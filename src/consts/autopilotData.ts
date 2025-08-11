@@ -1,6 +1,7 @@
 import { ProjectsData } from "@/types/globalAppTypes";
 
-export const autopilotData: ProjectsData = {
+//mock data for projects
+export const vaultsData: ProjectsData = {
     'morpho-USDC': {
       name: "Morpho",
       asset: "USDC",
@@ -12,6 +13,9 @@ export const autopilotData: ProjectsData = {
       autopilotBalance: 200400.00,
       walletBalance: 10000.00,
       monthlyForecast: (200400 * 0.0875) / 12,
+      weeklyApy: 8.75,
+      monthlyApy: 8.42,
+      tvl: "$10.8M",
       allocations: [
         { name: "Extrafi XLend USDC Vault (Gauntlet)", apy: 7.52, amount: 75000.00, allocation: 37.5 },
         { name: "Ionic Ecosystem", apy: 7.51, amount: 60000.00, allocation: 30.0 },
@@ -24,7 +28,24 @@ export const autopilotData: ProjectsData = {
         { time: "1 hr", amount: 12.45, type: "yield" },
         { time: "2 hr", amount: 20.99, type: "yield" },
         { time: "4 hr", amount: 25.00, type: "yield" },
-      ]
+      ],
+      benchmarkData: [
+            { name: "Autopilot", description: "Smart Yield Router", apy: 8.75, isAutopilot: true },
+            { name: "Extrafi XLend USDC Vault (Gauntlet)", description: "Morpho Vault", apy: 8.50 },
+            { name: "Ionic Ecosystem", description: "Morpho Vault", apy: 8.50 },
+            { name: "Moonwell Flagship", description: "Morpho Vault", apy: 7.94 },
+            { name: "Seamless", description: "Morpho Vault", apy: 7.88 },
+            { name: "Smokehouse", description: "Morpho Vault", apy: 7.82 },
+            { name: "Apostro Resolv", description: "Morpho Vault", apy: 7.76 },
+            { name: "Clearstar OpenEden", description: "Morpho Vault", apy: 7.43 },
+            { name: "Steakhouse", description: "Morpho Vault", apy: 7.24 },
+            { name: "Gauntlet Prime", description: "Morpho Vault", apy: 7.19 },
+            { name: "Gauntlet Core", description: "Morpho Vault", apy: 6.95 },
+            { name: "Spark", description: "Morpho Vault", apy: 5.67 },
+            { name: "Pyth USDC (Re7 Labs)", description: "Morpho Vault", apy: 4.93 },
+            { name: "Re7 Labs", description: "Morpho Vault", apy: 4.78 },
+            { name: "Universal USDC (Re7 Labs)", description: "Morpho Vault", apy: 3.55 },
+    ]
     },
     'morpho-ETH': {
       name: "Morpho",
@@ -37,6 +58,9 @@ export const autopilotData: ProjectsData = {
       autopilotBalance: 85.67,
       walletBalance: 2.5,
       monthlyForecast: (85.67 * 0.0438) / 12,
+      weeklyApy: 4.38,
+      monthlyApy: 4.21,
+      tvl: "$10.8M",
       allocations: [
         { name: "Gauntlet ETH Core", apy: 4.68, amount: 32.25, allocation: 37.6 },
         { name: "Hyperithm ETH", apy: 4.51, amount: 25.70, allocation: 30.0 },
@@ -49,6 +73,23 @@ export const autopilotData: ProjectsData = {
         { time: "1hr", amount: 0.0028, type: "yield" },
         { time: "2hr", amount: 0.0041, type: "yield" },
         { time: "4hr", amount: 0.0033, type: "yield" },
+      ],
+      benchmarkData: [
+        { name: "Autopilot", description: "Smart Yield Router", apy: 4.38, isAutopilot: true },
+        { name: "Extrafi XLend ETH Vault (Gauntlet)", description: "Morpho Vault", apy: 4.25 },
+        { name: "Ionic Ecosystem ETH", description: "Morpho Vault", apy: 4.25 },
+        { name: "Moonwell Flagship ETH", description: "Morpho Vault", apy: 3.97 },
+        { name: "Seamless ETH", description: "Morpho Vault", apy: 3.94 },
+        { name: "Smokehouse ETH", description: "Morpho Vault", apy: 3.91 },
+        { name: "Apostro Resolv ETH", description: "Morpho Vault", apy: 3.88 },
+        { name: "Clearstar OpenEden ETH", description: "Morpho Vault", apy: 3.72 },
+        { name: "Steakhouse ETH", description: "Morpho Vault", apy: 3.62 },
+        { name: "Gauntlet Prime ETH", description: "Morpho Vault", apy: 3.60 },
+        { name: "Gauntlet Core ETH", description: "Morpho Vault", apy: 3.48 },
+        { name: "Spark ETH", description: "Morpho Vault", apy: 2.84 },
+        { name: "Pyth ETH (Re7 Labs)", description: "Morpho Vault", apy: 2.47 },
+        { name: "Re7 Labs ETH", description: "Morpho Vault", apy: 2.39 },
+        { name: "Universal ETH (Re7 Labs)", description: "Morpho Vault", apy: 1.78 },
       ]
     },
     'morpho-cbBTC': {
@@ -62,6 +103,9 @@ export const autopilotData: ProjectsData = {
       autopilotBalance: 3.24,
       walletBalance: 0.15,
       monthlyForecast: (3.24 * 0.0219) / 12,
+      weeklyApy: 2.19,
+      monthlyApy: 2.10,
+      tvl: "$10.8M",
       allocations: [
         { name: "Gauntlet cbBTC Core", apy: 3.90, amount: 1.22, allocation: 37.7 },
         { name: "Hyperithm cbBTC", apy: 3.76, amount: 0.97, allocation: 29.9 },
@@ -74,6 +118,23 @@ export const autopilotData: ProjectsData = {
         { time: "1hr", amount: 0.000096, type: "yield" },
         { time: "3hr", amount: 0.000156, type: "yield" },
         { time: "5hr", amount: 0.000112, type: "yield" },
+      ],
+      benchmarkData: [
+        { name: "Autopilot", description: "Smart Yield Router", apy: 2.19, isAutopilot: true },
+        { name: "Extrafi XLend cbBTC Vault (Gauntlet)", description: "Morpho Vault", apy: 2.13 },
+        { name: "Ionic Ecosystem cbBTC", description: "Morpho Vault", apy: 2.13 },
+        { name: "Moonwell Flagship cbBTC", description: "Morpho Vault", apy: 1.99 },
+        { name: "Seamless cbBTC", description: "Morpho Vault", apy: 1.97 },
+        { name: "Smokehouse cbBTC", description: "Morpho Vault", apy: 1.96 },
+        { name: "Apostro Resolv cbBTC", description: "Morpho Vault", apy: 1.94 },
+        { name: "Clearstar OpenEden cbBTC", description: "Morpho Vault", apy: 1.86 },
+        { name: "Steakhouse cbBTC", description: "Morpho Vault", apy: 1.81 },
+        { name: "Gauntlet Prime cbBTC", description: "Morpho Vault", apy: 1.80 },
+        { name: "Gauntlet Core cbBTC", description: "Morpho Vault", apy: 1.74 },
+        { name: "Spark cbBTC", description: "Morpho Vault", apy: 1.42 },
+        { name: "Pyth cbBTC (Re7 Labs)", description: "Morpho Vault", apy: 1.23 },
+        { name: "Re7 Labs cbBTC", description: "Morpho Vault", apy: 1.20 },
+        { name: "Universal cbBTC (Re7 Labs)", description: "Morpho Vault", apy: 0.89 },
       ]
     },
     'euler-USDC': {
@@ -87,6 +148,9 @@ export const autopilotData: ProjectsData = {
       autopilotBalance: 180250.00,
       walletBalance: 10000.00,
       monthlyForecast: (180250 * 0.0735) / 12,
+      weeklyApy: 7.35,
+      monthlyApy: 7.12,
+      tvl: "$10.8M",
       allocations: [
         { name: "Euler Core USDC", apy: 8.84, amount: 68000.00, allocation: 37.7 },
         { name: "Euler Prime USDC", apy: 8.56, amount: 54075.00, allocation: 30.0 },
@@ -99,6 +163,20 @@ export const autopilotData: ProjectsData = {
         { time: "1hr", amount: 11.67, type: "yield" },
         { time: "2hr", amount: 18.45, type: "yield" },
         { time: "4hr", amount: 22.10, type: "yield" },
+      ],
+      benchmarkData: [
+        { name: "Autopilot", description: "Smart Yield Router", apy: 7.35, isAutopilot: true },
+        { name: "Euler Core USDC", description: "Euler Vault", apy: 7.25 },
+        { name: "Euler Prime USDC", description: "Euler Vault", apy: 6.98 },
+        { name: "Euler Growth USDC", description: "Euler Vault", apy: 6.67 },
+        { name: "Euler Max USDC", description: "Euler Vault", apy: 6.45 },
+        { name: "Euler Base USDC", description: "Euler Vault", apy: 6.12 },
+        { name: "Euler Safe USDC", description: "Euler Vault", apy: 5.89 },
+        { name: "Euler Balance USDC", description: "Euler Vault", apy: 5.76 },
+        { name: "Euler Basic USDC", description: "Euler Vault", apy: 5.45 },
+        { name: "Euler Stable USDC", description: "Euler Vault", apy: 5.34 },
+        { name: "Euler Reserve USDC", description: "Euler Vault", apy: 4.98 },
+        { name: "Euler Conservative USDC", description: "Euler Vault", apy: 4.23 },
       ]
     },
     'euler-ETH': {
@@ -112,6 +190,9 @@ export const autopilotData: ProjectsData = {
       autopilotBalance: 76.23,
       walletBalance: 2.5,
       monthlyForecast: (76.23 * 0.0373) / 12,
+      weeklyApy: 3.73,
+      monthlyApy: 3.56,
+      tvl: "$10.8M",
       allocations: [
         { name: "Euler Core ETH", apy: 4.56, amount: 28.81, allocation: 37.8 },
         { name: "Euler Prime ETH", apy: 4.38, amount: 22.87, allocation: 30.0 },
@@ -124,6 +205,20 @@ export const autopilotData: ProjectsData = {
         { time: "1hr", amount: 0.0026, type: "yield" },
         { time: "3hr", amount: 0.0038, type: "yield" },
         { time: "5hr", amount: 0.0029, type: "yield" },
+      ],
+      benchmarkData: [
+        { name: "Autopilot", description: "Smart Yield Router", apy: 3.73, isAutopilot: true },
+        { name: "Euler Core ETH", description: "Euler Vault", apy: 3.63 },
+        { name: "Euler Prime ETH", description: "Euler Vault", apy: 3.49 },
+        { name: "Euler Growth ETH", description: "Euler Vault", apy: 3.34 },
+        { name: "Euler Max ETH", description: "Euler Vault", apy: 3.23 },
+        { name: "Euler Base ETH", description: "Euler Vault", apy: 3.06 },
+        { name: "Euler Safe ETH", description: "Euler Vault", apy: 2.95 },
+        { name: "Euler Balance ETH", description: "Euler Vault", apy: 2.88 },
+        { name: "Euler Basic ETH", description: "Euler Vault", apy: 2.73 },
+        { name: "Euler Stable ETH", description: "Euler Vault", apy: 2.67 },
+        { name: "Euler Reserve ETH", description: "Euler Vault", apy: 2.49 },
+        { name: "Euler Conservative ETH", description: "Euler Vault", apy: 2.12 },
       ]
     },
     'euler-cbBTC': {
@@ -137,6 +232,9 @@ export const autopilotData: ProjectsData = {
       autopilotBalance: 2.89,
       walletBalance: 0.15,
       monthlyForecast: (2.89 * 0.0186) / 12,
+      weeklyApy: 1.86,
+      monthlyApy: 1.78,
+      tvl: "$10.8M",
       allocations: [
         { name: "Euler Core cbBTC", apy: 3.38, amount: 1.09, allocation: 37.7 },
         { name: "Euler Prime cbBTC", apy: 3.24, amount: 0.87, allocation: 30.1 },
@@ -149,6 +247,20 @@ export const autopilotData: ProjectsData = {
         { time: "1hr", amount: 0.000074, type: "yield" },
         { time: "3hr", amount: 0.000121, type: "yield" },
         { time: "5hr", amount: 0.000085, type: "yield" },
+      ],
+      benchmarkData: [
+        { name: "Autopilot", description: "Smart Yield Router", apy: 1.86, isAutopilot: true },
+        { name: "Euler Core cbBTC", description: "Euler Vault", apy: 1.81 },
+        { name: "Euler Prime cbBTC", description: "Euler Vault", apy: 1.75 },
+        { name: "Euler Growth cbBTC", description: "Euler Vault", apy: 1.67 },
+        { name: "Euler Max cbBTC", description: "Euler Vault", apy: 1.61 },
+        { name: "Euler Base cbBTC", description: "Euler Vault", apy: 1.53 },
+        { name: "Euler Safe cbBTC", description: "Euler Vault", apy: 1.47 },
+        { name: "Euler Balance cbBTC", description: "Euler Vault", apy: 1.44 },
+        { name: "Euler Basic cbBTC", description: "Euler Vault", apy: 1.36 },
+        { name: "Euler Stable cbBTC", description: "Euler Vault", apy: 1.34 },
+        { name: "Euler Reserve cbBTC", description: "Euler Vault", apy: 1.25 },
+        { name: "Euler Conservative cbBTC", description: "Euler Vault", apy: 1.06 },
       ]
     }
   };

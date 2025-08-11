@@ -1,35 +1,55 @@
-"use client"
-import Dashboard from "@/components/Dashboard";
-import { useState } from "react";
+import Portfolio from "@/components/Portfolio";
+import { PortfolioData, LatestEarningData } from "@/types/globalAppTypes";
 
-export type AutopilotProtocol = 'morpho' | 'euler';
-export type AutopilotAsset = 'USDC' | 'ETH' | 'cbBTC';
-export type UserState = 'new' | 'active' | 'old';
-
-export interface AutopilotProduct {
-  protocol: AutopilotProtocol;
-  asset: AutopilotAsset;
+const getPortfolioData = () => {
+  const portfolioData: PortfolioData = [
+    {
+      protocol: 'morpho',
+      asset: 'USDC',
+      balance: 460000.00,
+      usdValue: 460000,
+      earnings: 20700,
+      earningsUsd: 20700,
+      apy: 8.75,
+      status: 'active'
+    },
+    {
+      protocol: 'morpho',
+      asset: 'ETH',
+      balance: 77.5,
+      usdValue: 310000,
+      earnings: 0.775,
+      earningsUsd: 3100,
+      apy: 3.83,
+      status: 'active'
+    },
+    {
+      protocol: 'morpho',
+      asset: 'cbBTC',
+      balance: 0.40,
+      usdValue: 40000,
+      earnings: 0.008,
+      earningsUsd: 800,
+      apy: 1.91,
+      status: 'active'
+    }
+  ];
+  const latestEarningsData: LatestEarningData = [
+    { asset: 'USDC', amount: 22.35, value: 22.35, time: '1hr', icon: "/coins/usdc.png", protocol: 'morpho' },
+    { asset: 'ETH', amount: 0.0019, value: 7.60, time: '2hr', icon: "/coins/eth.png", protocol: 'morpho' },
+    { asset: 'cbBTC', amount: 0.000018, value: 1.80, time: '3hr', icon: "/coins/cbBTC.png", protocol: 'morpho' },
+    { asset: 'USDC', amount: 18.92, value: 18.92, time: '4hr', icon: "/coins/usdc.png", protocol: 'morpho' }
+  ];
+  return {portfolioData, latestEarningsData};
 }
 
-// Simple routing system
-type Route = 'home' | 'app' | 'about' | 'documentation';
-type AppView = 'dashboard' | 'portfolio' | 'earnings';
-
-export default function Home() {
-  const [currentRoute, setCurrentRoute] = useState<Route>('home');
-  const [currentAppView, setCurrentAppView] = useState<AppView>('dashboard');
-  const [previousRoute, setPreviousRoute] = useState<Route>('home');
-  const [initialDashboardTab, setInitialDashboardTab] = useState<string>('overview');
-  const [selectedAutopilot, setSelectedAutopilot] = useState<AutopilotProduct>({ protocol: 'morpho', asset: 'USDC' });
-  const [userState, setUserState] = useState<UserState>('active');
+export default function PortfolioPage() {
+  const {portfolioData, latestEarningsData} = getPortfolioData();
   return (
     <>
-      <Dashboard
-          initialTab={initialDashboardTab}
-          selectedAutopilot={selectedAutopilot}
-          onAutopilotChange={setSelectedAutopilot}
-          userState={userState}
-          onUserStateChange={setUserState}
+      <Portfolio
+        portfolioData={portfolioData}
+        latestEarningsData={latestEarningsData}
       />
     </>
   );
