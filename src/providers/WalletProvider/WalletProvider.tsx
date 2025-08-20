@@ -150,10 +150,6 @@ export default function WalletProvider({ children }: { children: ReactNode }) {
         transport: custom(window.ethereum),
       }) as WalletClient;
       setWalletClient(wc);
-      console.log('Wallet client created successfully', { 
-        account: accountAddress, 
-        chain: currentChain.name 
-      });
     } catch (e) {
       console.error("Failed to create walletClient:", e);
       setWalletClient(null);

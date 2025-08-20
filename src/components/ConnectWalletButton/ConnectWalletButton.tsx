@@ -3,6 +3,8 @@
 import * as React from "react";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useDisconnect } from "wagmi";
+import { useWallet } from "@/providers/WalletProvider";
+import { useWalletSync } from "@/hooks/useWalletSync";
 import {
   Wallet,
   AlertTriangle,
@@ -31,8 +33,11 @@ function avatarUrl(address?: string, ensAvatar?: string | null) {
 
 export function ConnectWalletButton() {
   const { disconnectAsync } = useDisconnect();
+  const { disconnect: walletProviderDisconnect } = useWallet();
   const [menuOpen, setMenuOpen] = React.useState(false);
   const rootRef = React.useRef<HTMLDivElement | null>(null);
+
+  useWalletSync();
 
   React.useEffect(() => {
     if (!menuOpen) return;
@@ -168,6 +173,9 @@ export function ConnectWalletButton() {
                       onClick={async () => {
                         try {
                           await disconnectAsync();
+                          await walletProviderDisconnect();
+                        } catch (error) {
+                          console.error('Error disconnecting wallet:', error);
                         } finally {
                           setMenuOpen(false);
                         }
