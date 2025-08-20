@@ -1,23 +1,23 @@
 "use client"
 import Link from "next/link";
 import { usePathname } from 'next/navigation'
-import { TrendingUp, ChevronDown, BarChart3, Circle, X, Eye, User, UserCheck, Users, Menu } from "lucide-react";
+import { TrendingUp, ChevronDown, BarChart3, Circle, X, Menu } from "lucide-react";
 import { useEffect, useState } from "react";
 import { AutopilotIcon } from "./AutopilotIcon";
-import { SideBarOption } from "@/types/globalAppTypes";
+import { useContext } from "react";
+import { GlobalContext } from "@/providers/GlobalDataProvider";
+import { ConnectWalletButton } from "../ConnectWalletButton/ConnectWalletButton";
 
-
-export default function Sidebar({sideBarData} : {
-  sideBarData: SideBarOption[]
-}) {
+export default function Sidebar() {
   const [isOpen, setIsOpen] = useState(false);
   const [morphoExpanded, setMorphoExpanded] = useState(true);
   const [eulerExpanded, setEulerExpanded] = useState(true);
   const [url, setUrl] = useState<string>();
   const [isMobile, setIsMobile] = useState(false);
   const pathname = usePathname();
-  const morphoOptions = sideBarData.filter(option => option.protocol === "morpho");
-  const eulerOptions = sideBarData.filter(option => option.protocol === "euler");
+  const { availableAutopilots } = useContext(GlobalContext);
+  const morphoOptions = availableAutopilots.filter(option => option.protocol === "morpho");
+  const eulerOptions = availableAutopilots.filter(option => option.protocol === "euler");
 
   const closeSidebar = () => {
     setIsOpen(false);
@@ -265,6 +265,7 @@ export default function Sidebar({sideBarData} : {
       {/* Navigation */}
       <div className="flex-1 overflow-y-auto">
         <div className="p-6 space-y-6">
+          <ConnectWalletButton/>
 
           {/* Portfolio Section */}
           <div>
@@ -359,7 +360,7 @@ export default function Sidebar({sideBarData} : {
                       </div>
                       <div className="flex items-center space-x-1">
                         <Circle className="w-2 h-2 fill-green-600 text-green-600" />
-                        <span className="text-xs text-green-600 font-medium">{option.apy}%</span>
+                        <span className="text-xs text-green-600 font-medium">{option.apy.toFixed(2)}%</span>
                       </div>
                     </Link>
                   )
@@ -406,7 +407,7 @@ export default function Sidebar({sideBarData} : {
                       </div>
                       <div className="flex items-center space-x-1">
                         <Circle className="w-2 h-2 fill-green-600 text-green-600" />
-                        <span className="text-xs text-green-600 font-medium">{option.apy}%</span>
+                        <span className="text-xs text-green-600 font-medium">{option.apy.toFixed(2)}%</span>
                       </div>
                     </Link>
                   )

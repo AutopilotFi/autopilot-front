@@ -1,16 +1,21 @@
 "use client"
 import { TrendingUp, ChevronLeft, BarChart3, Wallet, Trophy, History, Info, Circle } from "lucide-react";
 import { useState, useEffect, useContext } from "react";
-import { GlobalContext } from "../GlobalDataProvider";
-import { AllUserStats, AutopilotProduct, AutopilotProtocol, ProjectData, UserStats } from "@/types/globalAppTypes";
+import { GlobalContext } from "../../providers/GlobalDataProvider";
+import { ProjectData, UserStats } from "@/types/globalAppTypes";
 import { TooltipProvider } from "../UI/Tooltip";
 import TermsModal from "../UI/TermsModal";
 import Details from "./Details";
 import Overview from "./Overview";
+
 import Earnings from "./Earnings";
 import HistoryTab from "./History";
 import Deposit from "./Deposit";
 import Benchamrk from "./Benchmark";
+
+import { useVaultMetrics } from "@/providers/VaultMetricsProvider";
+import { formatBalance } from "@/helpers/utils";
+
 
 type Tab = 'overview' | 'deposit' | 'earnings' | 'benchmark' | 'details' | 'history' | undefined;
 
@@ -25,40 +30,123 @@ const tabConfig = [
 ];
 
 interface DashboardProps {
-  selectedAutopilot: AutopilotProduct;
-  userStats: AllUserStats;
   currentProjectData: ProjectData;
 }
 
 export default function Dashboard({
-  selectedAutopilot,
-  userStats,
   currentProjectData
 }: DashboardProps) {
   const [activeTab, setActiveTab] = useState<Tab>();
   const [showTermsModal, setShowTermsModal] = useState(false);
 
+  const [enrichedProjectData, setEnrichedProjectData] = useState<ProjectData>(currentProjectData);
+  const [enrichedUserStats, setEnrichedUserStats] = useState<UserStats>({
+    totalBalance: "—",
+    totalEarnings: "—",
+    monthlyForecast: "—",
+    updateFrequency: "—",
+    monthlyEarnings: "—",
+    dailyEarnings: "—",
+    totalDeposits: "—",
+    totalWithdrawals: "—",
+    totalActions: "0",
+    transactions: [],
+  });
+
   const globalData = useContext(GlobalContext);
   const user = globalData?.user;
-
-  const dataKey = `${selectedAutopilot.protocol}-${selectedAutopilot.asset}` as keyof UserStats;
-  const userStatsData = userStats?.[user?.status]?.[dataKey];
+  const { getMetricsForVault } = useVaultMetrics();
 
   const isOldUser = user?.status === 'old';
-  const isNewUser = user?.status === "new" || !userStatsData;
+  const isNewUser = user?.status === "new";
 
   // Set the initial tab properly
   useEffect(() => {
     const hash = window.location.hash.substring(1);
-    console.log(hash);
     const isValidHash = (h?: string): h is Tab =>
       ['overview', 'deposit', 'earnings', 'benchmark', 'details', 'history'].includes(h || "");
-    console.log(isValidHash(hash));
     if(isValidHash(hash))
       setActiveTab(hash);
     else setActiveTab("overview");
 
   }, []);
+
+  // Load metrics and enrich project data
+  useEffect(() => {
+    if (!currentProjectData.vaultAddress) {
+      return;
+    }
+
+    const loadMetrics = () => {
+      try {
+        const result = getMetricsForVault(currentProjectData.vaultAddress);
+        if (!result) {
+          return;
+        }
+
+
+        
+        // Update enriched project data with APY values
+        setEnrichedProjectData({
+          ...currentProjectData,
+          apy7d: Number(result.apy7d),
+          apy30d: Number(result.apy30d),
+          initialSharePrice: result.initialSharePrice,
+          latestSharePrice: result.latestSharePrice,
+          frequency: result.frequency,
+          latestUpdate: result.latestUpdate,
+          operatingSince: result.operatingSince,
+          recentEarnings: result.earningsSeries.map(e => ({ time: e.timestamp.toString(), amount: e.amount, amountUsd: e.amountUsd })),
+        });
+
+          // Calculate 24h and 30D earnings from earningsSeries
+         const now = Math.floor(Date.now() / 1000);
+         const oneDayAgo = now - (24 * 60 * 60);
+         const thirtyDaysAgo = now - (30 * 24 * 60 * 60);
+         
+         const earnings24h = result.earningsSeries
+           .filter(earning => earning.timestamp >= oneDayAgo)
+           .reduce((sum, earning) => sum + earning.amount, 0);
+         
+         const earnings30d = result.earningsSeries
+           .filter(earning => earning.timestamp >= thirtyDaysAgo)
+           .reduce((sum, earning) => sum + earning.amount, 0);
+         
+         // Update enriched user stats data
+         setEnrichedUserStats({
+           totalBalance: formatBalance(result.totalBalance, ''),
+           totalEarnings: formatBalance(result.totalEarnings, ''),
+           monthlyForecast: formatBalance(result.monthlyForecast, ''),
+           updateFrequency: result.frequency,
+           monthlyEarnings: formatBalance(earnings30d, ''),
+           dailyEarnings: formatBalance(earnings24h, ''),
+           totalDeposits: result.deposits.length ? formatBalance(result.deposits.reduce((a,b)=>a+b.amount,0), '') : "—",
+           totalWithdrawals: result.withdrawals.length ? formatBalance(result.withdrawals.reduce((a,b)=>a+b.amount,0), '') : "—",
+           totalActions: String(result.deposits.length + result.withdrawals.length + result.earningsSeries.length),
+          transactions: [
+            ...result.deposits.map(deposit => ({
+              date: new Date(deposit.timestamp * 1000).toISOString(),
+              type: 'deposit',
+              amount: deposit.amount,
+              status: 'confirmed',
+              timestamp: deposit.timestamp // Keep original timestamp for sorting
+            })),
+            ...result.withdrawals.map(withdrawal => ({
+              date: new Date(withdrawal.timestamp * 1000).toISOString(),
+              type: 'withdrawal',
+              amount: withdrawal.amount,
+              status: 'confirmed',
+              timestamp: withdrawal.timestamp // Keep original timestamp for sorting
+            }))
+          ].sort((a, b) => b.timestamp - a.timestamp), // Sort by timestamp, newest first
+        });
+      } catch (error) {
+        console.error('Error loading metrics:', error);
+      }
+    };
+
+    loadMetrics();
+  }, [currentProjectData.vaultAddress, getMetricsForVault]);
 
   // Navigation handlers
   const handleNavigateToDeposit = () => {
@@ -79,7 +167,6 @@ export default function Dashboard({
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-4 pl-10 md:pl-0">
                   <button
-                    // onClick={onNavigateHome}
                     className="text-gray-500 hover:text-gray-700 p-2 rounded-md hover:bg-gray-100 transition-colors"
                   >
                     <ChevronLeft className="w-5 h-5" />
@@ -144,49 +231,44 @@ export default function Dashboard({
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
               {activeTab === 'overview' && (
                 <Overview
-                  currentProjectData={currentProjectData}
-                  handleNavigateToDeposit={handleNavigateToDeposit}
+                  currentProjectData={enrichedProjectData}
+                  userStatsData={enrichedUserStats}
                   isNewUser={isNewUser}
                   isOldUser={isOldUser}
-                  userStatsData={userStatsData}
+                  handleNavigateToDeposit={handleNavigateToDeposit}
                 />
               )}
 
               {/* Earnings tab - only new users get empty state */}
               {activeTab === 'earnings' && (
                 <Earnings
-                  currentProjectData={currentProjectData}
+                  currentProjectData={enrichedProjectData}
                   handleNavigateToDeposit={handleNavigateToDeposit}
                   isNewUser={isNewUser}
-                  userStatsData={userStatsData}
+                  userStatsData={enrichedUserStats}
                 />
               )}
 
               {/* History tab - only new users get empty state */}
               {activeTab === 'history' && (
                 <HistoryTab
-                  currentProjectData={currentProjectData}
+                  currentProjectData={enrichedProjectData}
                   handleNavigateToDeposit={handleNavigateToDeposit}
                   isNewUser={isNewUser}
-                  userStatsData={userStatsData}
-                  selectedAutopilot={selectedAutopilot}
-                  dataKey={dataKey}
+                  userStatsData={enrichedUserStats}
                 />
               )}
 
               {/* Details tab - always show regular content */}
               {activeTab === 'details' && (
-                <Details
-                  currentProjectData={currentProjectData}
-                  selectedAutopilot={selectedAutopilot}
-                />
+                <Details currentProjectData={enrichedProjectData} />
               )}
 
               {/* Deposit tab - always show regular content */}
               {activeTab === 'deposit' && (
                 <Deposit
                   isNewUser={isNewUser}
-                  currentProjectData={currentProjectData}
+                  currentProjectData={enrichedProjectData}
                   setShowTermsModal={setShowTermsModal}
                   handleOpenBenchmark={handleOpenBenchmark}
                 />
@@ -195,7 +277,7 @@ export default function Dashboard({
               {/* Benchmark tab - always show regular content */}
               {activeTab === 'benchmark' && (
                 <Benchamrk
-                  benchmarkData={currentProjectData?.benchmarkData || []}
+                  benchmarkData={enrichedProjectData?.benchmarkData || []}
                 />
               )}
             </div>

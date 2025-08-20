@@ -1,7 +1,12 @@
 "use client"
 import { ProjectData } from "@/types/globalAppTypes";
-import { Plus, Minus, Info, Shield, TrendingUp, ExternalLink } from "lucide-react";
+import { Plus, Minus, Info, Shield, TrendingUp, ExternalLink, Loader2 } from "lucide-react";
 import { Dispatch, SetStateAction, useState } from "react";
+import { useIporActions } from "@/hooks/useIporActions";
+import { useBalances } from "@/hooks/useBalances";
+import { useWallet } from "@/providers/WalletProvider";
+import { useToastContext } from "@/providers/ToastProvider";
+import { Address } from "viem";
 
 export default function Deposit({isNewUser, currentProjectData, setShowTermsModal, handleOpenBenchmark} : {
     isNewUser: boolean,
@@ -12,6 +17,162 @@ export default function Deposit({isNewUser, currentProjectData, setShowTermsModa
     const [depositMode, setDepositMode] = useState<'enter' | 'exit'>('enter');
     const [insuranceEnabled, setInsuranceEnabled] = useState(false);
     const [depositAmount, setDepositAmount] = useState('');
+    const [isProcessing, setIsProcessing] = useState(false);
+    const [txError, setTxError] = useState<string | null>(null);
+    const [txSuccess, setTxSuccess] = useState<string | null>(null);
+    const [isRefreshingBalances, setIsRefreshingBalances] = useState(false);
+
+    // Wallet and blockchain interactions
+    const { isConnected } = useWallet();
+    const { deposit, withdraw } = useIporActions();
+    const { showSuccess, showError } = useToastContext();
+    
+    // Fetch real-time balances
+    const { 
+        tokenBalanceFormatted, 
+        vaultBalanceFormatted, 
+        loading: balancesLoading,
+        error: balancesError,
+        refetch: refetchBalances 
+    } = useBalances(
+        currentProjectData.tokenAddress,
+        currentProjectData.vaultAddress,
+        parseInt(currentProjectData.tokenDecimals),
+        parseInt(currentProjectData.vaultDecimals)
+    );
+
+    // Handle deposit transaction
+    const handleDeposit = async () => {
+        if (!depositAmount || parseFloat(depositAmount) <= 0) return;
+        
+        try {
+            setIsProcessing(true);
+            setTxError(null);
+            setTxSuccess(null);
+
+            const result = await deposit(
+                currentProjectData.vaultAddress as Address,
+                currentProjectData.tokenAddress as Address,
+                depositAmount,
+                parseInt(currentProjectData.tokenDecimals)
+            );
+
+            setTxSuccess(`Deposit successful! Transaction: ${result.hash}`);
+            setDepositAmount('');
+            setInsuranceEnabled(false);
+            
+            showSuccess(
+                "Deposit Successful!", 
+                `${depositAmount} ${currentProjectData.asset} deposited successfully`,
+                result.hash
+            );
+            
+            await refreshBalancesAfterTransaction();
+            
+        } catch (error) {
+            console.error('Deposit failed:', error);
+            const errorMessage = error instanceof Error ? error.message : 'Deposit failed';
+            setTxError(errorMessage);
+            
+            // Show error toast notification
+            showError("Deposit Failed", errorMessage);
+        } finally {
+            setIsProcessing(false);
+        }
+    };
+
+    // Handle withdraw transaction
+    const handleWithdraw = async () => {
+        if (!depositAmount || parseFloat(depositAmount) <= 0) return;
+        
+        try {
+            setIsProcessing(true);
+            setTxError(null);
+            setTxSuccess(null);
+
+            const result = await withdraw(
+                currentProjectData.vaultAddress as Address,
+                depositAmount,
+                parseInt(currentProjectData.vaultDecimals)
+            );
+
+            setTxSuccess(`Withdrawal successful! Transaction: ${result.hash}`);
+            setDepositAmount('');
+            
+            // Show success toast notification
+            showSuccess(
+                "Withdrawal Successful!", 
+                `${depositAmount} ${currentProjectData.asset} withdrawn successfully`,
+                result.hash
+            );
+            
+            // Refetch balances after successful transaction with multiple attempts
+            await refreshBalancesAfterTransaction();
+            
+        } catch (error) {
+            console.error('Withdrawal failed:', error);
+            const errorMessage = error instanceof Error ? error.message : 'Withdrawal failed';
+            setTxError(errorMessage);
+            
+            // Show error toast notification
+            showError("Withdrawal Failed", errorMessage);
+        } finally {
+            setIsProcessing(false);
+        }
+    };
+
+    // Handle main action button click
+    const handleMainAction = async () => {
+        if (!isConnected) {
+            setTxError('Please connect your wallet first');
+            return;
+        }
+
+        if (isNewUser && depositMode === 'enter') {
+            setShowTermsModal(true);
+            return;
+        }
+
+        if (depositMode === 'enter') {
+            await handleDeposit();
+        } else {
+            await handleWithdraw();
+        }
+    };
+
+    // Refresh balances after transaction with multiple attempts
+    const refreshBalancesAfterTransaction = async () => {
+        setIsRefreshingBalances(true);
+        const maxAttempts = 3;
+        const delays = [1000, 2000, 3000]; // 1s, 2s, 3s delays
+        
+        try {
+            for (let attempt = 0; attempt < maxAttempts; attempt++) {
+                try {
+                    await new Promise(resolve => setTimeout(resolve, delays[attempt]));
+                    await refetchBalances();
+                    console.log(`Balance refresh successful on attempt ${attempt + 1}`);
+                    break;
+                } catch (error) {
+                    console.warn(`Balance refresh attempt ${attempt + 1} failed:`, error);
+                    if (attempt === maxAttempts - 1) {
+                        console.error('All balance refresh attempts failed');
+                        // Show a warning to the user but don't override success message
+                        if (!txSuccess) {
+                            setTxError('Transaction completed but balance refresh failed. Please refresh the page.');
+                        }
+                    }
+                }
+            }
+        } finally {
+            setIsRefreshingBalances(false);
+        }
+    };
+
+    // Get current balance for display
+    const currentBalance = depositMode === 'enter' 
+        ? (balancesLoading ? currentProjectData.walletBalance : tokenBalanceFormatted)
+        : (balancesLoading ? (isNewUser ? 0 : currentProjectData.autopilotBalance) : vaultBalanceFormatted);
     return(
         <div className="space-y-6">
             <div className="flex flex-col lg:flex-row gap-6">
@@ -67,6 +228,43 @@ export default function Deposit({isNewUser, currentProjectData, setShowTermsModa
                 </div>
                 )}
 
+                {/* Transaction Status Messages */}
+                {txError && (
+                    <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                        <div className="flex items-center space-x-3">
+                            <Info className="w-5 h-5 text-red-500 flex-shrink-0" />
+                            <div>
+                                <h4 className="text-sm font-medium text-red-900">Transaction Failed</h4>
+                                <p className="text-sm text-red-700">{txError}</p>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {txSuccess && (
+                    <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+                        <div className="flex items-center space-x-3">
+                            <Shield className="w-5 h-5 text-green-500 flex-shrink-0" />
+                            <div>
+                                <h4 className="text-sm font-medium text-green-900">Transaction Successful</h4>
+                                <p className="text-sm text-green-700">{txSuccess}</p>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {balancesError && (
+                    <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                        <div className="flex items-center space-x-3">
+                            <Info className="w-5 h-5 text-yellow-500 flex-shrink-0" />
+                            <div>
+                                <h4 className="text-sm font-medium text-yellow-900">Balance Loading Error</h4>
+                                <p className="text-sm text-yellow-700">Using cached balance data. {balancesError}</p>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 {/* Available Balance Section with Integrated Top-up */}
                 <div className="bg-gray-50 rounded-xl p-4 mb-6">
                 <div className="flex items-center justify-between">
@@ -76,26 +274,26 @@ export default function Deposit({isNewUser, currentProjectData, setShowTermsModa
                     </p>
                     <div className="flex items-center space-x-2">
                         <img src={currentProjectData.assetIcon} alt={currentProjectData.asset} className="w-6 h-6" />
-                        <span className="text-xl font-semibold text-gray-900">
-                        {depositMode === 'enter'
-                            ? currentProjectData.walletBalance.toLocaleString('en-US', {
-                                minimumFractionDigits: currentProjectData.asset === 'USDC' ? 2 : 6,
-                                maximumFractionDigits: currentProjectData.asset === 'USDC' ? 2 : 6
-                            })
-                            : isNewUser
-                            ? '0.00'
-                            : currentProjectData.autopilotBalance.toLocaleString('en-US', {
-                                minimumFractionDigits: currentProjectData.asset === 'USDC' ? 2 : 6,
-                                maximumFractionDigits: currentProjectData.asset === 'USDC' ? 2 : 6
-                            })
-                        } {currentProjectData.asset}
-                        </span>
+                        <div className="flex items-center space-x-2">
+                            {(balancesLoading || isRefreshingBalances) && (
+                                <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
+                            )}
+                            <span className="text-xl font-semibold text-gray-900">
+                                {currentBalance.toLocaleString('en-US', {
+                                    minimumFractionDigits: currentProjectData.asset === 'USDC' ? 2 : 6,
+                                    maximumFractionDigits: currentProjectData.asset === 'USDC' ? 2 : 6
+                                })} {currentProjectData.asset}
+                            </span>
+                            {isRefreshingBalances && (
+                                <span className="text-xs text-blue-600 font-medium">Updating...</span>
+                            )}
+                        </div>
                     </div>
                     </div>
 
                     {depositMode === 'enter' && (
                     <button
-                        onClick={() => console.log('Top-up clicked')}
+                        onClick={() => {}}
                         className="bg-[#9159FF] hover:bg-[#7c3aed] text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-1.5"
                     >
                         <Plus className="w-3.5 h-3.5" />
@@ -115,9 +313,14 @@ export default function Deposit({isNewUser, currentProjectData, setShowTermsModa
                     <input
                         type="text"
                         value={depositAmount}
-                        onChange={(e) => setDepositAmount(e.target.value.replace(/[^0-9.]/g, ''))}
+                        onChange={(e) => {
+                            setDepositAmount(e.target.value.replace(/[^0-9.]/g, ''));
+                            setTxError(null);
+                            setTxSuccess(null);
+                        }}
                         placeholder="0.00"
-                        className="w-full p-4 pr-20 border border-gray-200 rounded-lg text-xl font-medium focus:ring-1 focus:ring-purple-300 focus:border-purple-400 transition-colors"
+                        disabled={balancesLoading || isProcessing || isRefreshingBalances}
+                        className="w-full p-4 pr-20 border border-gray-200 rounded-lg text-xl font-medium focus:ring-1 focus:ring-purple-300 focus:border-purple-400 transition-colors disabled:bg-gray-50 disabled:cursor-not-allowed"
                     />
                     <div className="absolute right-4 top-1/2 transform -translate-y-1/2 flex items-center space-x-2">
                         <img src={currentProjectData.assetIcon} alt={currentProjectData.asset} className="w-5 h-5" />
@@ -132,11 +335,13 @@ export default function Deposit({isNewUser, currentProjectData, setShowTermsModa
                     <button
                         key={percentage}
                         onClick={() => {
-                        const balance = depositMode === 'enter' ? currentProjectData.walletBalance : (isNewUser ? 0 : currentProjectData.autopilotBalance);
-                        const amount = (balance * percentage / 100).toFixed(currentProjectData.asset === 'USDC' ? 2 : 6);
+                        const amount = (currentBalance * percentage / 100).toFixed(currentProjectData.asset === 'USDC' ? 2 : 6);
                         setDepositAmount(amount);
+                        setTxError(null);
+                        setTxSuccess(null);
                         }}
-                        className="py-2.5 px-3 bg-gray-100 hover:bg-purple-100 hover:text-purple-700 rounded-lg text-sm font-medium text-gray-700 transition-colors"
+                        disabled={balancesLoading || isProcessing || isRefreshingBalances}
+                        className="py-2.5 px-3 bg-gray-100 hover:bg-purple-100 hover:text-purple-700 disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed rounded-lg text-sm font-medium text-gray-700 transition-colors"
                     >
                         {percentage}%
                     </button>
@@ -208,52 +413,67 @@ export default function Deposit({isNewUser, currentProjectData, setShowTermsModa
 
                 {/* Supply Button with Dynamic Text */}
                 <button
-                onClick={() => {
-                    if (isNewUser && depositMode === 'enter') {
-                    setShowTermsModal(true);
-                    return;
-                    }
-                    if (!depositAmount) return;
-                    console.log(`${depositMode === 'enter' ? 'Depositing' : 'Withdrawing'} ${depositAmount} ${currentProjectData.asset}`);
-                    setDepositAmount('');
-                    setInsuranceEnabled(false);
-                }}
-                disabled={isNewUser && depositMode === 'exit'}
-                className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-medium py-4 rounded-lg transition-colors text-lg"
+                onClick={handleMainAction}
+                disabled={
+                    isProcessing || 
+                    balancesLoading || 
+                    isRefreshingBalances ||
+                    (isNewUser && depositMode === 'exit') ||
+                    (!depositAmount || parseFloat(depositAmount) <= 0) ||
+                    (depositMode === 'enter' && parseFloat(depositAmount) > currentBalance) ||
+                    (depositMode === 'exit' && parseFloat(depositAmount) > currentBalance)
+                }
+                className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-medium py-4 rounded-lg transition-colors text-lg flex items-center justify-center space-x-2"
                 >
+                {isProcessing && <Loader2 className="w-5 h-5 animate-spin" />}
+                <span>
                 {(() => {
+                    if (isProcessing) {
+                        return depositMode === 'enter' ? 'Processing Deposit...' : 'Processing Withdrawal...';
+                    }
+
+                    if (!isConnected) {
+                        return 'Connect Wallet';
+                    }
+
                     if (isNewUser && depositMode === 'enter') {
-                    return 'Accept Terms of Use';
+                        return 'Accept Terms of Use';
                     }
 
                     const amount = parseFloat(depositAmount);
                     const hasAmount = amount > 0;
 
+                    // Check for insufficient balance
+                    if (hasAmount && amount > currentBalance) {
+                        return depositMode === 'enter' ? 'Insufficient Wallet Balance' : 'Insufficient Vault Balance';
+                    }
+
                     if (depositMode === 'enter') {
-                    if (insuranceEnabled && hasAmount) {
-                        return `Supply ${amount.toLocaleString('en-US', {
-                        minimumFractionDigits: currentProjectData.asset === 'USDC' ? 2 : 4,
-                        maximumFractionDigits: currentProjectData.asset === 'USDC' ? 2 : 4
-                        })} ${currentProjectData.asset} & Pay Insurance`;
-                    } else if (hasAmount) {
-                        return `Supply ${amount.toLocaleString('en-US', {
-                        minimumFractionDigits: currentProjectData.asset === 'USDC' ? 2 : 4,
-                        maximumFractionDigits: currentProjectData.asset === 'USDC' ? 2 : 4
-                        })} ${currentProjectData.asset}`;
+                        if (insuranceEnabled && hasAmount) {
+                            return `Supply ${amount.toLocaleString('en-US', {
+                            minimumFractionDigits: currentProjectData.asset === 'USDC' ? 2 : 4,
+                            maximumFractionDigits: currentProjectData.asset === 'USDC' ? 2 : 4
+                            })} ${currentProjectData.asset} & Pay Insurance`;
+                        } else if (hasAmount) {
+                            return `Supply ${amount.toLocaleString('en-US', {
+                            minimumFractionDigits: currentProjectData.asset === 'USDC' ? 2 : 4,
+                            maximumFractionDigits: currentProjectData.asset === 'USDC' ? 2 : 4
+                            })} ${currentProjectData.asset}`;
+                        } else {
+                            return `Supply ${currentProjectData.asset}`;
+                        }
                     } else {
-                        return `Supply ${currentProjectData.asset}`;
-                    }
-                    } else {
-                    if (hasAmount) {
-                        return `Withdraw ${amount.toLocaleString('en-US', {
-                        minimumFractionDigits: currentProjectData.asset === 'USDC' ? 2 : 4,
-                        maximumFractionDigits: currentProjectData.asset === 'USDC' ? 2 : 4
-                        })} ${currentProjectData.asset}`;
-                    } else {
-                        return `Withdraw ${currentProjectData.asset}`;
-                    }
+                        if (hasAmount) {
+                            return `Withdraw ${amount.toLocaleString('en-US', {
+                            minimumFractionDigits: currentProjectData.asset === 'USDC' ? 2 : 4,
+                            maximumFractionDigits: currentProjectData.asset === 'USDC' ? 2 : 4
+                            })} ${currentProjectData.asset}`;
+                        } else {
+                            return `Withdraw ${currentProjectData.asset}`;
+                        }
                     }
                 })()}
+                </span>
                 </button>
             </div>
 
@@ -328,7 +548,7 @@ export default function Deposit({isNewUser, currentProjectData, setShowTermsModa
                         <div className="flex justify-between">
                         <span className="text-gray-600">Remaining Balance</span>
                         <span className="font-medium text-gray-900 tabular-nums">
-                            {Math.max(0, (isNewUser ? 0 : currentProjectData.autopilotBalance) - parseFloat(depositAmount || '0')).toLocaleString('en-US', {
+                            {Math.max(0, currentBalance - parseFloat(depositAmount || '0')).toLocaleString('en-US', {
                             minimumFractionDigits: currentProjectData.asset === 'USDC' ? 2 : 6,
                             maximumFractionDigits: currentProjectData.asset === 'USDC' ? 2 : 6
                             })} {currentProjectData.asset}

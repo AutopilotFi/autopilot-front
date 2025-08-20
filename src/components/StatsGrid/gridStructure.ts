@@ -22,7 +22,7 @@ export const generateUserStatsGridStructure = (currentProjectData: ProjectData):
             {
                 label: "Update Frequency",
                 valueKey: "updateFrequency",
-                unit: "min",
+                unit: "",
                 hasTooltip: true,
                 tooltipText: "This is an approximation based on historical data, when the Autopilot will harvest the earned yield and distribute it to your account.",
                 latestUpdate: "Latest: 2min ago"
@@ -51,7 +51,7 @@ export const generateUserEarningStatsGridStructure = (currentProjectData: Projec
     {
         label: "Update Frequency",
         valueKey: "updateFrequency",
-        unit: "min"
+        unit: ""
     },
 ]
 

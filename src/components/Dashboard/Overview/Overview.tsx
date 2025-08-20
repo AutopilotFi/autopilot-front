@@ -2,9 +2,11 @@
 import { TrendingUp, Coins, Clock, Zap, Layers } from "lucide-react";
 import { ProjectData, UserStats, TimeFrame } from "@/types/globalAppTypes";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import StatsGrid from "@/components/StatsGrid";
 import { generateUserStatsGridStructure } from "@/components/StatsGrid/gridStructure";
 import StandardCTAButton from "@/components/UI/StandardCTAButton";
+import { formatFrequency, formatBalance } from "@/helpers/utils";
 
 export default function Overview({currentProjectData, userStatsData, isNewUser, isOldUser, handleNavigateToDeposit}: {
     currentProjectData: ProjectData,
@@ -15,6 +17,11 @@ export default function Overview({currentProjectData, userStatsData, isNewUser, 
 }){
     const [timeframe, setTimeframe] = useState<TimeFrame>('all');
     const periods: TimeFrame[] = ["1m", "7d", "all"];
+    const router = useRouter();
+
+    const handleViewAllEarnings = () => {
+        router.push('/earnings');
+    };
     return(
         <div className="space-y-8">
             {/* Stats Grid */}
@@ -151,7 +158,7 @@ export default function Overview({currentProjectData, userStatsData, isNewUser, 
                 <h3 className="text-lg font-semibold text-gray-900">Latest Earnings</h3>
                 {!isNewUser && (
                     <button
-                    // onClick={handleViewAllEarnings}
+                    onClick={handleViewAllEarnings}
                     className="text-xs bg-[#9159FF] text-white px-3 py-1.5 rounded-md hover:bg-[#7c3aed] transition-colors"
                     >
                     View All
@@ -187,21 +194,18 @@ export default function Overview({currentProjectData, userStatsData, isNewUser, 
                 </div>
                 ) : (
                 <div className="space-y-3">
-                    {currentProjectData.recentEarnings.map((earning, index) => (
+                    {currentProjectData.recentEarnings.slice(0, 5).map((earning, index) => (
                     <div key={index} className="flex items-center justify-between py-2.5 px-3 rounded-lg hover:bg-purple-50 hover:border hover:border-purple-200 transition-colors cursor-pointer">
                         <div className="flex items-center space-x-3">
                         <img src={currentProjectData.assetIcon} alt={currentProjectData.asset} className="w-5 h-5" />
                         <div>
                             <div className="text-sm font-medium text-gray-900">
-                            +{earning.amount.toLocaleString('en-US', {
-                                minimumFractionDigits: currentProjectData.asset === 'USDC' ? 2 : 6,
-                                maximumFractionDigits: currentProjectData.asset === 'USDC' ? 2 : 6
-                            })} {currentProjectData.asset}
+                            +{formatBalance(earning.amount, currentProjectData.asset)}
                             </div>
                             <div className="text-xs text-gray-500">Yield earned</div>
                         </div>
                         </div>
-                        <div className="text-xs text-gray-500">{earning.time}</div>
+                        <div className="text-xs text-gray-500">{formatFrequency(Date.now() / 1000 - Number(earning.time))} ago</div>
                     </div>
                     ))}
                 </div>
@@ -263,7 +267,7 @@ export default function Overview({currentProjectData, userStatsData, isNewUser, 
                         </td>
                     </tr>
                     ) : (
-                    currentProjectData.allocations.map((allocation, index) => (
+                    currentProjectData.benchmarkData.filter(allocation => !allocation.isAutopilot).map((allocation, index) => (
                         <tr key={index} className="border-b border-gray-50 hover:bg-purple-50 transition-colors">
                         <td className="py-4 px-4">
                             <div className="flex items-center space-x-3">
@@ -276,13 +280,13 @@ export default function Overview({currentProjectData, userStatsData, isNewUser, 
                         </td>
                         <td className="py-4 px-4 text-right">
                             <div className="text-sm font-medium text-gray-900">
-                            {allocation.amount.toLocaleString('en-US', {
+                            {(allocation.amount ?? 0).toLocaleString('en-US', {
                                 maximumFractionDigits: currentProjectData.asset === 'USDC' ? 0 : 4
                             })} {currentProjectData.asset}
                             </div>
                         </td>
                         <td className="py-4 px-4 text-right">
-                            <div className="text-sm font-medium text-gray-900">{allocation.allocation.toFixed(1)}%</div>
+                            <div className="text-sm font-medium text-gray-900">{(allocation.allocation ?? 0).toFixed(1)}%</div>
                         </td>
                         </tr>
                     ))
