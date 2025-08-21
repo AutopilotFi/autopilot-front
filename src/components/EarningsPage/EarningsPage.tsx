@@ -1,13 +1,15 @@
 "use client"
-import { useState, useContext } from 'react';
+import { useState, useContext, useEffect } from 'react';
 import { ChevronLeft, TrendingUp, ArrowUpRight, RotateCcw } from 'lucide-react';
 import Link from 'next/link';
 import { EarningTransaction } from '@/types/globalAppTypes';
-import { GlobalContext } from '../GlobalDataProvider';
+import { GlobalContext } from '../../providers/GlobalDataProvider';
+import { formatFrequency } from '@/helpers/utils';
 
 export default function EarningsPage({earningsData} : {
   earningsData: EarningTransaction[]
 }) {
+  const [isLoading, setIsLoading] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
     const [sortBy, setSortBy] = useState<'timestamp' | 'amount' | 'usdValue'>('timestamp');
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
@@ -16,6 +18,15 @@ export default function EarningsPage({earningsData} : {
 
     const itemsPerPage = 25;
     const isNewUser = user.status === 'new';
+    
+    // Set loading state when earningsData changes
+    useEffect(() => {
+      if (earningsData.length === 0) {
+        setIsLoading(true);
+      } else {
+        setIsLoading(false);
+      }
+    }, [earningsData]);
 
 
   const allTransactions = isNewUser ? [] : earningsData;
@@ -50,10 +61,10 @@ export default function EarningsPage({earningsData} : {
 
   const getAssetIcon = (asset: string): string => {
     switch (asset) {
-      case 'USDC': return "/coins/usdc.png";
-      case 'ETH': return "/coins/eth.png";
-      case 'cbBTC': return "/coins/cbBTC.png";
-      default: return "/coins/usdc.png";
+      case 'USDC': return "/icons/usdc.svg";
+      case 'ETH': return "/icons/eth.svg";
+      case 'cbBTC': return "/icons/cbbtc.svg";
+      default: return "/icons/usdc.svg";
     }
   };
 
@@ -68,28 +79,6 @@ export default function EarningsPage({earningsData} : {
       return amount.toFixed(6);
     } else {
       return amount.toFixed(8);
-    }
-  };
-
-  const formatTimestamp = (timestamp: Date) => {
-    const now = new Date();
-    const diffMs = now.getTime() - timestamp.getTime();
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-    const diffDays = Math.floor(diffHours / 24);
-    const diffWeeks = Math.floor(diffDays / 7);
-    const diffMonths = Math.floor(diffDays / 30);
-
-    if (diffHours < 1) {
-      const diffMinutes = Math.floor(diffMs / (1000 * 60));
-      return `${diffMinutes}m`;
-    } else if (diffHours < 24) {
-      return `${diffHours}h`;
-    } else if (diffDays < 7) {
-      return `${diffDays}d`;
-    } else if (diffWeeks < 4) {
-      return `${diffWeeks}w`;
-    } else {
-      return `${diffMonths}m`;
     }
   };
 
@@ -157,7 +146,12 @@ export default function EarningsPage({earningsData} : {
 
         <main className="flex-1">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            {isNewUser ? (
+            {isLoading ? (
+              <div className="bg-white rounded-xl border border-gray-100 p-8 text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#9159FF] mx-auto mb-4"></div>
+                <p className="text-gray-600">Loading earnings data...</p>
+              </div>
+            ) : isNewUser ? (
               <div className="bg-gradient-to-br from-purple-50 to-green-50 rounded-xl border border-purple-200 p-8 text-center">
                 <div className="w-16 h-16 bg-gradient-to-br from-[#9159FF] to-green-600 rounded-xl flex items-center justify-center mx-auto mb-6">
                   <TrendingUp className="w-8 h-8 text-white" />
@@ -226,7 +220,7 @@ export default function EarningsPage({earningsData} : {
                                 className="text-sm text-gray-500 cursor-help"
                                 title={formatFullTimestamp(transaction.timestamp)}
                               >
-                                {formatTimestamp(transaction.timestamp)}
+                                {formatFrequency(Date.now() / 1000 - Number(transaction.timestamp) / 1000)}
                               </div>
                             </td>
                           </tr>

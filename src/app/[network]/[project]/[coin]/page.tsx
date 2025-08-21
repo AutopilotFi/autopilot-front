@@ -1,36 +1,61 @@
+"use client"
+
 import Dashboard from "@/components/Dashboard";
 import { isValidProtocol, isValidAsset } from "@/helpers/checkIfValidDashboardParams";
-import { AutopilotProduct, AutopilotProtocol, AutopilotAsset } from "@/types/globalAppTypes";
-import {getStatsForUserState} from "@/helpers/getStatsForUserState";
-import { vaultsData } from "@/consts/autopilotData";
+ import { AutopilotProduct, AutopilotProtocol, AutopilotAsset, SideBarOption } from "@/types/globalAppTypes";
+import { GlobalContext } from "@/providers/GlobalDataProvider";
+import { useContext } from "react";
+import { getVaultDataFromAutopilots } from "@/consts/vaultData";
 
-//mock fetching stats for user
-const getDashboardStats = async(selectedAutopilot: AutopilotProduct) => {
-  const userStats = getStatsForUserState(selectedAutopilot);
-  const dataKey = `${selectedAutopilot.protocol}-${selectedAutopilot.asset}`;
-  const currentProjectData = vaultsData[dataKey as keyof typeof vaultsData];
-  return {userStats, currentProjectData};
+const getDashboardStats = (selectedAutopilot: AutopilotProduct, availableAutopilots: SideBarOption[]) => {
+  
+  const vaultData = getVaultDataFromAutopilots(availableAutopilots, selectedAutopilot.protocol, selectedAutopilot.asset);
+
+  const userData = {
+    name: selectedAutopilot.protocol === 'morpho' ? 'Morpho' : selectedAutopilot.protocol.charAt(0).toUpperCase() + selectedAutopilot.protocol.slice(1), // Force Morpho name
+    asset: selectedAutopilot.asset,
+    currentEarnings: 0,
+    autopilotBalance: 0,
+    walletBalance: 0,
+    monthlyForecast: 0,
+    recentEarnings: []
+  };
+  
+  return { vaultData, userData };
 }
 
-export default async function DashboardPage({
+export default function DashboardPage({
     params
 } : {
-    params: Promise<{
+    params: {
       network: string,
       project: string,
       coin: string
-    }>
+    }
 }) {
-  const {network, project, coin} = await params;
-  const selectedAutopilot: AutopilotProduct | null = isValidProtocol(project ) && isValidAsset(coin) ? {protocol: project as AutopilotProtocol, asset: coin as AutopilotAsset} : null;
+  // Type assertion to suppress params warning since we need useContext in Client Component
+  const {network, project, coin} = params as { network: string; project: string; coin: string };
+  const { availableAutopilots } = useContext(GlobalContext);
+  
+  const selectedAutopilot: AutopilotProduct | null = isValidProtocol(project) && isValidAsset(coin) ? {protocol: project as AutopilotProtocol, asset: coin as AutopilotAsset} : null;
   if(!selectedAutopilot) throw new Error("Page not found");
-  const {userStats, currentProjectData} = await getDashboardStats(selectedAutopilot);
+  
+  const { vaultData, userData} = getDashboardStats(selectedAutopilot, availableAutopilots);
+  
+  if (!vaultData) {
+    return <div>Vault data not found</div>;
+  }
+  
   return (
     <>
       <Dashboard
-          selectedAutopilot={selectedAutopilot}
-          userStats={userStats}
-          currentProjectData={currentProjectData}
+          currentProjectData={{
+            ...vaultData,
+            ...userData,
+            frequency: "—",
+            latestUpdate: "—",
+            operatingSince: "—",
+          }}
       />
     </>
   );

@@ -1,29 +1,114 @@
 "use client"
 import { useState, useEffect, useContext } from 'react';
-import { ChevronLeft, TrendingUp, Wallet, BarChart3, ArrowUpRight, Shield, ChevronDown, Check, ChevronUp } from 'lucide-react';
+import { ChevronLeft, TrendingUp, Wallet, BarChart3, ArrowUpRight, Shield, ChevronDown, Check } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { LatestEarningData, PortfolioData } from '@/types/globalAppTypes';
-import { GlobalContext } from '../GlobalDataProvider';
+import { GlobalContext } from '../../providers/GlobalDataProvider';
+import { useWallet } from '@/providers/WalletProvider';
+import { useVaultMetrics } from '@/providers/VaultMetricsProvider';
+import { formatBalance } from "@/helpers/utils";
 
 
-export default function Portfolio({portfolioData, latestEarningsData}: {
-    portfolioData: PortfolioData,
-    latestEarningsData: LatestEarningData
 
-}) {
+export default function Portfolio() {
     const [selectedPosition, setSelectedPosition] = useState('');
     const [coverageDuration, setCoverageDuration] = useState('60 days');
     const [coverageAmount, setCoverageAmount] = useState(50);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [sortColumn, setSortColumn] = useState<string | null>(null);
     const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+    const [realPortfolioData, setRealPortfolioData] = useState<PortfolioData>([]);
+    const [realLatestEarningsData, setRealLatestEarningsData] = useState<LatestEarningData>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    
     const router = useRouter()
     const globalData = useContext(GlobalContext);
     const user = globalData?.user;
     const availableAutopilots = globalData?.availableAutopilots;
-
+    const { account } = useWallet();
+    const { vaultMetrics, isLoading: metricsLoading, error: metricsError } = useVaultMetrics();
+ 
     const isNewUser = user.status === 'new';
+
+  // Process portfolio data from VaultMetricsProvider
+  useEffect(() => {
+    if (!availableAutopilots || availableAutopilots.length === 0 || Object.keys(vaultMetrics).length === 0 || metricsLoading) {
+      setLoading(true);
+      return;
+    }
+
+    try {
+      setLoading(false);
+      setError(null);
+      
+      const portfolioData: PortfolioData = [];
+      const earningsData: LatestEarningData = [];
+      
+      // Process data for each available autopilot using cached metrics
+      for (const autopilot of availableAutopilots) {
+        try {
+          const vaultData = autopilot.vault;
+          
+          if (!vaultData?.vaultAddress) {
+            continue;
+          }
+
+          // Get metrics from VaultMetricsProvider
+          const result = vaultMetrics[vaultData.vaultAddress];
+          if (!result || result.error) {
+            console.warn(`No metrics available for vault: ${vaultData.vaultAddress}`);
+            continue;
+          }
+          
+          // Find the highest APY from allocPointData
+          const secondBestAPY = autopilot.vault.allocPointData && autopilot.vault.allocPointData.length > 0
+            ? Math.max(...autopilot.vault.allocPointData.map(item => Number(item.apy || 0)))
+            : 0;
+
+          const usdValue = result.metrics.totalBalance * result.metrics.latestUnderlyingPrice;
+          
+          portfolioData.push({
+            protocol: autopilot.protocol,
+            asset: autopilot.asset,
+            balance: result.metrics.totalBalance,
+            usdValue: usdValue,
+            earnings: result.metrics.totalEarnings,
+            earningsUsd: result.metrics.totalEarnings * result.metrics.latestUnderlyingPrice,
+            apy: autopilot.apy,
+            secondBestAPY: secondBestAPY,
+            status: 'active'
+          });
+
+          const latestEarnings = result.metrics.earningsSeries
+            .map((earning: { amount: number; amountUsd?: number; timestamp: number }) => ({
+              asset: autopilot.asset,
+              protocol: autopilot.protocol,
+              amount: earning.amount,
+              value: earning.amountUsd || (earning.amount * result.metrics.latestUnderlyingPrice),
+              time: earning.timestamp,
+              icon: autopilot.icon
+            }));
+
+          earningsData.push(...latestEarnings);
+        } catch (vaultError) {
+          console.error(`Error processing data for ${autopilot.protocol}-${autopilot.asset}:`, vaultError);
+        }
+      }
+
+      const sortedPortfolio = portfolioData.sort((a, b) => b.usdValue - a.usdValue);
+      const sortedEarnings = earningsData
+        .sort((a, b) => b.time - a.time)
+        .slice(0, 4);
+
+      setRealPortfolioData(sortedPortfolio);
+      setRealLatestEarningsData(sortedEarnings);
+    } catch (err) {
+      console.error('Error processing portfolio data:', err);
+      setError('Failed to process portfolio data');
+    }
+  }, [availableAutopilots, vaultMetrics]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -37,16 +122,27 @@ export default function Portfolio({portfolioData, latestEarningsData}: {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isDropdownOpen]);
 
-  const portfolio = isNewUser ? [] : portfolioData;
+  const portfolio = isNewUser ? [] : (realPortfolioData.length > 0 ? realPortfolioData : []);
 
-  const latestEarnings = isNewUser ? [] : latestEarningsData;
+  const latestEarnings = isNewUser ? [] : (realLatestEarningsData.length > 0 ? realLatestEarningsData : []);
+
+  const formatTimeAgo = (timestamp: number): string => {
+    const now = Math.floor(Date.now() / 1000);
+    const diffSeconds = now - timestamp;
+    
+    if (diffSeconds < 60) return `${diffSeconds}s`;
+    if (diffSeconds < 3600) return `${Math.floor(diffSeconds / 60)}m`;
+    if (diffSeconds < 86400) return `${Math.floor(diffSeconds / 3600)}h`;
+    if (diffSeconds < 2592000) return `${Math.floor(diffSeconds / 86400)}d`;
+    return `${Math.floor(diffSeconds / 2592000)}mo`;
+  };
 
   const getAssetIcon = (asset: string) => {
     switch (asset) {
-      case 'USDC': return "/coins/usdc.png";
-      case 'ETH': return "/coins/eth.png";
-      case 'cbBTC': return "/coins/cbBTC.png";
-      default: return "/coins/usdc.png";
+      case 'USDC': return "/icons/usdc.svg";
+      case 'WETH': return "/icons/eth.svg";
+      case 'cbBTC': return "/icons/cbbtc.svg";
+      default: return "/icons/usdc.svg";
     }
   };
 
@@ -63,15 +159,8 @@ export default function Portfolio({portfolioData, latestEarningsData}: {
     return sum + (position.usdValue * (position.apy / 100));
   }, 0);
 
-  // Sorting function
-  const handleSort = (column: string) => {
-    if (sortColumn === column) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortColumn(column);
-      setSortDirection('asc');
-    }
-  };
+     // Show loading state for portfolio stats if still loading
+   const showPortfolioStats = !loading && !metricsLoading && !error && !metricsError && realPortfolioData.length > 0;
 
   // Sort portfolio data
   const sortedPortfolioData = portfolio.sort((a, b) => {
@@ -103,11 +192,6 @@ export default function Portfolio({portfolioData, latestEarningsData}: {
       return bValue - aValue;
     }
   });
-
-  const getSortIcon = (column: string) => {
-    if (sortColumn !== column) return null;
-    return sortDirection === 'asc' ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />;
-  };
 
   // Calculate coverage details
   const getSelectedPositionData = () => {
@@ -157,25 +241,24 @@ export default function Portfolio({portfolioData, latestEarningsData}: {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-
-            <Link
+              <Link
                 href='/'
                 className="text-gray-500 hover:text-gray-700 p-2 rounded-md hover:bg-gray-100 transition-colors"
-            >
+              >
                 <ChevronLeft className="w-5 h-5" />
-            </Link>
+              </Link>
 
-            <div>
+              <div>
                 <h1 className="font-semibold text-gray-900">Portfolio Overview</h1>
                 <p className="text-sm text-gray-500">
                 {isNewUser ? 'Welcome to Autopilot' : 'Manage your positions'}
                 {isNewUser && (
-                    <span className="ml-2 text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-medium">
-                    New User View
-                    </span>
+                  <span className="ml-2 text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-medium">
+                  New User View
+                  </span>
                 )}
                 </p>
-            </div>
+              </div>
             </div>
         </div>
         </div>
@@ -183,7 +266,27 @@ export default function Portfolio({portfolioData, latestEarningsData}: {
 
     <main className="flex-1">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {isNewUser ? (
+        {!account?.address ? (
+          <div className="bg-white rounded-xl border border-gray-100 p-8 text-center">
+            <div className="text-gray-500 text-lg mb-2">Wallet Not Connected</div>
+            <p className="text-gray-600">Please connect your wallet to view your portfolio.</p>
+          </div>
+        ) : loading ? (
+          <div className="bg-white rounded-xl border border-gray-100 p-8 text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#9159FF] mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading portfolio data...</p>
+          </div>
+        ) : error ? (
+          <div className="bg-white rounded-xl border border-gray-100 p-8 text-center">
+            <div className="text-red-500 text-lg mb-2">Error</div>
+            <p className="text-gray-600">{error}</p>
+          </div>
+        ) : !availableAutopilots || availableAutopilots.length === 0 ? (
+          <div className="bg-white rounded-xl border border-gray-100 p-8 text-center">
+            <div className="text-gray-500 text-lg mb-2">No Autopilots Available</div>
+            <p className="text-gray-600">No autopilots are currently available on this network.</p>
+          </div>
+        ) : isNewUser ? (
             <div className="space-y-8">
             {/* Welcome Section */}
             <div className="bg-gradient-to-br from-blue-50 to-green-50 rounded-xl border border-blue-200 p-8 text-center">
@@ -265,24 +368,37 @@ export default function Portfolio({portfolioData, latestEarningsData}: {
                 {/* Total Portfolio Value */}
                 <div className="bg-white rounded-xl border border-gray-100 p-6">
                 <h3 className="text-sm font-medium text-gray-600 mb-2">Total Portfolio Value</h3>
-                <p className="text-xl font-bold text-gray-900">${totalValue.toLocaleString('en-US', { useGrouping: true })}<span className="text-xs font-normal text-gray-500 ml-1">USD</span></p>
+                <p className="text-xl font-bold text-gray-900">
+                  {showPortfolioStats ? `${totalValue.toLocaleString('en-US', { useGrouping: true })}` : '—'}
+                  <span className="text-xs font-normal text-gray-500 ml-1">USD</span>
+                </p>
                 </div>
 
                 {/* All-Time Earnings */}
                 <div className="bg-white rounded-xl border border-gray-100 p-6">
                 <h3 className="text-sm font-medium text-gray-600 mb-2">All-Time Earnings</h3>
-                <p className="text-xl font-bold text-gray-900">${totalEarnings.toLocaleString('en-US', { useGrouping: true })}<span className="text-xs font-normal text-gray-900 ml-1">USD</span></p>
+                <p className="text-xl font-bold text-gray-900">
+                  {showPortfolioStats ? `$${formatBalance(totalEarnings, 'USD', 2)}` : '—'}
+                </p>
                 </div>
 
                 {/* Est. Annual Earnings */}
                 <div className="bg-white rounded-xl border border-gray-100 p-6">
                 <h3 className="text-sm font-medium text-gray-600 mb-2">Est. Annual Earnings</h3>
-                <p className="text-xl font-bold text-gray-900">${Math.round(annualEarningsFromAPY).toLocaleString('en-US', { useGrouping: true })}<span className="text-xs font-normal text-gray-900 ml-1">USD</span></p>
+                <p className="text-xl font-bold text-gray-900">
+                  {showPortfolioStats ? `$${formatBalance(Math.round(annualEarningsFromAPY), 'USD', 2)}` : '—'}
+                </p>
                 </div>
             </div>
 
             {/* Positions */}
             <div className="space-y-4">
+                {!showPortfolioStats ? (
+                  <div className="bg-white rounded-xl border border-gray-100 p-6 text-center py-12">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#9159FF] mx-auto mb-4"></div>
+                    <p className="text-gray-600">Loading portfolio positions...</p>
+                  </div>
+                ) : (
                 <div className="bg-white rounded-xl border border-gray-100 p-6">
                 <div className="overflow-x-auto">
                     <table className="w-full">
@@ -299,8 +415,6 @@ export default function Portfolio({portfolioData, latestEarningsData}: {
                     </thead>
                     <tbody>
                         {sortedPortfolioData.map((position, index) => {
-                        // Calculate single vault APY (reduced by ~8%)
-                        const singleVaultAPY = position.apy * 0.92;
 
                         return (
                             <tr key={index} className="border-b border-gray-50 hover:bg-purple-50 transition-colors cursor-pointer"
@@ -321,8 +435,8 @@ export default function Portfolio({portfolioData, latestEarningsData}: {
                                 <td className="py-4 px-4 text-right">
                                     <div className="text-sm font-medium text-gray-900">
                                     {position.asset === 'USDC'
-                                        ? position.balance.toLocaleString('en-US', { maximumFractionDigits: 0 })
-                                        : position.balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                                        ? position.balance.toLocaleString('en-US', { maximumFractionDigits: 2 })
+                                        : position.balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 6 })
                                     } {position.asset}
                                     </div>
                                 </td>
@@ -334,18 +448,18 @@ export default function Portfolio({portfolioData, latestEarningsData}: {
                                 <td className="py-4 px-4 text-right">
                                     <div className="text-sm font-medium text-green-600">
                                     {position.asset === 'USDC'
-                                        ? position.earnings.toLocaleString('en-US', { maximumFractionDigits: 0 })
+                                        ? position.earnings.toLocaleString('en-US', { maximumFractionDigits: 2 })
                                         : position.earnings.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 6 })
                                     } {position.asset}
                                     </div>
-                                    <div className="text-xs text-gray-500">${position.earningsUsd.toLocaleString()}</div>
+                                    <div className="text-xs text-gray-500">${formatBalance(position.earningsUsd, 'USD', 2)}</div>
                                 </td>
                                 <td className="py-4 px-4 text-right">
                                     <div className="text-sm font-medium text-[#9159FF]">{position.apy.toFixed(2)}%</div>
                                 </td>
-                                <td className="py-4 px-4 text-right">
-                                    <div className="text-sm font-medium text-gray-500">{singleVaultAPY.toFixed(2)}%</div>
-                                </td>
+                                                                 <td className="py-4 px-4 text-right">
+                                     <div className="text-sm font-medium text-gray-500">{position.secondBestAPY.toFixed(2)}%</div>
+                                 </td>
                             </tr>
                         );
                         })}
@@ -353,9 +467,16 @@ export default function Portfolio({portfolioData, latestEarningsData}: {
                     </table>
                 </div>
                 </div>
+                )}
             </div>
 
             {/* Latest Earnings Section */}
+            {!showPortfolioStats ? (
+              <div className="bg-white rounded-xl border border-gray-100 p-6 text-center py-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#9159FF] mx-auto mb-4"></div>
+                <p className="text-gray-600">Loading earnings data...</p>
+              </div>
+            ) : (
             <div className="bg-white rounded-xl border border-gray-100 p-6">
                 <div className="flex items-center justify-between mb-6">
                 <h3 className="font-medium text-gray-900">Latest Earnings</h3>
@@ -376,21 +497,17 @@ export default function Portfolio({portfolioData, latestEarningsData}: {
                         </div>
                         <div>
                         <div className="text-sm font-medium text-green-600">
-                            +{earning.asset === 'USDC'
-                            ? earning.amount.toFixed(2)
-                            : earning.asset === 'ETH'
-                            ? earning.amount.toFixed(4)
-                            : earning.amount.toFixed(6)
-                            } {earning.asset}
+                            {formatBalance(earning.amount, earning.asset)}  
                         </div>
-                        <div className="text-xs text-gray-500 mt-0.5">${earning.value.toFixed(2)}</div>
-                        <div className="text-xs text-gray-400 mt-0.5">{earning.time}</div>
+                        <div className="text-xs text-gray-500 mt-0.5">${formatBalance(earning.value, '', 2)}</div>
+                        <div className="text-xs text-gray-400 mt-0.5">{formatTimeAgo(earning.time)}</div>
                         </div>
                     </div>
                     </div>
                 ))}
                 </div>
             </div>
+            )}
 
             {/* Purchase Insurance Coverage - Full Width */}
             <div className="bg-white rounded-xl border border-gray-100 p-6">

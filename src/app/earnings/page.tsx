@@ -1,120 +1,102 @@
-import EarningsPage from "@/components/EarningsPage";
+"use client"
+
+import { useEffect, useState, useContext } from "react";
+import { useWallet } from "@/providers/WalletProvider";
+import { GlobalContext } from "@/providers/GlobalDataProvider";
+import { useVaultMetrics } from "@/providers/VaultMetricsProvider";
 import { EarningTransaction } from "@/types/globalAppTypes";
-
-const getEarningsData = () => {
-    // Generate comprehensive dummy earnings data across all positions
-    const transactions: EarningTransaction[] = [];
-
-    // Portfolio positions data (matching the Portfolio component)
-    const portfolioPositions = [
-      { asset: 'USDC' as const, protocol: 'morpho' as const, balance: 460000.00, apy: 9.03 },
-      { asset: 'ETH' as const, protocol: 'morpho' as const, balance: 77.5, apy: 2.11 },
-      { asset: 'cbBTC' as const, protocol: 'morpho' as const, balance: 0.40, apy: 4.27 }
-    ];
-
-    const types: ('interest' | 'compound' | 'reward')[] = ['interest', 'compound', 'reward'];
-
-    // Generate 150 transactions for comprehensive demo
-    for (let i = 0; i < 150; i++) {
-      // Weight asset selection based on portfolio balance (larger positions = more transactions)
-      const rand = Math.random();
-      let selectedPosition;
-      if (rand < 0.6) { // 60% USDC (largest position)
-        selectedPosition = portfolioPositions[0];
-      } else if (rand < 0.9) { // 30% ETH (medium position)
-        selectedPosition = portfolioPositions[1];
-      } else { // 10% cbBTC (smallest position)
-        selectedPosition = portfolioPositions[2];
-      }
-
-      const type = types[Math.floor(Math.random() * types.length)];
-
-      // Generate realistic amounts based on asset and position size
-      let amount: number;
-      let usdValue: number;
-
-      if (selectedPosition.asset === 'USDC') {
-        // Daily yield calculation: (balance * apy) / 365
-        const dailyYield = (selectedPosition.balance * selectedPosition.apy / 100) / 365;
-        // Vary earnings between 50%-150% of daily yield
-        amount = dailyYield * (0.5 + Math.random() * 1.0);
-        usdValue = amount;
-      } else if (selectedPosition.asset === 'ETH') {
-        const dailyYield = (selectedPosition.balance * selectedPosition.apy / 100) / 365;
-        amount = dailyYield * (0.5 + Math.random() * 1.0);
-        usdValue = amount * 4000; // ~$4000 per ETH
-      } else { // cbBTC
-        const dailyYield = (selectedPosition.balance * selectedPosition.apy / 100) / 365;
-        amount = dailyYield * (0.5 + Math.random() * 1.0);
-        usdValue = amount * 100000; // ~$100k per BTC
-      }
-
-      // Generate timestamp (last 60 days for more history)
-      const daysAgo = Math.floor(Math.random() * 60);
-      const hoursAgo = Math.floor(Math.random() * 24);
-      const minutesAgo = Math.floor(Math.random() * 60);
-      const timestamp = new Date();
-      timestamp.setDate(timestamp.getDate() - daysAgo);
-      timestamp.setHours(timestamp.getHours() - hoursAgo);
-      timestamp.setMinutes(timestamp.getMinutes() - minutesAgo);
-
-      transactions.push({
-        id: `txn_${i.toString().padStart(3, '0')}`,
-        asset: selectedPosition.asset,
-        protocol: selectedPosition.protocol,
-        amount,
-        usdValue,
-        timestamp,
-        type,
-        txHash: `0x${Math.random().toString(16).substr(2, 64)}`,
-        blockNumber: 19000000 + Math.floor(Math.random() * 100000)
-      });
-    }
-
-    // Add some recent high-value transactions for better demo
-    const recentTransactions = [
-      {
-        id: 'txn_recent_001',
-        asset: 'USDC' as const,
-        protocol: 'morpho' as const,
-        amount: 125.50,
-        usdValue: 125.50,
-        timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
-        type: 'compound' as const,
-        txHash: `0x${Math.random().toString(16).substr(2, 64)}`,
-        blockNumber: 19050000
-      },
-      {
-        id: 'txn_recent_002',
-        asset: 'ETH' as const,
-        protocol: 'morpho' as const,
-        amount: 0.045,
-        usdValue: 180.00,
-        timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000), // 5 hours ago
-        type: 'interest' as const,
-        txHash: `0x${Math.random().toString(16).substr(2, 64)}`,
-        blockNumber: 19049800
-      },
-      {
-        id: 'txn_recent_003',
-        asset: 'cbBTC' as const,
-        protocol: 'morpho' as const,
-        amount: 0.0012,
-        usdValue: 120.00,
-        timestamp: new Date(Date.now() - 8 * 60 * 60 * 1000), // 8 hours ago
-        type: 'reward' as const,
-        txHash: `0x${Math.random().toString(16).substr(2, 64)}`,
-        blockNumber: 19049500
-      }
-    ];
-
-    transactions.push(...recentTransactions);
-
-    return transactions.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
-}
+import EarningsPage from "@/components/EarningsPage";
 
 export default function Home() {
-  const earningsData = getEarningsData();
+  const [earningsData, setEarningsData] = useState<EarningTransaction[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
+  const { account, chainId } = useWallet();
+  const globalData = useContext(GlobalContext);
+  const { vaultMetrics, isLoading: metricsLoading } = useVaultMetrics();
+
+  useEffect(() => {
+    const availableAutopilots = globalData?.availableAutopilots || [];
+    
+    if (!account?.address || !chainId || Object.keys(vaultMetrics).length === 0 || metricsLoading) {
+      setLoading(true);
+      return;
+    }
+
+    try {
+      setLoading(false);
+      setError(null);
+      
+      const allEarnings: EarningTransaction[] = [];
+      
+      // Process earnings from all available autopilots using cached metrics
+      for (const autopilot of availableAutopilots) {
+        try {
+          // Use the vault data from the autopilot
+          const vaultData = autopilot.vault;
+          
+          if (!vaultData?.vaultAddress) {
+            continue;
+          }
+
+          // Get metrics from VaultMetricsProvider
+          const result = vaultMetrics[vaultData.vaultAddress];
+          if (!result || result.error) {
+            console.warn(`No metrics available for vault: ${vaultData.vaultAddress}`);
+            continue;
+          }
+
+          // Transform earnings data to match EarningTransaction type
+          const vaultEarnings = result.metrics.earningsSeries.map((earning: { timestamp: number; amount: number; amountUsd?: number }, index: number) => ({
+            id: `${autopilot.protocol}-${autopilot.asset}-${earning.timestamp}-${index}`,
+            asset: autopilot.asset,
+            protocol: autopilot.protocol,
+            amount: earning.amount,
+            usdValue: earning.amountUsd || 0,
+            timestamp: new Date(earning.timestamp * 1000),
+            type: 'compound' as const // Harvest earnings are typically compound
+          }));
+
+          allEarnings.push(...vaultEarnings);
+        } catch (vaultError) {
+          console.error(`Error processing earnings for ${autopilot.protocol}-${autopilot.asset}:`, vaultError);
+          // Continue with other vaults even if one fails
+        }
+      }
+
+      // Sort all earnings by timestamp (newest first)
+      const sortedEarnings = allEarnings.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+      
+      setEarningsData(sortedEarnings);
+    } catch (err) {
+      console.error('Error processing earnings:', err);
+      setError('Failed to process earnings data');
+    }
+  }, [account?.address, chainId, globalData?.availableAutopilots, vaultMetrics, metricsLoading]);
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-red-500 text-lg mb-2">Error</div>
+          <p className="text-gray-600">{error}</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!account?.address) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-gray-500 text-lg mb-2">Wallet Not Connected</div>
+          <p className="text-gray-600">Please connect your wallet to view earnings history.</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <>
       <EarningsPage
