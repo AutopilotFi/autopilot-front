@@ -7,6 +7,7 @@ import StatsGrid from "@/components/StatsGrid";
 import { generateUserStatsGridStructure } from "@/components/StatsGrid/gridStructure";
 import StandardCTAButton from "@/components/UI/StandardCTAButton";
 import { formatFrequency, formatBalance } from "@/helpers/utils";
+import EarningsChart from "./EarningsChart";
 
 export default function Overview({currentProjectData, userStatsData, isNewUser, isOldUser, handleNavigateToDeposit}: {
     currentProjectData: ProjectData,
@@ -16,7 +17,6 @@ export default function Overview({currentProjectData, userStatsData, isNewUser, 
     handleNavigateToDeposit: () => void
 }){
     const [timeframe, setTimeframe] = useState<TimeFrame>('all');
-    const periods: TimeFrame[] = ["1m", "7d", "all"];
     const router = useRouter();
 
     const handleViewAllEarnings = () => {
@@ -31,28 +31,6 @@ export default function Overview({currentProjectData, userStatsData, isNewUser, 
             <div className="grid lg:grid-cols-3 gap-8">
             {/* Earnings Chart */}
             <div className="lg:col-span-2 bg-white rounded-xl border border-gray-100 overflow-hidden">
-                {/* Header Section */}
-                <div className="p-6 pb-4">
-                <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-lg font-semibold text-gray-900">Earnings</h3>
-                    <div className="flex items-center space-x-1">
-                    {periods.map(period => (
-                        <button
-                        key={period}
-                        onClick={() => setTimeframe(period)}
-                        className={`px-3 py-1 text-sm rounded-md transition-colors ${
-                            timeframe === period
-                            ? 'bg-[#9159FF] text-white'
-                            : 'text-[#9159FF] hover:text-[#7c3aed] hover:bg-purple-50'
-                        }`}
-                        >
-                        {period}
-                        </button>
-                    ))}
-                    </div>
-                </div>
-                </div>
-
                 {isNewUser ? (
                 <div className="p-6">
                     <div className="h-64 flex items-center justify-center bg-gradient-to-br from-blue-50 to-green-50 rounded-lg border-2 border-dashed border-blue-200">
@@ -69,86 +47,11 @@ export default function Overview({currentProjectData, userStatsData, isNewUser, 
                     </div>
                 </div>
                 ) : (
-                <>
-
-
-                    {/* Chart Section */}
-                    <div className="px-6 pb-6">
-                    <div className="h-72 bg-gradient-to-br from-purple-50 to-white rounded-lg relative overflow-hidden">
-                        {/* Blur overlay for chart area */}
-                        <div className="absolute inset-0 backdrop-blur-[2px] bg-white/20 rounded-lg"></div>
-
-                        {/* Chart Visualization Label */}
-                        <div className="absolute inset-0 flex items-center justify-center z-10">
-                        <div className="bg-white/90 backdrop-blur-sm rounded-lg px-4 py-2 border border-gray-200 shadow-sm">
-                            <span className="text-sm font-medium text-gray-600">Chart Visualization</span>
-                        </div>
-                        </div>
-
-                        <svg className="w-full h-full opacity-60" viewBox="0 0 400 200" preserveAspectRatio="none">
-                        <defs>
-                            <linearGradient id="purpleGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                            <stop offset="0%" stopColor="#9159FF" stopOpacity="0.3" />
-                            <stop offset="50%" stopColor="#9159FF" stopOpacity="0.15" />
-                            <stop offset="100%" stopColor="#9159FF" stopOpacity="0.05" />
-                            </linearGradient>
-                            <linearGradient id="purpleStroke" x1="0%" y1="0%" x2="100%" y2="0%">
-                            <stop offset="0%" stopColor="#9159FF" stopOpacity="0.6" />
-                            <stop offset="50%" stopColor="#9159FF" stopOpacity="0.8" />
-                            <stop offset="100%" stopColor="#9159FF" stopOpacity="1" />
-                            </linearGradient>
-                        </defs>
-
-                        {/* Chart area fill */}
-                        <path
-                            d="M 0 180 L 50 160 L 100 150 L 150 130 L 200 120 L 250 100 L 300 85 L 350 70 L 400 50 L 400 200 L 0 200 Z"
-                            fill="url(#purpleGradient)"
-                        />
-
-                        {/* Chart line */}
-                        <path
-                            d="M 0 180 L 50 160 L 100 150 L 150 130 L 200 120 L 250 100 L 300 85 L 350 70 L 400 50"
-                            stroke="url(#purpleStroke)"
-                            strokeWidth="3"
-                            fill="none"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                        />
-
-                        {/* Data points */}
-                        {[
-                            { x: 0, y: 180 },
-                            { x: 50, y: 160 },
-                            { x: 100, y: 150 },
-                            { x: 150, y: 130 },
-                            { x: 200, y: 120 },
-                            { x: 250, y: 100 },
-                            { x: 300, y: 85 },
-                            { x: 350, y: 70 },
-                            { x: 400, y: 50 }
-                        ].map((point, index) => (
-                            <circle
-                            key={index}
-                            cx={point.x}
-                            cy={point.y}
-                            r="3"
-                            fill="#9159FF"
-                            opacity="0.8"
-                            />
-                        ))}
-                        </svg>
-
-                        {/* Subtle grid lines */}
-                        <div className="absolute inset-0 opacity-10">
-                        <div className="grid grid-cols-8 grid-rows-4 h-full w-full">
-                            {Array.from({ length: 32 }).map((_, i) => (
-                            <div key={i} className="border border-gray-300"></div>
-                            ))}
-                        </div>
-                        </div>
-                    </div>
-                    </div>
-                </>
+                    <EarningsChart 
+                        currentProjectData={currentProjectData} 
+                        timeframe={timeframe}
+                        onTimeframeChange={setTimeframe}
+                    />
                 )}
             </div>
 
