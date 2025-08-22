@@ -1,6 +1,7 @@
 "use client"
 import { ProjectData } from "@/types/globalAppTypes";
 import { Plus, Minus, Info, Shield, TrendingUp, ExternalLink } from "lucide-react";
+import Image from "next/image";
 import { Dispatch, SetStateAction, useState } from "react";
 
 export default function Deposit({isNewUser, currentProjectData, setShowTermsModal, handleOpenBenchmark} : {
@@ -69,40 +70,40 @@ export default function Deposit({isNewUser, currentProjectData, setShowTermsModa
 
                 {/* Available Balance Section with Integrated Top-up */}
                 <div className="bg-gray-50 rounded-xl p-4 mb-6">
-                <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                    <p className="text-sm text-gray-500 mb-1">
-                        {depositMode === 'enter' ? 'Available in Wallet' : `${currentProjectData.asset} in ${currentProjectData.name} Autopilot`}
-                    </p>
-                    <div className="flex items-center space-x-2">
-                        <img src={currentProjectData.assetIcon} alt={currentProjectData.asset} className="w-6 h-6" />
-                        <span className="text-xl font-semibold text-gray-900">
-                        {depositMode === 'enter'
-                            ? currentProjectData.walletBalance.toLocaleString('en-US', {
-                                minimumFractionDigits: currentProjectData.asset === 'USDC' ? 2 : 6,
-                                maximumFractionDigits: currentProjectData.asset === 'USDC' ? 2 : 6
-                            })
-                            : isNewUser
-                            ? '0.00'
-                            : currentProjectData.autopilotBalance.toLocaleString('en-US', {
-                                minimumFractionDigits: currentProjectData.asset === 'USDC' ? 2 : 6,
-                                maximumFractionDigits: currentProjectData.asset === 'USDC' ? 2 : 6
-                            })
-                        } {currentProjectData.asset}
-                        </span>
-                    </div>
-                    </div>
+                    <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                        <p className="text-sm text-gray-500 mb-1">
+                            {depositMode === 'enter' ? 'Available in Wallet' : `${currentProjectData.asset} in ${currentProjectData.name} Autopilot`}
+                        </p>
+                        <div className="flex items-center space-x-2">
+                            <Image width={21} height={21} src={currentProjectData.assetIcon} alt={currentProjectData.asset} className="w-6 h-6" />
+                            <span className="text-xl font-semibold text-gray-900">
+                            {depositMode === 'enter'
+                                ? currentProjectData.walletBalance.toLocaleString('en-US', {
+                                    minimumFractionDigits: currentProjectData.asset === 'USDC' ? 2 : 6,
+                                    maximumFractionDigits: currentProjectData.asset === 'USDC' ? 2 : 6
+                                })
+                                : isNewUser
+                                ? '0.00'
+                                : currentProjectData.autopilotBalance.toLocaleString('en-US', {
+                                    minimumFractionDigits: currentProjectData.asset === 'USDC' ? 2 : 6,
+                                    maximumFractionDigits: currentProjectData.asset === 'USDC' ? 2 : 6
+                                })
+                            } {currentProjectData.asset}
+                            </span>
+                        </div>
+                        </div>
 
-                    {depositMode === 'enter' && (
-                    <button
-                        onClick={() => console.log('Top-up clicked')}
-                        className="bg-[#9159FF] hover:bg-[#7c3aed] text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-1.5"
-                    >
-                        <Plus className="w-3.5 h-3.5" />
-                        <span>Top-up</span>
-                    </button>
-                    )}
-                </div>
+                        {/* {depositMode === 'enter' && (
+                        <button
+                            onClick={() => console.log('Top-up clicked')}
+                            className="bg-[#9159FF] hover:bg-[#7c3aed] text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-1.5"
+                        >
+                            <Plus className="w-3.5 h-3.5" />
+                            <span>Top-up</span>
+                        </button>
+                        )} */}
+                    </div>
                 </div>
 
                 {/* Amount Input */}
@@ -120,7 +121,7 @@ export default function Deposit({isNewUser, currentProjectData, setShowTermsModa
                         className="w-full p-4 pr-20 border border-gray-200 rounded-lg text-xl font-medium focus:ring-1 focus:ring-purple-300 focus:border-purple-400 transition-colors"
                     />
                     <div className="absolute right-4 top-1/2 transform -translate-y-1/2 flex items-center space-x-2">
-                        <img src={currentProjectData.assetIcon} alt={currentProjectData.asset} className="w-5 h-5" />
+                        <Image width={17.5} height={17.5} src={currentProjectData.assetIcon} alt={currentProjectData.asset} className="w-5 h-5" />
                         <span className="text-sm font-medium text-gray-500">{currentProjectData.asset}</span>
                     </div>
                     </div>
@@ -145,7 +146,7 @@ export default function Deposit({isNewUser, currentProjectData, setShowTermsModa
                 </div>
 
                 {/* Deposit Insurance - Added above supply button for Enter mode */}
-                {depositMode === 'enter' && (
+                {/* {depositMode === 'enter' && (
                 <div className="mb-6 p-4 border border-purple-200 rounded-lg bg-purple-50">
                     <div className="flex items-start space-x-3">
                     <div className="flex-shrink-0 mt-1">
@@ -204,22 +205,22 @@ export default function Deposit({isNewUser, currentProjectData, setShowTermsModa
                     </div>
                     </div>
                 </div>
-                )}
+                )} */}
 
                 {/* Supply Button with Dynamic Text */}
                 <button
-                onClick={() => {
-                    if (isNewUser && depositMode === 'enter') {
-                    setShowTermsModal(true);
-                    return;
-                    }
-                    if (!depositAmount) return;
-                    console.log(`${depositMode === 'enter' ? 'Depositing' : 'Withdrawing'} ${depositAmount} ${currentProjectData.asset}`);
-                    setDepositAmount('');
-                    setInsuranceEnabled(false);
-                }}
-                disabled={isNewUser && depositMode === 'exit'}
-                className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-medium py-4 rounded-lg transition-colors text-lg"
+                    onClick={() => {
+                        if (isNewUser && depositMode === 'enter') {
+                        setShowTermsModal(true);
+                        return;
+                        }
+                        if (!depositAmount) return;
+                        console.log(`${depositMode === 'enter' ? 'Depositing' : 'Withdrawing'} ${depositAmount} ${currentProjectData.asset}`);
+                        setDepositAmount('');
+                        setInsuranceEnabled(false);
+                    }}
+                    disabled={isNewUser && depositMode === 'exit'}
+                    className="w-full bg-[#9159FF] hover:bg-[#7c3aed] disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-medium py-4 rounded-lg transition-all duration-300 text-lg shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] mb-5"
                 >
                 {(() => {
                     if (isNewUser && depositMode === 'enter') {
@@ -303,25 +304,25 @@ export default function Deposit({isNewUser, currentProjectData, setShowTermsModa
                         </span>
                         </div>
 
-                        <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                        <div className="flex items-center justify-between mb-1">
-                            <div className="flex items-center space-x-2">
-                            <TrendingUp className="w-4 h-4 text-green-600" />
-                            <span className="text-sm font-medium text-green-700">Yearly Advantage</span>
+                        {/* <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                            <div className="flex items-center justify-between mb-1">
+                                <div className="flex items-center space-x-2">
+                                <TrendingUp className="w-4 h-4 text-green-600" />
+                                <span className="text-sm font-medium text-green-700">Yearly Advantage</span>
+                                </div>
+                                <span className="font-semibold text-green-600 tabular-nums">
+                                {parseFloat(depositAmount || '0') > 0 ? (
+                                    `+${(parseFloat(depositAmount || '0') * (currentProjectData.currentAPY - currentProjectData.secondBestAPY)).toLocaleString('en-US', {
+                                    minimumFractionDigits: currentProjectData.asset === 'USDC' ? 2 : 6,
+                                    maximumFractionDigits: currentProjectData.asset === 'USDC' ? 2 : 6
+                                    })} ${currentProjectData.asset}`
+                                ) : (
+                                    <span className="text-sm font-medium text-green-700">Enter amount to see benefit</span>
+                                )}
+                                </span>
                             </div>
-                            <span className="font-semibold text-green-600 tabular-nums">
-                            {parseFloat(depositAmount || '0') > 0 ? (
-                                `+${(parseFloat(depositAmount || '0') * (currentProjectData.currentAPY - currentProjectData.secondBestAPY)).toLocaleString('en-US', {
-                                minimumFractionDigits: currentProjectData.asset === 'USDC' ? 2 : 6,
-                                maximumFractionDigits: currentProjectData.asset === 'USDC' ? 2 : 6
-                                })} ${currentProjectData.asset}`
-                            ) : (
-                                <span className="text-sm font-medium text-green-700">Enter amount to see benefit</span>
-                            )}
-                            </span>
-                        </div>
-                        <p className="text-xs text-green-600">vs. Best {currentProjectData.name} Vault{insuranceEnabled ? ' (after insurance cost)' : ''}</p>
-                        </div>
+                            <p className="text-xs text-green-600">vs. Best {currentProjectData.name} Vault{insuranceEnabled ? ' (after insurance cost)' : ''}</p>
+                        </div> */}
                     </div>
                     ) : (
                     <div className="border-t border-gray-100 pt-3 space-y-3">
@@ -362,33 +363,33 @@ export default function Deposit({isNewUser, currentProjectData, setShowTermsModa
                 </div>
 
                 {/* Info Cards */}
-                <div className="space-y-4">
-                <div className="bg-green-50 border border-green-200 rounded-xl p-4">
-                    <div className="flex items-start space-x-3">
-                    <Shield className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-                    <div>
-                        <h4 className="font-semibold text-green-900 mb-1">Audited &amp; Secure</h4>
-                        <p className="text-sm text-green-700">
-                        Smart contracts have been audited by leading security firms
-                        </p>
-                    </div>
-                    </div>
-                </div>
-
-                {depositMode === 'enter' && (
-                    <div className="bg-purple-50 border border-purple-200 rounded-xl p-4">
-                    <div className="flex items-start space-x-3">
-                        <ExternalLink className="w-5 h-5 text-purple-600 flex-shrink-0 mt-0.5" />
+                {/* <div className="space-y-4">
+                    <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+                        <div className="flex items-start space-x-3">
+                        <Shield className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
                         <div>
-                        <h4 className="font-semibold mb-1 text-purple-900">Exit Anytime</h4>
-                        <p className="text-sm text-purple-700">
-                            Withdraw your funds at any time with no lock-up periods
-                        </p>
+                            <h4 className="font-semibold text-green-900 mb-1">Audited &amp; Secure</h4>
+                            <p className="text-sm text-green-700">
+                            Smart contracts have been audited by leading security firms
+                            </p>
+                        </div>
                         </div>
                     </div>
-                    </div>
-                )}
-                </div>
+
+                    {depositMode === 'enter' && (
+                        <div className="bg-purple-50 border border-purple-200 rounded-xl p-4">
+                            <div className="flex items-start space-x-3">
+                                <ExternalLink className="w-5 h-5 text-purple-600 flex-shrink-0 mt-0.5" />
+                                <div>
+                                <h4 className="font-semibold mb-1 text-purple-900">Exit Anytime</h4>
+                                <p className="text-sm text-purple-700">
+                                    Withdraw your funds at any time with no lock-up periods
+                                </p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div> */}
             </div>
             </div>
         </div>

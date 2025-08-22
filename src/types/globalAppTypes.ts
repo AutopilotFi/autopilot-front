@@ -20,7 +20,8 @@ export type SideBarOption = {
     asset: AutopilotAsset,
     protocol: AutopilotProtocol,
     apy: number,
-    icon: string
+    icon: string,
+    enabled?: boolean
 }
 
 export type PortfolioData = {
@@ -77,7 +78,11 @@ export type ProjectData = {
         tvl: string,
         allocations: { name: string, apy: number, amount: number, allocation: number }[],
         recentEarnings: { time: string, amount: number, type: string }[],
-        benchmarkData: BenchmarkData[]
+        benchmarkData: BenchmarkData[],
+        yieldSources: {
+            name: string,
+            address: string
+        }[]
 }
 
 export type BenchmarkData = {

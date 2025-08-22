@@ -1,8 +1,8 @@
 "use client"
-import { TrendingUp, ChevronLeft, BarChart3, Wallet, Trophy, History, Info, Circle } from "lucide-react";
+import { TrendingUp, BarChart3, Wallet, Trophy, History, Info, Circle } from "lucide-react";
 import { useState, useEffect, useContext } from "react";
 import { GlobalContext } from "../GlobalDataProvider";
-import { AllUserStats, AutopilotProduct, AutopilotProtocol, ProjectData, UserStats } from "@/types/globalAppTypes";
+import { AllUserStats, AutopilotProduct, ProjectData, UserStats } from "@/types/globalAppTypes";
 import { TooltipProvider } from "../UI/Tooltip";
 import TermsModal from "../UI/TermsModal";
 import Details from "./Details";
@@ -11,6 +11,7 @@ import Earnings from "./Earnings";
 import HistoryTab from "./History";
 import Deposit from "./Deposit";
 import Benchamrk from "./Benchmark";
+import Image from "next/image";
 
 type Tab = 'overview' | 'deposit' | 'earnings' | 'benchmark' | 'details' | 'history' | undefined;
 
@@ -33,7 +34,7 @@ interface DashboardProps {
 export default function Dashboard({
   selectedAutopilot,
   userStats,
-  currentProjectData
+  currentProjectData,
 }: DashboardProps) {
   const [activeTab, setActiveTab] = useState<Tab>();
   const [showTermsModal, setShowTermsModal] = useState(false);
@@ -75,22 +76,16 @@ export default function Dashboard({
         <div className="flex-1 flex flex-col min-w-0">
           {/* Header */}
           <header className="bg-white border-b border-gray-100 sticky top-0 z-40">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div className="max-w-7xl mx-auto px-10 sm:px-12 lg:px-14 py-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-4 pl-10 md:pl-0">
-                  <button
-                    // onClick={onNavigateHome}
-                    className="text-gray-500 hover:text-gray-700 p-2 rounded-md hover:bg-gray-100 transition-colors"
-                  >
-                    <ChevronLeft className="w-5 h-5" />
-                  </button>
 
                   <div className="flex items-center space-x-3">
-                    <img src={currentProjectData.assetIcon} alt={currentProjectData.asset} className="w-8 h-8" />
+                    <Image width={28} height={28} src={currentProjectData.assetIcon} alt={currentProjectData.asset} className="w-8 h-8" />
                     <div>
                       <h1 className="font-semibold text-gray-900">{currentProjectData.asset} Autopilot</h1>
                       <div className="flex items-center space-x-2">
-                        <img src={currentProjectData.icon} alt={currentProjectData.name} className="w-4 h-4" />
+                        <Image width={14} height={14} src={currentProjectData.icon} alt={currentProjectData.name} className="w-4 h-4" />
                         <span className="text-sm text-gray-500">{currentProjectData.name}</span>
 
                       </div>
@@ -112,7 +107,7 @@ export default function Dashboard({
 
           {/* Navigation Tabs */}
           <div className="bg-white border-b border-gray-100">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="max-w-7xl mx-auto px-4 px-10 sm:px-12 lg:px-14">
               <nav className="flex space-x-8 overflow-x-auto">
                 {tabConfig.map((tab) => {
                   const IconComponent = tab.icon;

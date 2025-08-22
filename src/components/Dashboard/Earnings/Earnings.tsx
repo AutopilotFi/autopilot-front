@@ -3,6 +3,7 @@ import { ProjectData, UserStats } from "@/types/globalAppTypes";
 import StatsGrid from "@/components/StatsGrid";
 import { generateUserEarningStatsGridStructure } from "@/components/StatsGrid/gridStructure";
 import StandardCTAButton from "@/components/UI/StandardCTAButton";
+import Image from "next/image";
 
 export default function Earnings({currentProjectData, isNewUser, userStatsData, handleNavigateToDeposit}: {
     currentProjectData: ProjectData,
@@ -84,7 +85,7 @@ export default function Earnings({currentProjectData, isNewUser, userStatsData, 
                             <tr key={index} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
                             <td className="py-4 px-4">
                                 <div className="flex items-center space-x-3">
-                                <img src={currentProjectData.assetIcon} alt={currentProjectData.asset} className="w-6 h-6 rounded-full" />
+                                <Image width={21} height={21} src={currentProjectData.assetIcon} alt={currentProjectData.asset} className="w-6 h-6 rounded-full" />
                                 <span className="text-sm font-medium text-gray-900">{currentProjectData.asset}</span>
                                 </div>
                             </td>

@@ -38,7 +38,13 @@ const getPortfolioData = () => {
     { asset: 'USDC', amount: 22.35, value: 22.35, time: '1hr', icon: "/coins/usdc.png", protocol: 'morpho' },
     { asset: 'ETH', amount: 0.0019, value: 7.60, time: '2hr', icon: "/coins/eth.png", protocol: 'morpho' },
     { asset: 'cbBTC', amount: 0.000018, value: 1.80, time: '3hr', icon: "/coins/cbBTC.png", protocol: 'morpho' },
-    { asset: 'USDC', amount: 18.92, value: 18.92, time: '4hr', icon: "/coins/usdc.png", protocol: 'morpho' }
+    { asset: 'USDC', amount: 18.92, value: 18.92, time: '4hr', icon: "/coins/usdc.png", protocol: 'morpho' },
+    { asset: 'ETH', amount: 0.0015, value: 6.00, time: '5hr', icon: "/coins/eth.png", protocol: 'morpho' },
+    { asset: 'USDC', amount: 15.67, value: 15.67, time: '6hr', icon: "/coins/usdc.png", protocol: 'morpho' },
+    { asset: 'cbBTC', amount: 0.000015, value: 1.50, time: '7hr', icon: "/coins/cbBTC.png", protocol: 'morpho' },
+    { asset: 'USDC', amount: 19.82, value: 19.82, time: '8hr', icon: "/coins/usdc.png", protocol: 'morpho' },
+    { asset: 'ETH', amount: 0.0021, value: 8.40, time: '9hr', icon: "/coins/eth.png", protocol: 'morpho' },
+    { asset: 'cbBTC', amount: 0.000020, value: 2.00, time: '10hr', icon: "/coins/cbBTC.png", protocol: 'morpho' }
   ];
   return {portfolioData, latestEarningsData};
 }

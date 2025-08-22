@@ -5,6 +5,8 @@ import { useState } from "react";
 import StatsGrid from "@/components/StatsGrid";
 import { generateUserStatsGridStructure } from "@/components/StatsGrid/gridStructure";
 import StandardCTAButton from "@/components/UI/StandardCTAButton";
+import Link from "next/link";
+import Image from "next/image";
 
 export default function Overview({currentProjectData, userStatsData, isNewUser, isOldUser, handleNavigateToDeposit}: {
     currentProjectData: ProjectData,
@@ -150,12 +152,12 @@ export default function Overview({currentProjectData, userStatsData, isNewUser, 
                 <div className="flex items-center justify-between mb-6">
                 <h3 className="text-lg font-semibold text-gray-900">Latest Earnings</h3>
                 {!isNewUser && (
-                    <button
-                    // onClick={handleViewAllEarnings}
-                    className="text-xs bg-[#9159FF] text-white px-3 py-1.5 rounded-md hover:bg-[#7c3aed] transition-colors"
+                    <Link
+                        href={"/earnings"}
+                        className="text-xs bg-[#9159FF] text-white px-3 py-1.5 rounded-md hover:bg-[#7c3aed] transition-colors"
                     >
                     View All
-                    </button>
+                    </Link>
                 )}
                 </div>
 
@@ -190,7 +192,7 @@ export default function Overview({currentProjectData, userStatsData, isNewUser, 
                     {currentProjectData.recentEarnings.map((earning, index) => (
                     <div key={index} className="flex items-center justify-between py-2.5 px-3 rounded-lg hover:bg-purple-50 hover:border hover:border-purple-200 transition-colors cursor-pointer">
                         <div className="flex items-center space-x-3">
-                        <img src={currentProjectData.assetIcon} alt={currentProjectData.asset} className="w-5 h-5" />
+                        <Image width={17.5} height={17.5} src={currentProjectData.assetIcon} alt={currentProjectData.asset} className="w-5 h-5" />
                         <div>
                             <div className="text-sm font-medium text-gray-900">
                             +{earning.amount.toLocaleString('en-US', {
@@ -267,8 +269,14 @@ export default function Overview({currentProjectData, userStatsData, isNewUser, 
                         <tr key={index} className="border-b border-gray-50 hover:bg-purple-50 transition-colors">
                         <td className="py-4 px-4">
                             <div className="flex items-center space-x-3">
-                            <img src={currentProjectData.assetIcon} alt={currentProjectData.asset} className="w-6 h-6 rounded-full" />
-                            <span className="text-sm font-medium text-gray-900">{allocation.name}</span>
+                                <Image width={21} height={21} src={currentProjectData.assetIcon} alt={currentProjectData.asset} className="w-6 h-6 rounded-full" />
+                                <div>
+                                    <div className="text-sm font-medium text-gray-900">{allocation.name}</div>
+                                    <div className="flex items-center space-x-1 mt-1">
+                                        <Image width={10.5} height={10.5} src={"/projects/morpho.png"} alt="Morpho" className="w-3 h-3" />
+                                        <span className="text-xs text-gray-500">Morpho</span>
+                                    </div>
+                                </div>
                             </div>
                         </td>
                         <td className="py-4 px-4 text-right">

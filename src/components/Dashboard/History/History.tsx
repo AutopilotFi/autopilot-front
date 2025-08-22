@@ -58,27 +58,32 @@ export default function HistoryTab({currentProjectData, userStatsData, isNewUser
                         const date = new Date(transaction.date);
                         const formatDate = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
                         const formatTime = date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-
+                        const truncatedHash = `${transaction.txHash.slice(0, 6)}...${transaction.txHash.slice(-4)}`;
                         return (
                             <tr key={index} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
-                            <td className="py-4 px-4">
-                                <div className="text-sm font-medium text-gray-900">{transaction.type}</div>
-                            </td>
-                            <td className="py-4 px-4 text-right">
-                                <div className="text-sm font-medium text-gray-900">
-                                {transaction.type === 'Withdrawal' ? '-' : '+'}
-                                {transaction.amount.toLocaleString('en-US', {
-                                    minimumFractionDigits: currentProjectData.asset === 'USDC' ? 2 : 6,
-                                    maximumFractionDigits: currentProjectData.asset === 'USDC' ? 2 : 6
-                                })} {currentProjectData.asset}
-                                </div>
-                            </td>
-                            <td className="py-4 px-4 text-right">
-                                <div className="text-sm font-medium text-gray-900">{transaction.status}</div>
-                            </td>
-                            <td className="py-4 px-4 text-right">
-                                <div className="text-sm text-gray-500">{formatDate} {formatTime}</div>
-                            </td>
+                                <td className="py-4 px-4">
+                                    <div className="text-sm font-medium text-gray-900">{transaction.type}</div>
+                                </td>
+                                <td className="py-4 px-4 text-right">
+                                    <div className="text-sm font-medium text-gray-900">
+                                    {transaction.type === 'Withdrawal' ? '-' : '+'}
+                                    {transaction.amount.toLocaleString('en-US', {
+                                        minimumFractionDigits: currentProjectData.asset === 'USDC' ? 2 : 6,
+                                        maximumFractionDigits: currentProjectData.asset === 'USDC' ? 2 : 6
+                                    })} {currentProjectData.asset}
+                                    </div>
+                                </td>
+                                <td className="py-4 px-4 text-right">
+                                    <div className="text-sm font-medium text-gray-900">{transaction.status}</div>
+                                </td>
+                                <td className="py-4 px-4 text-right">
+                                    <div className="text-sm text-gray-500">{formatDate} {formatTime}</div>
+                                </td>
+                                <td className="py-4 px-4 text-right">
+                                    <div className="text-sm text-blue-600 hover:text-blue-800 hover:underline cursor-pointer font-mono">
+                                    {truncatedHash}
+                                    </div>
+                                </td>
                             </tr>
                         );
                         });

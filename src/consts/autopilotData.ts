@@ -45,6 +45,28 @@ export const vaultsData: ProjectsData = {
             { name: "Pyth USDC (Re7 Labs)", description: "Morpho Vault", apy: 4.93 },
             { name: "Re7 Labs", description: "Morpho Vault", apy: 4.78 },
             { name: "Universal USDC (Re7 Labs)", description: "Morpho Vault", apy: 3.55 },
+    ],
+    yieldSources: [
+          { name: "High Yield Clearstar USDC", address: "0xa1b2...c3d4" },
+          { name: "Extrafi XLend USDC", address: "0xe5f6...7890" },
+          { name: "Clearstar Reactor OpenEden Boosted USDC", address: "0x1234...abcd" },
+          { name: "Universal USDC", address: "0x5678...efgh" },
+          { name: "Steakhouse Prime USDC", address: "0x9abc...ijkl" },
+          { name: "Gauntlet USDC Frontier", address: "0xdef0...mnop" },
+          { name: "Steakhouse High Yield USDC v1.1", address: "0x2345...qrst" },
+          { name: "Apostro Resolv USDC", address: "0x6789...uvwx" },
+          { name: "Seamless USDC Vault", address: "0xabcd...yz12" },
+          { name: "Gauntlet USDC Prime", address: "0xef34...5678" },
+          { name: "Moonwell Flagship USDC", address: "0x90ab...cdef" },
+          { name: "Yearn OG USDC", address: "0x1234...5678" },
+          { name: "Gauntlet USDC Core", address: "0x90ab...cdef" },
+          { name: "Smokehouse USDC", address: "0xfedc...ba98" },
+          { name: "Ionic Ecosystem USDC", address: "0x7654...3210" },
+          { name: "Steakhouse High Yield USDC", address: "0xba98...7654" },
+          { name: "Steakhouse USDC", address: "0x3210...fedc" },
+          { name: "Re7 USDC", address: "0x8765...4321" },
+          { name: "Spark USDC Vault", address: "0xcdef...0123" },
+          { name: "Pyth USDC", address: "0x4567...89ab" }
     ]
     },
     'morpho-ETH': {
@@ -90,6 +112,9 @@ export const vaultsData: ProjectsData = {
         { name: "Pyth ETH (Re7 Labs)", description: "Morpho Vault", apy: 2.47 },
         { name: "Re7 Labs ETH", description: "Morpho Vault", apy: 2.39 },
         { name: "Universal ETH (Re7 Labs)", description: "Morpho Vault", apy: 1.78 },
+      ],
+      yieldSources: [
+
       ]
     },
     'morpho-cbBTC': {
@@ -135,6 +160,9 @@ export const vaultsData: ProjectsData = {
         { name: "Pyth cbBTC (Re7 Labs)", description: "Morpho Vault", apy: 1.23 },
         { name: "Re7 Labs cbBTC", description: "Morpho Vault", apy: 1.20 },
         { name: "Universal cbBTC (Re7 Labs)", description: "Morpho Vault", apy: 0.89 },
+      ],
+      yieldSources: [
+
       ]
     },
     'euler-USDC': {
@@ -177,6 +205,9 @@ export const vaultsData: ProjectsData = {
         { name: "Euler Stable USDC", description: "Euler Vault", apy: 5.34 },
         { name: "Euler Reserve USDC", description: "Euler Vault", apy: 4.98 },
         { name: "Euler Conservative USDC", description: "Euler Vault", apy: 4.23 },
+      ],
+      yieldSources: [
+
       ]
     },
     'euler-ETH': {
@@ -219,6 +250,9 @@ export const vaultsData: ProjectsData = {
         { name: "Euler Stable ETH", description: "Euler Vault", apy: 2.67 },
         { name: "Euler Reserve ETH", description: "Euler Vault", apy: 2.49 },
         { name: "Euler Conservative ETH", description: "Euler Vault", apy: 2.12 },
+      ],
+      yieldSources: [
+
       ]
     },
     'euler-cbBTC': {
@@ -261,6 +295,9 @@ export const vaultsData: ProjectsData = {
         { name: "Euler Stable cbBTC", description: "Euler Vault", apy: 1.34 },
         { name: "Euler Reserve cbBTC", description: "Euler Vault", apy: 1.25 },
         { name: "Euler Conservative cbBTC", description: "Euler Vault", apy: 1.06 },
+      ],
+      yieldSources: [
+
       ]
     }
   };

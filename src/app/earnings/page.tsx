@@ -116,10 +116,8 @@ const getEarningsData = () => {
 export default function Home() {
   const earningsData = getEarningsData();
   return (
-    <>
-      <EarningsPage
-        earningsData={earningsData}
-      />
-    </>
+    <EarningsPage
+      earningsData={earningsData}
+    />
   );
 }

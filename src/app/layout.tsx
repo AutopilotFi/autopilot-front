@@ -22,7 +22,7 @@ export const metadata: Metadata = {
 
 const getSideBarData = () => {
     const availableAutopilots: SideBarOption[] = [
-      { asset: 'USDC', protocol: "morpho",  apy: 8.75, icon: "/coins/usdc.png" }, // Morpho USDC Autopilot APY
+      { asset: 'USDC', protocol: "morpho",  apy: 8.75, icon: "/coins/usdc.png", enabled: true }, // Morpho USDC Autopilot APY
       { asset: 'ETH', protocol: "morpho", apy: 4.38, icon: "/coins/eth.png" },   // Morpho ETH Autopilot APY
       { asset: 'cbBTC', protocol: "morpho", apy: 2.19, icon: "/coins/cbBTC.png" }, // Morpho cbBTC Autopilot APY
       { asset: 'USDC', protocol: "euler", apy: 7.35, icon: "/coins/usdc.png" }, // Euler USDC Autopilot APY
