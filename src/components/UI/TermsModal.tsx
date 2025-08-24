@@ -21,7 +21,7 @@ export default function TermsModal({setShowTermsModal} : {
                 {/* Terms Content */}
                 <div className="space-y-6">
                     <p className="text-gray-700 text-sm leading-relaxed">
-                    By accessing or using Autopilot's products and services, I agree to the{" "}
+                    By accessing or using Autopilot&apos;s products and services, I agree to the{" "}
                     <span className="text-green-600 underline cursor-pointer hover:text-green-700">Terms of Service</span>
                     {", "}
                     <span className="text-green-600 underline cursor-pointer hover:text-green-700">Privacy Policy</span>

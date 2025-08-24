@@ -21,7 +21,7 @@ export default async function DashboardPage({
       coin: string
     }>
 }) {
-  const {network, project, coin} = await params;
+  const {project, coin} = await params;
   const selectedAutopilot: AutopilotProduct | null = isValidProtocol(project ) && isValidAsset(coin) ? {protocol: project as AutopilotProtocol, asset: coin as AutopilotAsset} : null;
   if(!selectedAutopilot) throw new Error("Page not found");
   const {userStats, currentProjectData} = await getDashboardStats(selectedAutopilot);

@@ -2,7 +2,6 @@
 import { createContext, useEffect, useState } from 'react';
 import { UserState, SideBarOption, GlobalData } from '@/types/globalAppTypes';
 import { AutopilotIcon } from '../Sidebar/AutopilotIcon';
-AutopilotIcon
 
 const defaultGlobalData: GlobalData = {
     user: {
@@ -47,7 +46,7 @@ export default function GlobalDataProvider({
             });
         }
         getUserData();
-    }, []);
+    }, [availableAutopilots]);
     if(isMobile === undefined) return null;
     if (isMobile) {
     return (

@@ -1,6 +1,6 @@
 "use client"
 import { useState, useContext } from 'react';
-import { ChevronLeft, TrendingUp, ArrowUpRight, RotateCcw } from 'lucide-react';
+import { TrendingUp, ArrowUpRight, RotateCcw } from 'lucide-react';
 import Link from 'next/link';
 import { EarningTransaction } from '@/types/globalAppTypes';
 import { GlobalContext } from '../GlobalDataProvider';
@@ -10,8 +10,8 @@ export default function EarningsPage({earningsData} : {
   earningsData: EarningTransaction[]
 }) {
     const [currentPage, setCurrentPage] = useState(1);
-    const [sortBy, setSortBy] = useState<'timestamp' | 'amount' | 'usdValue'>('timestamp');
-    const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+    const [sortBy] = useState<'timestamp' | 'amount' | 'usdValue'>('timestamp');
+    const [sortOrder] = useState<'asc' | 'desc'>('desc');
     const globalData = useContext(GlobalContext);
     const user = globalData?.user;
 

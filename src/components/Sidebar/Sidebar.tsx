@@ -4,8 +4,8 @@ import { usePathname } from 'next/navigation'
 import { TrendingUp, ChevronDown, BarChart3, Circle, X, Menu, Wallet, RefreshCw, LogOut, LucideUserCircle2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { SideBarOption } from "@/types/globalAppTypes";
-import Image from "next/image";
 import { AutopilotIcon } from "./AutopilotIcon";
+import Image from "next/image";
 
 export interface WalletState {
   isConnected: boolean;
@@ -17,14 +17,14 @@ export default function Sidebar({sideBarData} : {
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [morphoExpanded, setMorphoExpanded] = useState(true);
-  const [eulerExpanded, setEulerExpanded] = useState(true);
+  // const [eulerExpanded, setEulerExpanded] = useState(true);
   const [walletDropdownOpen, setWalletDropdownOpen] = useState(false);
   const [url, setUrl] = useState<string>();
   const [isMobile, setIsMobile] = useState(false);
   const pathname = usePathname();
   const morphoOptions = sideBarData.filter(option => option.protocol === "morpho");
-  const eulerOptions = sideBarData.filter(option => option.protocol === "euler");
-    const [walletState, setWalletState] = useState<WalletState>({
+  // const eulerOptions = sideBarData.filter(option => option.protocol === "euler");
+  const [walletState, setWalletState] = useState<WalletState>({
     isConnected: false,
     address: null
   });
@@ -281,7 +281,7 @@ export default function Sidebar({sideBarData} : {
                 <div>
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center space-x-2">
-                      <img src={"/projects/morpho.png"} alt="Morpho" className="w-4 h-4" />
+                      <Image width={14} height={14} src={"/projects/morpho.png"} alt="Morpho" className="w-4 h-4" />
                       <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">Morpho Autopilot</h3>
                     </div>
                     <button
@@ -310,7 +310,7 @@ export default function Sidebar({sideBarData} : {
                               !option.enabled && 'text-gray-400 cursor-not-allowed'
                             }`}
                           >
-                            <img src={option.icon} alt={option.asset} className="w-6 h-6" />
+                            <Image width={16} height={16} src={option.icon} alt={option.asset} className="w-6 h-6" />
                             <div className="flex-1 text-left">
                               <div className="font-medium text-gray-900">{option.asset}</div>
                               <div className="text-sm text-gray-500">Autopilot</div>

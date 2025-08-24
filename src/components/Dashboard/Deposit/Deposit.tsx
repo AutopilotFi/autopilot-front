@@ -1,6 +1,6 @@
 "use client"
 import { ProjectData } from "@/types/globalAppTypes";
-import { Plus, Minus, Info, Shield, TrendingUp, ExternalLink } from "lucide-react";
+import { Plus, Minus, Info } from "lucide-react";
 import Image from "next/image";
 import { Dispatch, SetStateAction, useState } from "react";
 

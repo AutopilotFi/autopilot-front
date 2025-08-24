@@ -6,7 +6,7 @@ import StatsGrid from "@/components/StatsGrid";
 import { generateUserHistoryStatsGridStructure } from "@/components/StatsGrid/gridStructure";
 import StandardCTAButton from "@/components/UI/StandardCTAButton";
 
-export default function HistoryTab({currentProjectData, userStatsData, isNewUser, handleNavigateToDeposit, selectedAutopilot, dataKey} : {
+export default function HistoryTab({currentProjectData, userStatsData, isNewUser, handleNavigateToDeposit} : {
     currentProjectData: ProjectData,
     userStatsData: UserStats,
     isNewUser: boolean,

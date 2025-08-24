@@ -1,5 +1,6 @@
-import { AutopilotProduct, ProjectData, ProjectsData } from "@/types/globalAppTypes";
-import { Cpu, Settings, DollarSign, TrendingUp, Activity, BarChart2, Timer, ExternalLink } from "lucide-react";
+import { AutopilotProduct, ProjectData } from "@/types/globalAppTypes";
+import { Cpu, Settings, DollarSign, TrendingUp, Activity, BarChart2, ExternalLink } from "lucide-react";
+import Image from "next/image";
 
   const detailsStats = [
     {
@@ -32,7 +33,7 @@ export default function Details({currentProjectData, selectedAutopilot} : {
                     <div className="flex items-start justify-between mb-2 md:mb-3">
                         <p className="text-xs md:text-sm font-medium text-gray-600 leading-tight">{stat.label}</p>
                         {stat.unit !== '' && stat.unit !== '%' && (
-                            <img src={currentProjectData.assetIcon} alt={stat.unit} className="w-3 md:w-4 h-3 md:h-4 flex-shrink-0" />
+                            <Image width={10} height={10} src={currentProjectData.assetIcon} alt={stat.unit} className="w-3 md:w-4 h-3 md:h-4 flex-shrink-0" />
                         )}
                     </div>
                     <div className="flex items-baseline space-x-1 md:space-x-2">
@@ -181,7 +182,7 @@ export default function Details({currentProjectData, selectedAutopilot} : {
                 <div className="mb-6">
                     <h4 className="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-4">Yield Sources</h4>
                     <div className="space-y-2">
-                    {currentProjectData.yieldSources.map((vault, index) => (
+                    {currentProjectData.yieldSources.map((vault) => (
                         <div key={vault.name} className="flex justify-between items-center py-3 px-4 bg-gray-50 rounded-lg">
                             <div className="flex-1 min-w-0">
                             <div className="text-sm font-medium text-gray-800">{vault.name}</div>

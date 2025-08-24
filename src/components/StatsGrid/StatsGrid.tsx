@@ -1,6 +1,7 @@
 import { ProjectData, UserStats, UserStatsGrid } from "@/types/globalAppTypes"
 import { Tooltip, TooltipTrigger, TooltipContent } from "../UI/Tooltip"
 import { Info } from "lucide-react"
+import Image from "next/image"
 
 export default function StatsGrid({gridStructure, userStatsData, isNewUser, currentProjectData} : {
     gridStructure: UserStatsGrid[],
@@ -36,7 +37,7 @@ export default function StatsGrid({gridStructure, userStatsData, isNewUser, curr
                 </TooltipContent>
               </Tooltip>
             ) : stat.unit !== 'min' ? (
-              <img src={currentProjectData.assetIcon} alt={stat.unit} className="w-3 md:w-4 h-3 md:h-4 flex-shrink-0" />
+              <Image width={10} height={10} src={currentProjectData.assetIcon} alt={stat.unit} className="w-3 md:w-4 h-3 md:h-4 flex-shrink-0" />
             ) : null}
           </div>
           <div className="flex items-baseline space-x-1 md:space-x-2">

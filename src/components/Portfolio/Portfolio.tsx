@@ -1,6 +1,6 @@
 "use client"
 import { useState, useEffect, useContext } from 'react';
-import { ChevronLeft, TrendingUp, Wallet, BarChart3, ArrowUpRight, Shield, ChevronDown, Check, ChevronUp } from 'lucide-react';
+import { TrendingUp, Wallet, BarChart3, ArrowUpRight, Shield } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { LatestEarningData, PortfolioData } from '@/types/globalAppTypes';
@@ -13,12 +13,12 @@ export default function Portfolio({portfolioData, latestEarningsData}: {
     latestEarningsData: LatestEarningData
 
 }) {
-    const [selectedPosition, setSelectedPosition] = useState('');
-    const [coverageDuration, setCoverageDuration] = useState('60 days');
-    const [coverageAmount, setCoverageAmount] = useState(50);
+    // const [selectedPosition] = useState('');
+    // const [coverageDuration] = useState('60 days');
+    // const [coverageAmount] = useState(50);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-    const [sortColumn, setSortColumn] = useState<string | null>(null);
-    const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+    const [sortColumn] = useState<string | null>(null);
+    const [sortDirection] = useState<'asc' | 'desc'>('asc');
     const router = useRouter()
     const globalData = useContext(GlobalContext);
     const user = globalData?.user;
@@ -105,51 +105,51 @@ export default function Portfolio({portfolioData, latestEarningsData}: {
     }
   });
 
-  const getSortIcon = (column: string) => {
-    if (sortColumn !== column) return null;
-    return sortDirection === 'asc' ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />;
-  };
+  // const getSortIcon = (column: string) => {
+  //   if (sortColumn !== column) return null;
+  //   return sortDirection === 'asc' ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />;
+  // };
 
   // Calculate coverage details
-  const getSelectedPositionData = () => {
-    if (!selectedPosition) return null;
-    return portfolio.find(p => `${p.protocol}-${p.asset}` === selectedPosition);
-  };
+  // const getSelectedPositionData = () => {
+  //   if (!selectedPosition) return null;
+  //   return portfolio.find(p => `${p.protocol}-${p.asset}` === selectedPosition);
+  // };
 
-  const calculateCoverageDetails = () => {
-    const position = getSelectedPositionData();
-    if (!position) return null;
+  // const calculateCoverageDetails = () => {
+  //   const position = getSelectedPositionData();
+  //   if (!position) return null;
 
-    const positionValue = position.usdValue;
-    const coverageAmountValue = (positionValue * coverageAmount) / 100;
-    const durationDays = parseInt(coverageDuration.split(' ')[0]);
+  //   const positionValue = position.usdValue;
+  //   const coverageAmountValue = (positionValue * coverageAmount) / 100;
+  //   const durationDays = parseInt(coverageDuration.split(' ')[0]);
 
-    // Estimate APY based on asset type (simplified calculation)
-    const estimatedAPY = position.asset === 'USDC' ? 0.05 :
-                        position.asset === 'ETH' ? 0.04 : 0.045;
+  //   // Estimate APY based on asset type (simplified calculation)
+  //   const estimatedAPY = position.asset === 'USDC' ? 0.05 :
+  //                       position.asset === 'ETH' ? 0.04 : 0.045;
 
-    const estimatedYield = (positionValue * estimatedAPY * durationDays) / 365;
+  //   const estimatedYield = (positionValue * estimatedAPY * durationDays) / 365;
 
-    // Insurance cost calculation - 0.20% per month as requested
-    const monthlyRate = 0.002; // 0.20% per month
-    const durationMonths = durationDays / 30;
-    const totalCost = coverageAmountValue * monthlyRate * durationMonths;
+  //   // Insurance cost calculation - 0.20% per month as requested
+  //   const monthlyRate = 0.002; // 0.20% per month
+  //   const durationMonths = durationDays / 30;
+  //   const totalCost = coverageAmountValue * monthlyRate * durationMonths;
 
-    const estimatedYieldWithCoverage = estimatedYield - totalCost;
-    const costPercentage = (totalCost / coverageAmountValue) * 100;
+  //   const estimatedYieldWithCoverage = estimatedYield - totalCost;
+  //   const costPercentage = (totalCost / coverageAmountValue) * 100;
 
-    return {
-      positionValue,
-      coverageAmountValue,
-      durationDays,
-      estimatedYield,
-      estimatedYieldWithCoverage,
-      totalCost,
-      costPercentage
-    };
-  };
+  //   return {
+  //     positionValue,
+  //     coverageAmountValue,
+  //     durationDays,
+  //     estimatedYield,
+  //     estimatedYieldWithCoverage,
+  //     totalCost,
+  //     costPercentage
+  //   };
+  // };
 
-  const coverageDetails = calculateCoverageDetails();
+  // const coverageDetails = calculateCoverageDetails();
 
   return (
     <div className="flex-1 flex flex-col min-w-0">
@@ -235,8 +235,8 @@ export default function Portfolio({portfolioData, latestEarningsData}: {
                     className="p-4 border border-gray-200 rounded-lg hover:border-green-300 hover:bg-green-50 transition-colors text-left group"
                     >
                     <div className="flex items-center space-x-3 mb-3">
-                        <img src={getAssetIcon(autopilot.asset)} alt={autopilot.asset} className="w-8 h-8" />
-                        <img src={getProtocolIcon(autopilot.protocol)} alt={autopilot.protocol} className="w-6 h-6" />
+                        <Image width={28} height={28} src={getAssetIcon(autopilot.asset)} alt={autopilot.asset} className="w-8 h-8" />
+                        <Image width={21} height={21} src={getProtocolIcon(autopilot.protocol)} alt={autopilot.protocol} className="w-6 h-6" />
                         <div className="flex-1">
                         <div className="font-medium text-gray-900">{autopilot.asset} Autopilot</div>
                         <div className="text-sm text-gray-500 capitalize">{autopilot.protocol}</div>
