@@ -148,14 +148,47 @@ export const formatDate = (value: number): string => {
   return `${month} ${day} ${year}`;
 };
 
-export const formatBalance = (balance: number, asset: string, decimals: number = 6): string => {
-  if (balance < 0.01) {
-    return `<0.01 ${asset}`;
+export const formatBalance = (balance: number, asset: string, decimals?: number): string => {
+  let decimalPlaces: number;
+  
+  if (decimals !== undefined) {
+    decimalPlaces = decimals;
+  } else {
+    switch (asset) {
+      case 'USDC':
+      case 'USDT':
+      case 'DAI':
+        decimalPlaces = 2;
+        break;
+      case 'WETH':
+      case 'ETH':
+        decimalPlaces = 6;
+        break;
+      case 'WBTC':
+      case 'cbBTC':
+        decimalPlaces = 8;
+        break;
+      default:
+        decimalPlaces = 6;
+    }
+  }
+  
+  const threshold = 1 / Math.pow(10, decimalPlaces);
+
+  if ((asset === 'USD' || asset === '$') && balance > threshold) {
+    return `${balance.toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    })} ${asset}`;
+  }
+
+  if (balance < threshold) {
+    return `<${threshold.toFixed(decimalPlaces)} ${asset}`;
   }
   
   return `${balance.toLocaleString('en-US', {
-    minimumFractionDigits: asset === 'USDC' ? 2 : Math.min(decimals, 6),
-    maximumFractionDigits: asset === 'USDC' ? 2 : Math.min(decimals, 6)
+    minimumFractionDigits: Math.min(decimalPlaces, 2),
+    maximumFractionDigits: decimalPlaces
   })} ${asset}`;
 };
 

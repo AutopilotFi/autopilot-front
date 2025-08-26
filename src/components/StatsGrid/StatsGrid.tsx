@@ -1,6 +1,7 @@
 import { ProjectData, UserStats, UserStatsGrid } from "@/types/globalAppTypes"
 import { Tooltip, TooltipTrigger, TooltipContent } from "../UI/Tooltip"
 import { Info } from "lucide-react"
+import { formatBalance } from "@/helpers/utils"
 
 export default function StatsGrid({gridStructure, userStatsData, isNewUser, currentProjectData} : {
     gridStructure: UserStatsGrid[],
@@ -12,7 +13,13 @@ export default function StatsGrid({gridStructure, userStatsData, isNewUser, curr
     return(
     <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6">
       {gridStructure.map((stat, index) => {
-        const userValue = userStatsData?.[stat.valueKey].toString();
+        const rawValue = userStatsData?.[stat.valueKey];
+        const value = Array.isArray(rawValue) 
+          ? rawValue.length.toString()
+          : stat.valueKey === 'updateFrequency' || stat.valueKey === 'totalActions'
+            ? (rawValue || '—') 
+            : rawValue === '—' ? '—'
+            : formatBalance(Number(rawValue), currentProjectData.asset, stat.showDecimals);
         return (
         <div key={index} className="bg-white rounded-lg md:rounded-xl border border-gray-100 p-3 md:p-6 relative">
           <div className="flex items-start justify-between mb-2 md:mb-3">
@@ -40,10 +47,9 @@ export default function StatsGrid({gridStructure, userStatsData, isNewUser, curr
             ) : null}
           </div>
           <div className="flex items-baseline space-x-1 md:space-x-2">
-            <span className={`text-lg md:text-2xl font-bold leading-none break-all ${
-              isNewUser && userValue === '—' ? 'text-gray-400' : 'text-gray-900'
-            }`}>{userValue}</span>
-            <span className="text-xs md:text-sm text-gray-500 flex-shrink-0">{stat.unit}</span>
+            <span className={`text-lg md:text-xl font-bold leading-none break-all ${
+              isNewUser && value === '—' ? 'text-gray-400' : 'text-gray-900'
+            }`}>{value}</span>
           </div>
           {stat.latestUpdate && (
             <div className="absolute bottom-1 md:bottom-2 right-3 md:right-6">

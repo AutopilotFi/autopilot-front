@@ -4,7 +4,7 @@ import { ChevronLeft, TrendingUp, ArrowUpRight, RotateCcw } from 'lucide-react';
 import Link from 'next/link';
 import { EarningTransaction } from '@/types/globalAppTypes';
 import { GlobalContext } from '../../providers/GlobalDataProvider';
-import { formatFrequency } from '@/helpers/utils';
+import { formatBalance, formatFrequency } from '@/helpers/utils';
 
 export default function EarningsPage({earningsData} : {
   earningsData: EarningTransaction[]
@@ -207,12 +207,12 @@ export default function EarningsPage({earningsData} : {
                             </td>
                             <td className="py-4 px-4 text-right">
                               <div className="text-sm font-medium text-green-600">
-                                +{formatAmount(transaction.amount, transaction.asset)}
+                                {formatBalance(transaction.amount, transaction.asset, transaction.showDecimals)}
                               </div>
                             </td>
                             <td className="py-4 px-4 text-right">
                               <div className="text-sm font-medium text-gray-900">
-                                ${transaction.usdValue.toFixed(2)}
+                                {formatBalance(transaction.usdValue, 'USD', 2)}
                               </div>
                             </td>
                             <td className="py-4 px-4">

@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Area, AreaChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from 'recharts';
 import { ProjectData } from '@/types/globalAppTypes';
-import { formatCurrency } from '@/helpers/utils';
+import { formatBalance } from '@/helpers/utils';
 
 interface EarningsChartProps {
   currentProjectData: ProjectData;
@@ -13,6 +13,7 @@ interface EarningsChartProps {
 interface ChartDataPoint {
   date: string;
   value: number;
+  valueUsd: number;
   timestamp: number;
   amount: number;
   amountUsd: number;
@@ -33,12 +34,15 @@ export default function EarningsChart({ currentProjectData, timeframe, onTimefra
     
     const allSortedEarnings = [...currentProjectData.recentEarnings].sort((a, b) => parseInt(a.time) - parseInt(b.time));
     
+    let totalCumulativeAmount = 0;
     let totalCumulativeUsd = 0;
     const allDataPoints = allSortedEarnings.map((earning) => {
+      totalCumulativeAmount += earning.amount;
       totalCumulativeUsd += earning.amountUsd;
       return {
         timestamp: parseInt(earning.time) * 1000,
-        value: totalCumulativeUsd,
+        value: totalCumulativeAmount,
+        valueUsd: totalCumulativeUsd,
         amount: earning.amount,
         amountUsd: earning.amountUsd
       };
@@ -83,10 +87,12 @@ export default function EarningsChart({ currentProjectData, timeframe, onTimefra
       const dateObj = new Date(currentTime);
       
       let interpolatedValue = baselineValue;
+      let interpolatedUsdValue = 0;
       
       for (let j = allDataPoints.length - 1; j >= 0; j--) {
         if (allDataPoints[j].timestamp <= currentTime) {
           interpolatedValue = allDataPoints[j].value;
+          interpolatedUsdValue = allDataPoints[j].valueUsd;
           break;
         }
       }
@@ -94,6 +100,7 @@ export default function EarningsChart({ currentProjectData, timeframe, onTimefra
       linearData.push({
         date: `${dateObj.getMonth() + 1}/${dateObj.getDate()}`,
         value: interpolatedValue,
+        valueUsd: interpolatedUsdValue,
         timestamp: currentTime,
         amount: 0,
         amountUsd: 0,
@@ -175,7 +182,7 @@ export default function EarningsChart({ currentProjectData, timeframe, onTimefra
               Earnings
             </div>
             <div className="text-2xl font-bold text-green-500">
-              {formatCurrency(currentValue)}
+              {formatBalance(currentValue, currentProjectData.asset, currentProjectData.showDecimals)}
             </div>
             {currentDate && (
               <div className="text-sm text-gray-500 mt-1">

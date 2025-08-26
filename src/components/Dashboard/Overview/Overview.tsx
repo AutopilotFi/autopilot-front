@@ -103,7 +103,7 @@ export default function Overview({currentProjectData, userStatsData, isNewUser, 
                         <img src={currentProjectData.assetIcon} alt={currentProjectData.asset} className="w-5 h-5" />
                         <div>
                             <div className="text-sm font-medium text-gray-900">
-                            {formatBalance(earning.amount, currentProjectData.asset)}
+                            {formatBalance(earning.amount, currentProjectData.asset, currentProjectData.showDecimals)}
                             </div>
                             <div className="text-xs text-gray-500">Yield earned</div>
                         </div>
@@ -170,7 +170,9 @@ export default function Overview({currentProjectData, userStatsData, isNewUser, 
                         </td>
                     </tr>
                     ) : (
-                    currentProjectData.benchmarkData.filter(allocation => !allocation.isAutopilot).map((allocation, index) => (
+                    currentProjectData.benchmarkData
+                      .filter(allocation => !allocation.isAutopilot && Number(allocation.allocation) > 1e-8)
+                      .map((allocation, index) => (
                         <tr key={index} className="border-b border-gray-50 hover:bg-purple-50 transition-colors">
                         <td className="py-4 px-4">
                             <div className="flex items-center space-x-3">
@@ -183,9 +185,7 @@ export default function Overview({currentProjectData, userStatsData, isNewUser, 
                         </td>
                         <td className="py-4 px-4 text-right">
                             <div className="text-sm font-medium text-gray-900">
-                            {(allocation.amount ?? 0).toLocaleString('en-US', {
-                                maximumFractionDigits: currentProjectData.asset === 'USDC' ? 0 : 4
-                            })} {currentProjectData.asset}
+                            {formatBalance(allocation.amount ?? 0, currentProjectData.asset, currentProjectData.showDecimals)}
                             </div>
                         </td>
                         <td className="py-4 px-4 text-right">

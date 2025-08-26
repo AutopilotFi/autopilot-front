@@ -166,15 +166,15 @@ export default function Earnings({currentProjectData, isNewUser, userStatsData, 
                                 </td>
                                 <td className="py-4 px-4 text-right">
                                     <div className="text-sm font-medium text-green-600">
-                                    +{formatBalance(earning.amount, currentProjectData.asset)}
+                                        {formatBalance(earning.amount, currentProjectData.asset, currentProjectData.showDecimals)}
                                     </div>
                                 </td>
                                 <td className="py-4 px-4 text-right">
                                     <div className="text-sm font-medium text-gray-900">
-                                    ${earning.amountUsd.toFixed(2)}
+                                        {formatBalance(earning.amountUsd, 'USD', 2)}
                                     </div>
                                 </td>
-                                <td className="py-4 px-4">
+                                <td className="py-4 px-4 text-right">
                                     <div className="text-sm text-gray-500">{formatDate} {formatTime}</div>
                                 </td>
                                 </tr>

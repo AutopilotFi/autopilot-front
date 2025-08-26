@@ -114,14 +114,14 @@ export default function Dashboard({
          
          // Update enriched user stats data
          setEnrichedUserStats({
-           totalBalance: formatBalance(result.totalBalance, ''),
-           totalEarnings: formatBalance(result.totalEarnings, ''),
-           monthlyForecast: formatBalance(result.monthlyForecast, ''),
+           totalBalance: result.totalBalance.toString(),
+           totalEarnings: result.totalEarnings.toString(),
+           monthlyForecast: result.monthlyForecast.toString(),
            updateFrequency: result.frequency,
-           monthlyEarnings: formatBalance(earnings30d, ''),
-           dailyEarnings: formatBalance(earnings24h, ''),
-           totalDeposits: result.deposits.length ? formatBalance(result.deposits.reduce((a,b)=>a+b.amount,0), '') : "—",
-           totalWithdrawals: result.withdrawals.length ? formatBalance(result.withdrawals.reduce((a,b)=>a+b.amount,0), '') : "—",
+           monthlyEarnings: earnings30d.toString(),
+           dailyEarnings: earnings24h.toString(),
+           totalDeposits: result.deposits.length ? result.deposits.reduce((a,b)=>a+b.amount,0).toString() : "—",
+           totalWithdrawals: result.withdrawals.length ? result.withdrawals.reduce((a,b)=>a+b.amount,0).toString() : "—",
            totalActions: String(result.deposits.length + result.withdrawals.length + result.earningsSeries.length),
           transactions: [
             ...result.deposits.map(deposit => ({
