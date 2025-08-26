@@ -51,6 +51,7 @@ export default function Home() {
           const vaultEarnings = result.metrics.earningsSeries.map((earning: { timestamp: number; amount: number; amountUsd?: number }, index: number) => ({
             id: `${autopilot.protocol}-${autopilot.asset}-${earning.timestamp}-${index}`,
             asset: autopilot.asset,
+            showDecimals: autopilot.showDecimals,
             protocol: autopilot.protocol,
             amount: earning.amount,
             usdValue: earning.amountUsd || 0,

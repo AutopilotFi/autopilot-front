@@ -1,6 +1,6 @@
 import { ProjectData } from "@/types/globalAppTypes";
 import { Cpu, Settings, DollarSign, TrendingUp, Activity, BarChart2, Timer, ExternalLink } from "lucide-react";
-import { getExplorerLink } from "@/helpers/utils";
+import { formatBalance, getExplorerLink } from "@/helpers/utils";
 import { useWallet } from "@/providers/WalletProvider";
 
   const detailsStats = [
@@ -132,11 +132,11 @@ export default function Details({currentProjectData} : {
                     </div>
                     <div className="flex justify-between">
                     <span className="text-sm text-gray-600">Starting SharePrice</span>
-                    <span className="text-sm font-medium text-gray-900">{currentProjectData.initialSharePrice} {currentProjectData.asset}</span>
+                    <span className="text-sm font-medium text-gray-900">{formatBalance(currentProjectData.initialSharePrice, currentProjectData.asset, currentProjectData.showDecimals)}</span>
                     </div>
                     <div className="flex justify-between">
                     <span className="text-sm text-gray-600">Latest SharePrice</span>
-                    <span className="text-sm font-medium text-gray-900">{currentProjectData.latestSharePrice} {currentProjectData.asset}</span>
+                    <span className="text-sm font-medium text-gray-900">{formatBalance(currentProjectData.latestSharePrice, currentProjectData.asset, currentProjectData.showDecimals)}</span>
                     </div>
                     <div>
                     <div className="text-sm text-gray-600 mb-1">Autopilot {currentProjectData.asset} Vault Address</div>

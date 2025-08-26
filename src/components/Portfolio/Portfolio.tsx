@@ -72,6 +72,7 @@ export default function Portfolio() {
           portfolioData.push({
             protocol: autopilot.protocol,
             asset: autopilot.asset,
+            showDecimals: autopilot.showDecimals,
             balance: result.metrics.totalBalance,
             usdValue: usdValue,
             earnings: result.metrics.totalEarnings,
@@ -368,8 +369,7 @@ export default function Portfolio() {
                 <div className="bg-white rounded-xl border border-gray-100 p-6">
                 <h3 className="text-sm font-medium text-gray-600 mb-2">Total Portfolio Value</h3>
                 <p className="text-xl font-bold text-gray-900">
-                  {showPortfolioStats ? `${totalValue.toLocaleString('en-US', { useGrouping: true })}` : '—'}
-                  <span className="text-xs font-normal text-gray-500 ml-1">USD</span>
+                  {showPortfolioStats ? `${formatBalance(totalValue, 'USD', 2)}` : '—'}
                 </p>
                 </div>
 
@@ -377,7 +377,7 @@ export default function Portfolio() {
                 <div className="bg-white rounded-xl border border-gray-100 p-6">
                 <h3 className="text-sm font-medium text-gray-600 mb-2">All-Time Earnings</h3>
                 <p className="text-xl font-bold text-gray-900">
-                  {showPortfolioStats ? `$${formatBalance(totalEarnings, 'USD', 2)}` : '—'}
+                  {showPortfolioStats ? `${formatBalance(totalEarnings, 'USD', 2)}` : '—'}
                 </p>
                 </div>
 
@@ -385,7 +385,7 @@ export default function Portfolio() {
                 <div className="bg-white rounded-xl border border-gray-100 p-6">
                 <h3 className="text-sm font-medium text-gray-600 mb-2">Est. Annual Earnings</h3>
                 <p className="text-xl font-bold text-gray-900">
-                  {showPortfolioStats ? `$${formatBalance(Math.round(annualEarningsFromAPY), 'USD', 2)}` : '—'}
+                  {showPortfolioStats ? `${formatBalance(Math.round(annualEarningsFromAPY), 'USD', 2)}` : '—'}
                 </p>
                 </div>
             </div>
@@ -433,15 +433,12 @@ export default function Portfolio() {
                                 </td>
                                 <td className="py-4 px-4 text-right">
                                     <div className="text-sm font-medium text-gray-900">
-                                    {position.asset === 'USDC'
-                                        ? position.balance.toLocaleString('en-US', { maximumFractionDigits: 2 })
-                                        : position.balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 6 })
-                                    } {position.asset}
+                                      {formatBalance(position.balance, position.asset, position.showDecimals)}
                                     </div>
                                 </td>
                                 <td className="py-4 px-4 text-right">
                                     <div className="text-sm font-medium text-gray-900">
-                                    ${position.usdValue.toLocaleString()}
+                                    {formatBalance(position.usdValue, 'USD', 2)}
                                     </div>
                                 </td>
                                 <td className="py-4 px-4 text-right">

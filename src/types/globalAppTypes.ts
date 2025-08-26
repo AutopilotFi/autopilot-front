@@ -21,12 +21,14 @@ export type SideBarOption = {
   protocol: AutopilotProtocol,
   apy: number,
   icon: string,
+  showDecimals: number,
   vault: FullVaultData
 }
 
 export type PortfolioData = {
   protocol: AutopilotProtocol,
   asset: AutopilotAsset,
+  showDecimals: number,
   balance: number,
   usdValue: number,
   earnings: number,
@@ -49,6 +51,7 @@ export type EarningTransaction = {
   id: string;
   asset: AutopilotAsset;
   protocol: 'morpho' | 'euler';
+  showDecimals: number;
   amount: number;
   usdValue: number;
   timestamp: Date;
@@ -66,6 +69,7 @@ export type AllUserStats = {
 export type ProjectData = {
   name: string,
   asset: string,
+  showDecimals: number,
   icon: string,
   assetIcon: string,
   currentAPY: number,
@@ -119,6 +123,7 @@ export type VaultOnlyData = {
   vaultAddress: string,
   tokenDecimals: string,
   vaultDecimals: string,
+  showDecimals: number,
   benchmarkData: BenchmarkData[]
 }
 
@@ -183,7 +188,8 @@ export type UserStats = {
 export type UserStatsGrid = {
   label: string,
   unit: string,
-  valueKey: keyof UserStats
+  valueKey: keyof UserStats,
+  showDecimals?: number,
   tooltip?: string,
   hasTooltip?: boolean,
   tooltipText?: string,

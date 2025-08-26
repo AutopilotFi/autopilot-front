@@ -120,6 +120,7 @@ export const getVaultDataFromAutopilots = (
     vaultAddress: autopilot.vault.vaultAddress,
     tokenDecimals: autopilot.vault.decimals,
     vaultDecimals: autopilot.vault.vaultDecimals,
+    showDecimals: autopilot.showDecimals,
     benchmarkData: benchmarkData
   };
   

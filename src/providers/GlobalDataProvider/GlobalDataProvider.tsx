@@ -21,8 +21,10 @@ const fetchUserData = async() => {
 const convertVaultDataToAutopilots = (vaultData: FullVaultData[]): SideBarOption[] => {
     
     return vaultData.map(vault => {
+        const showDecimals = vault.tokenNames[0] === 'USDC' ? 2 : (vault.tokenNames[0] === 'WETH' || vault.tokenNames[0] === 'ETH') ? 6 : vault.tokenNames[0] === 'cbBTC' ? 8 : 2;
         const autopilot = {
             asset: vault.tokenNames[0] as 'USDC' | 'WETH' | 'cbBTC' | 'ETH', // Map vault symbol to asset with proper typing
+            showDecimals: showDecimals,
             protocol: 'morpho' as const, // Force protocol to morpho
             apy: parseFloat(vault.estimatedApy) || 0, // Convert estimatedApy to number
             icon: vault.logoUrl[0]?.replace('./', '/') || '', // Convert relative path to absolute path
