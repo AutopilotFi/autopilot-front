@@ -125,7 +125,6 @@ export default function Portfolio() {
   const portfolio = isNewUser ? [] : (realPortfolioData.length > 0 ? realPortfolioData : []);
 
   const latestEarnings = isNewUser ? [] : (realLatestEarningsData.length > 0 ? realLatestEarningsData : []);
-
   const formatTimeAgo = (timestamp: number): string => {
     const now = Math.floor(Date.now() / 1000);
     const diffSeconds = now - timestamp;
@@ -452,12 +451,12 @@ export default function Portfolio() {
                                         : position.earnings.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 6 })
                                     } {position.asset}
                                     </div>
-                                    <div className="text-xs text-gray-500">${formatBalance(position.earningsUsd, 'USD', 2)}</div>
+                                    <div className="text-xs text-gray-500">{formatBalance(position.earningsUsd, 'USD', 2)}</div>
                                 </td>
                                 <td className="py-4 px-4 text-right">
                                     <div className="text-sm font-medium text-[#9159FF]">{position.apy.toFixed(2)}%</div>
                                 </td>
-                                                                 <td className="py-4 px-4 text-right">
+                                <td className="py-4 px-4 text-right">
                                      <div className="text-sm font-medium text-gray-500">{position.secondBestAPY.toFixed(2)}%</div>
                                  </td>
                             </tr>
@@ -499,7 +498,7 @@ export default function Portfolio() {
                         <div className="text-sm font-medium text-green-600">
                             {formatBalance(earning.amount, earning.asset)}  
                         </div>
-                        <div className="text-xs text-gray-500 mt-0.5">${formatBalance(earning.value, '', 2)}</div>
+                        <div className="text-xs text-gray-500 mt-0.5">{formatBalance(earning.value, '$', 2)}</div>
                         <div className="text-xs text-gray-400 mt-0.5">{formatTimeAgo(earning.time)}</div>
                         </div>
                     </div>

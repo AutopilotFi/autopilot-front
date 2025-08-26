@@ -103,7 +103,7 @@ export default function Overview({currentProjectData, userStatsData, isNewUser, 
                         <img src={currentProjectData.assetIcon} alt={currentProjectData.asset} className="w-5 h-5" />
                         <div>
                             <div className="text-sm font-medium text-gray-900">
-                            +{formatBalance(earning.amount, currentProjectData.asset)}
+                            {formatBalance(earning.amount, currentProjectData.asset)}
                             </div>
                             <div className="text-xs text-gray-500">Yield earned</div>
                         </div>

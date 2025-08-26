@@ -149,10 +149,8 @@ export const formatDate = (value: number): string => {
 };
 
 export const formatBalance = (balance: number, asset: string, decimals: number = 6): string => {
-  if (balance > 0 && balance < 0.00001) {
-    return `<0.00001 ${asset}`;
-  } else if (balance === 0 && balance > -0.00001) {
-    return `0.00 ${asset}`;
+  if (balance < 0.01) {
+    return `<0.01 ${asset}`;
   }
   
   return `${balance.toLocaleString('en-US', {

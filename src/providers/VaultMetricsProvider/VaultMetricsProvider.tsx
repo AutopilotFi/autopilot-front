@@ -68,7 +68,7 @@ export const VaultMetricsProvider: React.FC<VaultMetricsProviderProps> = ({ chil
           // Get metrics for this vault
           const result = await getHarvestMetrics(
             vaultData.vaultAddress as `0x${string}`,
-            chainId as 1 | 137 | 324 | 8453 | 42161,
+            Number(vaultData.chain) as 1 | 137 | 324 | 8453 | 42161,
             account.address,
             vaultData.decimals || '6',
             vaultData.vaultDecimals || '18'
