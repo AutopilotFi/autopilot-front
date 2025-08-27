@@ -6,6 +6,7 @@ import { isValidProtocol, isValidAsset } from "@/helpers/checkIfValidDashboardPa
 import { GlobalContext } from "@/providers/GlobalDataProvider";
 import { useContext } from "react";
 import { getVaultDataFromAutopilots } from "@/consts/vaultData";
+import { getChainIdFromNetwork } from "@/helpers/utils";
 
 const getDashboardStats = (selectedAutopilot: AutopilotProduct, availableAutopilots: SideBarOption[]) => {
   
@@ -55,6 +56,7 @@ export default function DashboardPage({
             frequency: "—",
             latestUpdate: "—",
             operatingSince: "—",
+            chainId: getChainIdFromNetwork(network),
           }}
       />
     </>

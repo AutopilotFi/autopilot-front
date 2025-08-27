@@ -5,18 +5,21 @@ export const generateUserStatsGridStructure = (currentProjectData: ProjectData):
                 label: "Total Balance",
                 valueKey: "totalBalance",
                 unit: currentProjectData?.asset,
+                showDecimals: currentProjectData?.showDecimals,
                 tooltip: `Your ${currentProjectData?.asset} balance will appear here once you make your first deposit`
             },
             {
                 label: "Total Earnings",
                 valueKey: "totalEarnings",
                 unit: currentProjectData?.asset,
+                showDecimals: currentProjectData?.showDecimals,
                 tooltip: "Track your accumulated earnings from yield optimization"
             },
             {
                 label: "Monthly Forecast",
                 valueKey: "monthlyForecast",
                 unit: currentProjectData?.asset,
+                showDecimals: currentProjectData?.showDecimals,
                 tooltip: "Projected monthly earnings based on current APY and your balance"
             },
             {
@@ -34,18 +37,21 @@ export const generateUserEarningStatsGridStructure = (currentProjectData: Projec
         label: "Total Earnings",
         valueKey: "totalEarnings",
         unit: currentProjectData.asset,
+        showDecimals: currentProjectData?.showDecimals,
         tooltip: "Your total accumulated earnings will be displayed here"
     },
     {
         label: "30D Earnings",
         valueKey: "monthlyEarnings",
         unit: currentProjectData.asset,
+        showDecimals: currentProjectData?.showDecimals,
         tooltip: "Earnings from the last 30 days"
     },
     {
         label: "24H Earnings",
         valueKey: "dailyEarnings",
         unit: currentProjectData.asset,
+        showDecimals: currentProjectData?.showDecimals,
         tooltip: "Earnings from the last 24 hours"
     },
     {

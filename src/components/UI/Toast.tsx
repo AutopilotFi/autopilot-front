@@ -44,7 +44,7 @@ export default function Toast({ id, type, title, message, txHash, duration = 500
 
   return (
     <div
-      className={`max-w-md w-full bg-white rounded-lg shadow-lg border border-gray-200 transform transition-all duration-300 ${
+      className={`${type === 'error' ? 'max-w-lg' : 'max-w-md'} w-full bg-white rounded-lg shadow-lg border border-gray-200 transform transition-all duration-300 ${
         isVisible && !isExiting
           ? "translate-x-0 opacity-100"
           : "translate-x-full opacity-0"
@@ -63,8 +63,8 @@ export default function Toast({ id, type, title, message, txHash, duration = 500
 
           {/* Content */}
           <div className="flex-1 min-w-0">
-            <h4 className="text-sm font-semibold text-gray-900">{title}</h4>
-            <p className="text-sm text-gray-600 mt-1">{message}</p>
+            <h4 className="text-sm font-semibold text-gray-900 break-words">{title}</h4>
+            <p className="text-sm text-gray-600 mt-1 break-words leading-relaxed">{message}</p>
             
             {/* Transaction Hash Link */}
             {txHash && (

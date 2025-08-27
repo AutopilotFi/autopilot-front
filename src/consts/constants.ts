@@ -23,8 +23,19 @@ export const CHAIN_IDS = {
   ZKSYNC: 324,
 } as const;
 
+export const CHAIN_NAMES = {
+  1: 'Ethereum',
+  8453: 'Base',
+  42161: 'Arbitrum',
+  137: 'Polygon',
+  324: 'zkSync Era',
+} as const;
+
 export const ETHERSCAN_URL = 'https://etherscan.io'
 export const MATICSCAN_URL = 'https://polygonscan.com'
 export const BASESCAN_URL = 'https://basescan.org'
 export const ARBISCAN_URL = 'https://arbiscan.io'
 export const ZKSYNCSCAN_URL = 'https://explorer.zksync.io/'
+
+export const DEFILLAMA_LINK_URL = 'https://yields.llama.fi/url'
+export const DEFILLAMA_POOLS_URL = 'https://yields.llama.fi/pools'
