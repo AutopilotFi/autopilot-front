@@ -209,3 +209,14 @@ export const toWei = (token: string | number, decimals: number, decimalsToDispla
   }
   return '0';
 };
+
+export const getChainIdFromNetwork = (network: string): number => {
+  switch (network.toLowerCase()) {
+    case 'ethereum': return CHAIN_IDS.MAINNET;
+    case 'base': return CHAIN_IDS.BASE;
+    case 'arbitrum': return CHAIN_IDS.ARBITRUM;
+    case 'polygon': return CHAIN_IDS.POLYGON;
+    case 'zksync': return CHAIN_IDS.ZKSYNC;
+    default: return CHAIN_IDS.BASE; // Default to Base
+  }
+};
