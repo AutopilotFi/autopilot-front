@@ -37,5 +37,4 @@ export const BASESCAN_URL = 'https://basescan.org'
 export const ARBISCAN_URL = 'https://arbiscan.io'
 export const ZKSYNCSCAN_URL = 'https://explorer.zksync.io/'
 
-export const DEFILLAMA_LINK_URL = 'https://yields.llama.fi/url'
 export const DEFILLAMA_POOLS_URL = 'https://yields.llama.fi/pools'

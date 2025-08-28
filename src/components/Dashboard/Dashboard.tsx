@@ -189,7 +189,7 @@ export default function Dashboard({
           return benchmark;
         }
         
-        const realTimeValue = realTimeAPY[benchmark.hVaultAddress];
+        const realTimeValue = realTimeAPY[benchmark.hVaultAddress.toLowerCase()];
         
         if (benchmark.isAutopilot && realTimeValue !== undefined) {
           autopilotRealTimeAPY = realTimeValue;
