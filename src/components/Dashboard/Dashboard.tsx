@@ -1,6 +1,6 @@
 "use client"
 import { TrendingUp, ChevronLeft, BarChart3, Wallet, Trophy, History, Info, Circle } from "lucide-react";
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect, useContext, useRef } from "react";
 import { GlobalContext } from "../../providers/GlobalDataProvider";
 import { ProjectData, UserStats } from "@/types/globalAppTypes";
 import { TooltipProvider } from "../UI/Tooltip";
@@ -14,8 +14,7 @@ import Deposit from "./Deposit";
 import Benchamrk from "./Benchmark";
 
 import { useVaultMetrics } from "@/providers/VaultMetricsProvider";
-import { formatBalance } from "@/helpers/utils";
-
+import { fetchDefiLlamaAPY } from "@/hooks/useDefiLlamaAPY";
 
 type Tab = 'overview' | 'deposit' | 'earnings' | 'benchmark' | 'details' | 'history' | undefined;
 
@@ -57,10 +56,17 @@ export default function Dashboard({
   const user = globalData?.user;
   const { getMetricsForVault } = useVaultMetrics();
 
+  const [realTimeAPY, setRealTimeAPY] = useState<{ [vaultAddress: string]: number }>({});
+  const [apyLoading, setApyLoading] = useState(true);
+
+  const [benchmarkEnrichmentLoading, setBenchmarkEnrichmentLoading] = useState(true);
+  
+  const hasEnrichedRef = useRef(false);
+  const lastRealTimeAPYRef = useRef<string>('');
+
   const isOldUser = user?.status === 'old';
   const isNewUser = user?.status === "new";
 
-  // Set the initial tab properly
   useEffect(() => {
     const hash = window.location.hash.substring(1);
     const isValidHash = (h?: string): h is Tab =>
@@ -84,8 +90,6 @@ export default function Dashboard({
           return;
         }
 
-
-        
         // Update enriched project data with APY values
         setEnrichedProjectData({
           ...currentProjectData,
@@ -99,30 +103,30 @@ export default function Dashboard({
           recentEarnings: result.earningsSeries.map(e => ({ time: e.timestamp.toString(), amount: e.amount, amountUsd: e.amountUsd })),
         });
 
-          // Calculate 24h and 30D earnings from earningsSeries
-         const now = Math.floor(Date.now() / 1000);
-         const oneDayAgo = now - (24 * 60 * 60);
-         const thirtyDaysAgo = now - (30 * 24 * 60 * 60);
-         
-         const earnings24h = result.earningsSeries
-           .filter(earning => earning.timestamp >= oneDayAgo)
-           .reduce((sum, earning) => sum + earning.amount, 0);
-         
-         const earnings30d = result.earningsSeries
-           .filter(earning => earning.timestamp >= thirtyDaysAgo)
-           .reduce((sum, earning) => sum + earning.amount, 0);
-         
-         // Update enriched user stats data
-         setEnrichedUserStats({
-           totalBalance: result.totalBalance.toString(),
-           totalEarnings: result.totalEarnings.toString(),
-           monthlyForecast: result.monthlyForecast.toString(),
-           updateFrequency: result.frequency,
-           monthlyEarnings: earnings30d.toString(),
-           dailyEarnings: earnings24h.toString(),
-           totalDeposits: result.deposits.length ? result.deposits.reduce((a,b)=>a+b.amount,0).toString() : "—",
-           totalWithdrawals: result.withdrawals.length ? result.withdrawals.reduce((a,b)=>a+b.amount,0).toString() : "—",
-           totalActions: String(result.deposits.length + result.withdrawals.length + result.earningsSeries.length),
+        // Calculate 24h and 30D earnings from earningsSeries
+        const now = Math.floor(Date.now() / 1000);
+        const oneDayAgo = now - (24 * 60 * 60);
+        const thirtyDaysAgo = now - (30 * 24 * 60 * 60);
+        
+        const earnings24h = result.earningsSeries
+          .filter(earning => earning.timestamp >= oneDayAgo)
+          .reduce((sum, earning) => sum + earning.amount, 0);
+        
+        const earnings30d = result.earningsSeries
+          .filter(earning => earning.timestamp >= thirtyDaysAgo)
+          .reduce((sum, earning) => sum + earning.amount, 0);
+        
+        // Update enriched user stats data
+        setEnrichedUserStats({
+          totalBalance: result.totalBalance.toString(),
+          totalEarnings: result.totalEarnings.toString(),
+          monthlyForecast: result.monthlyForecast.toString(),
+          updateFrequency: result.frequency,
+          monthlyEarnings: earnings30d.toString(),
+          dailyEarnings: earnings24h.toString(),
+          totalDeposits: result.deposits.length ? result.deposits.reduce((a,b)=>a+b.amount,0).toString() : "—",
+          totalWithdrawals: result.withdrawals.length ? result.withdrawals.reduce((a,b)=>a+b.amount,0).toString() : "—",
+          totalActions: String(result.deposits.length + result.withdrawals.length + result.earningsSeries.length),
           transactions: [
             ...result.deposits.map(deposit => ({
               date: new Date(deposit.timestamp * 1000).toISOString(),
@@ -147,6 +151,68 @@ export default function Dashboard({
 
     loadMetrics();
   }, [currentProjectData.vaultAddress, getMetricsForVault]);
+
+  useEffect(() => {
+    const fetchAPYData = async () => {
+      if (!currentProjectData.benchmarkData || currentProjectData.benchmarkData.length === 0) {
+        return;
+      }
+      
+      setApyLoading(true);
+      try {
+        const apyData = await fetchDefiLlamaAPY(currentProjectData.benchmarkData);
+        setRealTimeAPY(apyData);
+      } catch (error) {
+        console.error('Failed to fetch DefiLlama APY data:', error);
+      } finally {
+        setApyLoading(false);
+      }
+    };
+
+    fetchAPYData();
+  }, [currentProjectData.benchmarkData]);
+
+  useEffect(() => {
+    if (Object.keys(realTimeAPY).length > 0 && currentProjectData.benchmarkData && !apyLoading) {
+      
+      const realTimeAPYHash = JSON.stringify(realTimeAPY);
+      
+      if (hasEnrichedRef.current && lastRealTimeAPYRef.current === realTimeAPYHash) {
+        return;
+      }
+      
+      setBenchmarkEnrichmentLoading(true);
+      
+      let autopilotRealTimeAPY: number | undefined;
+      const enrichedBenchmarkData = currentProjectData.benchmarkData.map(benchmark => {
+        if (!benchmark.hVaultAddress) {
+          return benchmark;
+        }
+        
+        const realTimeValue = realTimeAPY[benchmark.hVaultAddress.toLowerCase()];
+        
+        if (benchmark.isAutopilot && realTimeValue !== undefined) {
+          autopilotRealTimeAPY = realTimeValue;
+        }
+        
+        return {
+          ...benchmark,
+          apy30dMean: realTimeValue !== undefined ? realTimeValue : benchmark.apy
+        };
+      });
+
+      setEnrichedProjectData(prev => ({
+        ...prev,
+        benchmarkData: enrichedBenchmarkData,
+        apy30d: autopilotRealTimeAPY !== undefined ? autopilotRealTimeAPY : prev.apy30d
+      }));
+
+      hasEnrichedRef.current = true;
+      lastRealTimeAPYRef.current = realTimeAPYHash;
+      
+      setBenchmarkEnrichmentLoading(false);
+    }
+  }, [realTimeAPY, apyLoading, currentProjectData.benchmarkData]); // Removed currentProjectData.benchmarkData from dependencies
 
   // Navigation handlers
   const handleNavigateToDeposit = () => {
@@ -278,6 +344,7 @@ export default function Dashboard({
               {activeTab === 'benchmark' && (
                 <Benchamrk
                   benchmarkData={enrichedProjectData?.benchmarkData || []}
+                  loading={benchmarkEnrichmentLoading}
                 />
               )}
             </div>

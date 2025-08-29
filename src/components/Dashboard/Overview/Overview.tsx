@@ -189,7 +189,9 @@ export default function Overview({currentProjectData, userStatsData, isNewUser, 
                             </div>
                         </td>
                         <td className="py-4 px-4 text-right">
-                            <div className="text-sm font-medium text-gray-900">{(allocation.allocation ?? 0).toFixed(1)}%</div>
+                            <div className="text-sm font-medium text-gray-900">
+                              {(allocation.allocation ?? 0) < 0.01 ? '<0.01' : (allocation.allocation ?? 0).toFixed(2)}%
+                            </div>
                         </td>
                         </tr>
                     ))

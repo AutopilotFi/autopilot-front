@@ -6,6 +6,7 @@ import { AutopilotProduct, AutopilotProtocol, AutopilotAsset, SideBarOption } fr
 import { GlobalContext } from "@/providers/GlobalDataProvider";
 import { useContext } from "react";
 import { getVaultDataFromAutopilots } from "@/consts/vaultData";
+import { getChainIdFromNetwork } from "@/helpers/utils";
 
 type RouteParams = { network: string; project: string; coin: string };
 
@@ -59,6 +60,7 @@ export default function ClientDashboardPage({ params }: { params: RouteParams })
         frequency: "—",
         latestUpdate: "—",
         operatingSince: "—",
+        chainId: getChainIdFromNetwork(network),
       }}
     />
   );

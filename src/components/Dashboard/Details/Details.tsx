@@ -160,13 +160,13 @@ export default function Details({currentProjectData} : {
                     <div className="flex justify-between">
                     <span className="text-sm text-gray-600">7d Average</span>
                     <span className="text-sm font-medium text-gray-900">
-                        {currentProjectData.apy7d} %
+                        {currentProjectData.apy7d.toFixed(2)} %
                     </span>
                     </div>
                     <div className="flex justify-between">
                     <span className="text-sm text-gray-600">30d Average</span>
                     <span className="text-sm font-medium text-gray-900">
-                        {currentProjectData.apy30d} %
+                        {currentProjectData.apy30d.toFixed(2)} %
                     </span>
                     </div>
                 </div>

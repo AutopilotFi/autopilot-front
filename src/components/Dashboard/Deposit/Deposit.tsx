@@ -1,12 +1,14 @@
 "use client"
 import { ProjectData } from "@/types/globalAppTypes";
-import { Plus, Minus, Info, Shield, TrendingUp, ExternalLink, Loader2 } from "lucide-react";
+import { Plus, Minus, Info, Shield, TrendingUp, ExternalLink, Loader2, AlertTriangle } from "lucide-react";
 import { Dispatch, SetStateAction, useState } from "react";
 import { useIporActions } from "@/hooks/useIporActions";
 import { useBalances } from "@/hooks/useBalances";
 import { useWallet } from "@/providers/WalletProvider";
 import { useToastContext } from "@/providers/ToastProvider";
 import { Address } from "viem";
+import { CHAIN_NAMES } from "@/consts/constants";
+import { ConnectWalletButton } from "@/components/ConnectWalletButton";
 
 export default function Deposit({isNewUser, currentProjectData, setShowTermsModal, handleOpenBenchmark} : {
     isNewUser: boolean,
@@ -18,15 +20,34 @@ export default function Deposit({isNewUser, currentProjectData, setShowTermsModa
     const [insuranceEnabled, setInsuranceEnabled] = useState(false);
     const [depositAmount, setDepositAmount] = useState('');
     const [isProcessing, setIsProcessing] = useState(false);
-    const [txError, setTxError] = useState<string | null>(null);
     const [txSuccess, setTxSuccess] = useState<string | null>(null);
     const [isRefreshingBalances, setIsRefreshingBalances] = useState(false);
 
-    // Wallet and blockchain interactions
-    const { isConnected } = useWallet();
+    const { isConnected, chainId, switchChain } = useWallet();
     const { deposit, withdraw } = useIporActions();
     const { showSuccess, showError } = useToastContext();
     
+    const isCorrectNetwork = chainId === currentProjectData.chainId;
+    const targetChainName = CHAIN_NAMES[currentProjectData.chainId as keyof typeof CHAIN_NAMES] || 'Unknown Network';
+    
+    const handleSwitchNetwork = async () => {
+        try {
+            
+            await switchChain(currentProjectData.chainId);
+            
+            showSuccess(
+                "Network Switched!", 
+                `Successfully switched to ${targetChainName} network`
+            );
+            
+        } catch (error) {
+            console.error('Network switching failed:', error);
+            const errorMessage = error instanceof Error ? error.message : 'Failed to switch network';
+            
+            showError("Network Switch Failed", errorMessage);
+        }
+    };
+
     // Fetch real-time balances
     const { 
         tokenBalanceFormatted, 
@@ -41,13 +62,11 @@ export default function Deposit({isNewUser, currentProjectData, setShowTermsModa
         parseInt(currentProjectData.vaultDecimals)
     );
 
-    // Handle deposit transaction
     const handleDeposit = async () => {
         if (!depositAmount || parseFloat(depositAmount) <= 0) return;
         
         try {
             setIsProcessing(true);
-            setTxError(null);
             setTxSuccess(null);
 
             const result = await deposit(
@@ -70,12 +89,21 @@ export default function Deposit({isNewUser, currentProjectData, setShowTermsModa
             await refreshBalancesAfterTransaction();
             
         } catch (error) {
-            console.error('Deposit failed:', error);
-            const errorMessage = error instanceof Error ? error.message : 'Deposit failed';
-            setTxError(errorMessage);
+            let userMessage = 'Deposit failed';
+            if (error instanceof Error) {
+                if (error.message.includes('User rejected') || error.message.includes('User denied')) {
+                    userMessage = 'Transaction was cancelled by user';
+                } else if (error.message.includes('insufficient funds')) {
+                    userMessage = 'Insufficient funds for transaction';
+                } else if (error.message.includes('network')) {
+                    userMessage = 'Network error occurred';
+                } else {
+                    userMessage = 'Transaction failed. Please try again.';
+                }
+            }
             
-            // Show error toast notification
-            showError("Deposit Failed", errorMessage);
+            
+            showError("Deposit Failed", userMessage);
         } finally {
             setIsProcessing(false);
         }
@@ -87,7 +115,6 @@ export default function Deposit({isNewUser, currentProjectData, setShowTermsModa
         
         try {
             setIsProcessing(true);
-            setTxError(null);
             setTxSuccess(null);
 
             const result = await withdraw(
@@ -99,32 +126,45 @@ export default function Deposit({isNewUser, currentProjectData, setShowTermsModa
             setTxSuccess(`Withdrawal successful! Transaction: ${result.hash}`);
             setDepositAmount('');
             
-            // Show success toast notification
             showSuccess(
                 "Withdrawal Successful!", 
                 `${depositAmount} ${currentProjectData.asset} withdrawn successfully`,
                 result.hash
             );
             
-            // Refetch balances after successful transaction with multiple attempts
             await refreshBalancesAfterTransaction();
             
         } catch (error) {
             console.error('Withdrawal failed:', error);
-            const errorMessage = error instanceof Error ? error.message : 'Withdrawal failed';
-            setTxError(errorMessage);
             
-            // Show error toast notification
-            showError("Withdrawal Failed", errorMessage);
+            let userMessage = 'Withdrawal failed';
+            if (error instanceof Error) {
+                if (error.message.includes('User rejected') || error.message.includes('User denied')) {
+                    userMessage = 'Transaction was cancelled by user';
+                } else if (error.message.includes('insufficient funds')) {
+                    userMessage = 'Insufficient funds for transaction';
+                } else if (error.message.includes('network')) {
+                    userMessage = 'Network error occurred';
+                } else {
+                    userMessage = 'Transaction failed. Please try again.';
+                }
+            }
+            
+            
+            showError("Withdrawal Failed", userMessage);
         } finally {
             setIsProcessing(false);
         }
     };
 
-    // Handle main action button click
     const handleMainAction = async () => {
         if (!isConnected) {
-            setTxError('Please connect your wallet first');
+            return;
+        }
+
+        // Check if network is correct first
+        if (!isCorrectNetwork) {
+            await handleSwitchNetwork();
             return;
         }
 
@@ -140,7 +180,6 @@ export default function Deposit({isNewUser, currentProjectData, setShowTermsModa
         }
     };
 
-    // Refresh balances after transaction with multiple attempts
     const refreshBalancesAfterTransaction = async () => {
         setIsRefreshingBalances(true);
         const maxAttempts = 3;
@@ -159,7 +198,6 @@ export default function Deposit({isNewUser, currentProjectData, setShowTermsModa
                         console.error('All balance refresh attempts failed');
                         // Show a warning to the user but don't override success message
                         if (!txSuccess) {
-                            setTxError('Transaction completed but balance refresh failed. Please refresh the page.');
                         }
                     }
                 }
@@ -228,19 +266,6 @@ export default function Deposit({isNewUser, currentProjectData, setShowTermsModa
                 </div>
                 )}
 
-                {/* Transaction Status Messages */}
-                {txError && (
-                    <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-                        <div className="flex items-center space-x-3">
-                            <Info className="w-5 h-5 text-red-500 flex-shrink-0" />
-                            <div>
-                                <h4 className="text-sm font-medium text-red-900">Transaction Failed</h4>
-                                <p className="text-sm text-red-700">{txError}</p>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
                 {txSuccess && (
                     <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
                         <div className="flex items-center space-x-3">
@@ -248,18 +273,6 @@ export default function Deposit({isNewUser, currentProjectData, setShowTermsModa
                             <div>
                                 <h4 className="text-sm font-medium text-green-900">Transaction Successful</h4>
                                 <p className="text-sm text-green-700">{txSuccess}</p>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {balancesError && (
-                    <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                        <div className="flex items-center space-x-3">
-                            <Info className="w-5 h-5 text-yellow-500 flex-shrink-0" />
-                            <div>
-                                <h4 className="text-sm font-medium text-yellow-900">Balance Loading Error</h4>
-                                <p className="text-sm text-yellow-700">Using cached balance data. {balancesError}</p>
                             </div>
                         </div>
                     </div>
@@ -315,11 +328,10 @@ export default function Deposit({isNewUser, currentProjectData, setShowTermsModa
                         value={depositAmount}
                         onChange={(e) => {
                             setDepositAmount(e.target.value.replace(/[^0-9.]/g, ''));
-                            setTxError(null);
                             setTxSuccess(null);
                         }}
                         placeholder="0.00"
-                        disabled={balancesLoading || isProcessing || isRefreshingBalances}
+                        disabled={balancesLoading || isProcessing || isRefreshingBalances || (isConnected && !isCorrectNetwork)}
                         className="w-full p-4 pr-20 border border-gray-200 rounded-lg text-xl font-medium focus:ring-1 focus:ring-purple-300 focus:border-purple-400 transition-colors disabled:bg-gray-50 disabled:cursor-not-allowed"
                     />
                     <div className="absolute right-4 top-1/2 transform -translate-y-1/2 flex items-center space-x-2">
@@ -337,10 +349,9 @@ export default function Deposit({isNewUser, currentProjectData, setShowTermsModa
                         onClick={() => {
                         const amount = (currentBalance * percentage / 100).toFixed(currentProjectData.asset === 'USDC' ? 2 : 6);
                         setDepositAmount(amount);
-                        setTxError(null);
                         setTxSuccess(null);
                         }}
-                        disabled={balancesLoading || isProcessing || isRefreshingBalances}
+                        disabled={balancesLoading || isProcessing || isRefreshingBalances || (isConnected && !isCorrectNetwork)}
                         className="py-2.5 px-3 bg-gray-100 hover:bg-purple-100 hover:text-purple-700 disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed rounded-lg text-sm font-medium text-gray-700 transition-colors"
                     >
                         {percentage}%
@@ -411,70 +422,83 @@ export default function Deposit({isNewUser, currentProjectData, setShowTermsModa
                 </div>
                 )}
 
+                {/* Network Switching Indicator */}
+                {isConnected && !isCorrectNetwork && (
+                    <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg flex items-center space-x-3">
+                        <AlertTriangle className="w-5 h-5 text-yellow-500 flex-shrink-0" />
+                        <div>
+                            <h4 className="text-sm font-medium text-yellow-900">Network Mismatch</h4>
+                            <p className="text-sm text-yellow-700">
+                                Your wallet is connected to {CHAIN_NAMES[chainId as keyof typeof CHAIN_NAMES] || 'an unknown network'}.
+                                This vault is deployed on {targetChainName}. Please use the button below to switch networks.
+                            </p>
+                        </div>
+                    </div>
+                )}
+
                 {/* Supply Button with Dynamic Text */}
-                <button
-                onClick={handleMainAction}
-                disabled={
-                    isProcessing || 
-                    balancesLoading || 
-                    isRefreshingBalances ||
-                    (isNewUser && depositMode === 'exit') ||
-                    (!depositAmount || parseFloat(depositAmount) <= 0) ||
-                    (depositMode === 'enter' && parseFloat(depositAmount) > currentBalance) ||
-                    (depositMode === 'exit' && parseFloat(depositAmount) > currentBalance)
-                }
-                className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-medium py-4 rounded-lg transition-colors text-lg flex items-center justify-center space-x-2"
-                >
-                {isProcessing && <Loader2 className="w-5 h-5 animate-spin" />}
-                <span>
-                {(() => {
-                    if (isProcessing) {
-                        return depositMode === 'enter' ? 'Processing Deposit...' : 'Processing Withdrawal...';
-                    }
-
-                    if (!isConnected) {
-                        return 'Connect Wallet';
-                    }
-
-                    if (isNewUser && depositMode === 'enter') {
-                        return 'Accept Terms of Use';
-                    }
-
-                    const amount = parseFloat(depositAmount);
-                    const hasAmount = amount > 0;
-
-                    // Check for insufficient balance
-                    if (hasAmount && amount > currentBalance) {
-                        return depositMode === 'enter' ? 'Insufficient Wallet Balance' : 'Insufficient Vault Balance';
-                    }
-
-                    if (depositMode === 'enter') {
-                        if (insuranceEnabled && hasAmount) {
-                            return `Supply ${amount.toLocaleString('en-US', {
-                            minimumFractionDigits: currentProjectData.asset === 'USDC' ? 2 : 4,
-                            maximumFractionDigits: currentProjectData.asset === 'USDC' ? 2 : 4
-                            })} ${currentProjectData.asset} & Pay Insurance`;
-                        } else if (hasAmount) {
-                            return `Supply ${amount.toLocaleString('en-US', {
-                            minimumFractionDigits: currentProjectData.asset === 'USDC' ? 2 : 4,
-                            maximumFractionDigits: currentProjectData.asset === 'USDC' ? 2 : 4
-                            })} ${currentProjectData.asset}`;
-                        } else {
-                            return `Supply ${currentProjectData.asset}`;
+                {!isConnected ? (
+                    <div className="w-full">
+                        <ConnectWalletButton />
+                    </div>
+                ) : (
+                    <button
+                        onClick={handleMainAction}
+                        disabled={
+                            isProcessing || 
+                            balancesLoading || 
+                            isRefreshingBalances ||
+                            (isNewUser && depositMode === 'exit') ||
+                            (!isCorrectNetwork ? false : (
+                                (!depositAmount || parseFloat(depositAmount) <= 0) ||
+                                (depositMode === 'enter' && parseFloat(depositAmount) > currentBalance) ||
+                                (depositMode === 'exit' && parseFloat(depositAmount) > currentBalance)
+                            ))
                         }
-                    } else {
-                        if (hasAmount) {
-                            return `Withdraw ${amount.toLocaleString('en-US', {
-                            minimumFractionDigits: currentProjectData.asset === 'USDC' ? 2 : 4,
-                            maximumFractionDigits: currentProjectData.asset === 'USDC' ? 2 : 4
-                            })} ${currentProjectData.asset}`;
-                        } else {
-                            return `Withdraw ${currentProjectData.asset}`;
-                        }
-                    }
-                })()}
-                </span>
-                </button>
+                        className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-medium py-4 rounded-lg transition-colors text-lg flex items-center justify-center space-x-2"
+                    >
+                        {isProcessing && <Loader2 className="w-5 h-5 animate-spin" />}
+                        <span>
+                            {(() => {
+                                if (isProcessing) {
+                                    return depositMode === 'enter' ? 'Processing Deposit...' : 'Processing Withdrawal...';
+                                }
+
+                                if (isNewUser && depositMode === 'enter') {
+                                    return 'Accept Terms of Use';
+                                }
+
+                                if (!isCorrectNetwork) {
+                                    return `Change to ${targetChainName} Network`;
+                                }
+
+                                const amount = parseFloat(depositAmount);
+                                const hasAmount = amount > 0;
+
+                                // Check for insufficient balance
+                                if (hasAmount && amount > currentBalance) {
+                                    return depositMode === 'enter' ? 'Insufficient Wallet Balance' : 'Insufficient Vault Balance';
+                                }
+
+                                if (depositMode === 'enter') {
+                                    if (insuranceEnabled && hasAmount) {
+                                        return `Supply ${amount.toFixed(2)} ${currentProjectData.asset} & Pay Insurance`;
+                                    } else if (hasAmount) {
+                                        return `Supply ${amount.toFixed(2)} ${currentProjectData.asset}`;
+                                    } else {
+                                        return `Supply ${currentProjectData.asset}`;
+                                    }
+                                } else {
+                                    if (hasAmount) {
+                                        return `Withdraw ${amount.toFixed(2)} ${currentProjectData.asset}`;
+                                    } else {
+                                        return `Withdraw ${currentProjectData.asset}`;
+                                    }
+                                }
+                            })()}
+                        </span>
+                    </button>
+                )}
             </div>
 
             {/* Right: Transaction Preview + Info Cards */}
@@ -482,6 +506,20 @@ export default function Deposit({isNewUser, currentProjectData, setShowTermsModa
                 {/* Transaction Preview */}
                 <div className="bg-white rounded-xl p-6 border border-gray-100">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Transaction Preview</h3>
+                
+                {/* Network Warning */}
+                {isConnected && !isCorrectNetwork && (
+                    <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                        <div className="flex items-center space-x-2 text-yellow-800">
+                            <AlertTriangle className="w-4 h-4" />
+                            <span className="text-sm font-medium">Network Mismatch</span>
+                        </div>
+                        <p className="text-xs text-yellow-700 mt-1">
+                            Switch to {targetChainName} to interact with this vault
+                        </p>
+                    </div>
+                )}
+                
                 <div className="space-y-3 text-sm">
                     <div className="flex justify-between">
                     <span className="text-gray-600">
