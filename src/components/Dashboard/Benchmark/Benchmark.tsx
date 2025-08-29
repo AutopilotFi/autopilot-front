@@ -1,15 +1,45 @@
-import { useMemo } from "react";
+import { useEffect, useState } from "react";
 import { BenchmarkData } from "@/types/globalAppTypes"
+import { fetchDefiLlamaAPY } from "@/hooks/useDefiLlamaAPY";
 
-
-export default function Benchamrk({benchmarkData, loading}: {
-    benchmarkData: BenchmarkData[],
-    loading: boolean
+export default function Benchmark({benchmarkData}: {
+    benchmarkData: BenchmarkData[]
 }){
-    const filteredBenchmarkData = useMemo(() => 
-        benchmarkData.filter(item => item.apy > 0), 
-        [benchmarkData]
-    );
+    const [syncedBenchmarkData, setSyncedBenchmarkData] = useState<BenchmarkData[]>([]);
+
+    useEffect(() => {
+        const validBenchmarks = benchmarkData.filter(benchmark => benchmark.name !== 'Not invested');
+        if (validBenchmarks.length === 0) {
+            setSyncedBenchmarkData(benchmarkData);
+            return;
+        }
+        
+        const syncAPYData = async () => {
+            try {
+                const apyData = await fetchDefiLlamaAPY(validBenchmarks);
+                const result = validBenchmarks.map(item => ({
+                    ...item,
+                    apy30dMean: apyData[item.hVaultAddress?.toLowerCase()] || item.apy
+                }));
+                
+                const sortedResult = result.sort((a, b) => {
+                    if (a.isAutopilot && !b.isAutopilot) return -1;
+                    if (!a.isAutopilot && b.isAutopilot) return 1;
+                    
+                    const aAPY = a.apy30dMean || a.apy;
+                    const bAPY = b.apy30dMean || b.apy;
+                    return bAPY - aAPY;
+                });
+                
+                setSyncedBenchmarkData(sortedResult);
+            } catch (error) {
+                console.error('Failed to fetch APY data:', error);
+                setSyncedBenchmarkData(validBenchmarks);
+            }
+        };
+
+        syncAPYData();
+    }, [benchmarkData]);
 
     return(
         <div className="bg-white rounded-xl border border-gray-100 p-6">
@@ -19,13 +49,7 @@ export default function Benchamrk({benchmarkData, loading}: {
             </div>
 
             <div className="space-y-3">   
-            {loading ? (
-                <div className="text-center py-8 text-gray-500">
-                    <div className="text-lg mb-2">🔄 Loading real-time APY data...</div>
-                    <div className="text-sm">Fetching latest rates from DefiLlama</div>
-                </div>
-            ) : (
-                filteredBenchmarkData
+            { syncedBenchmarkData
                     .map((item, index) => (
                 <div key={item.name} className={`p-4 rounded-xl border transition-all hover:shadow-md ${
                     item.isAutopilot
@@ -63,15 +87,14 @@ export default function Benchamrk({benchmarkData, loading}: {
                     </div>
                     <div className="text-right">
                         <div className={`font-bold ${item.isAutopilot ? 'text-green-600' : 'text-gray-900'}`}>
-                        {/* {item.apy30dMean ? item.apy30dMean.toFixed(2) : item.apy.toFixed(2)}% */}
-                        {item.apy30dMean}%
+                        {item.apy30dMean ? item.apy30dMean.toFixed(2) : item.apy.toFixed(2)}%
                         </div>
                         <div className="text-xs text-gray-500">30d APY</div>
                     </div>
                     </div>
                 </div>
                 ))
-            )}
+            }
             </div>
         </div>
     )

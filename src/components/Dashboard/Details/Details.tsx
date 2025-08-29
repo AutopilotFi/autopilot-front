@@ -2,6 +2,8 @@ import { ProjectData } from "@/types/globalAppTypes";
 import { Cpu, Settings, DollarSign, TrendingUp, Activity, BarChart2, Timer, ExternalLink } from "lucide-react";
 import { formatBalance, getExplorerLink } from "@/helpers/utils";
 import { useWallet } from "@/providers/WalletProvider";
+import { useEffect, useState } from "react";
+import { fetchDefiLlamaAPY } from "@/hooks/useDefiLlamaAPY";
 
   const detailsStats = [
     {
@@ -25,6 +27,54 @@ export default function Details({currentProjectData} : {
     currentProjectData: ProjectData,
 }){
     const { chainId } = useWallet();
+    const [enrichedProjectData, setEnrichedProjectData] = useState<ProjectData>(currentProjectData);
+
+    useEffect(() => {
+        if (!currentProjectData.benchmarkData || currentProjectData.benchmarkData.length === 0) {
+            return;
+        }
+
+        const validBenchmarks = currentProjectData.benchmarkData.filter(benchmark => 
+            benchmark.hVaultAddress && benchmark.name !== 'Not invested'
+        );
+
+        if (validBenchmarks.length === 0) {
+            return;
+        }
+
+        const fetchAPYData = async () => {
+            try {
+                const apyData = await fetchDefiLlamaAPY(validBenchmarks);
+                
+                const updatedProjectData = {
+                    ...currentProjectData,
+                    apy30d: apyData[currentProjectData.vaultAddress?.toLowerCase()] || currentProjectData.apy30d
+                };
+
+                const updatedBenchmarkData = currentProjectData.benchmarkData.map(benchmark => {
+                    if (!benchmark.hVaultAddress) {
+                        return benchmark;
+                    }
+                    
+                    const realTimeAPY = apyData[benchmark.hVaultAddress.toLowerCase()];
+                    return {
+                        ...benchmark,
+                        apy: realTimeAPY !== undefined ? realTimeAPY : benchmark.apy
+                    };
+                });
+
+                setEnrichedProjectData({
+                    ...updatedProjectData,
+                    benchmarkData: updatedBenchmarkData
+                });
+            } catch (error) {
+                console.error('Failed to fetch DefiLlama APY data:', error);
+                setEnrichedProjectData(currentProjectData);
+            }
+        };
+
+        fetchAPYData();
+    }, [currentProjectData]);
   
 
     return(
@@ -35,12 +85,12 @@ export default function Details({currentProjectData} : {
                 <div className="flex items-start justify-between mb-2 md:mb-3">
                     <p className="text-xs md:text-sm font-medium text-gray-600 leading-tight">{stat.label}</p>
                     {stat.unit !== '' && stat.unit !== '%' && (
-                    <img src={currentProjectData.assetIcon} alt={stat.unit} className="w-3 md:w-4 h-3 md:h-4 flex-shrink-0" />
+                    <img src={enrichedProjectData.assetIcon} alt={stat.unit} className="w-3 md:w-4 h-3 md:h-4 flex-shrink-0" />
                     )}
                 </div>
                 <div className="flex items-baseline space-x-1 md:space-x-2">
                     <span className="text-lg md:text-2xl font-bold leading-none break-all text-gray-900">
-                        {(currentProjectData[stat.valueKey] ?? "—").toString()}
+                        {(enrichedProjectData[stat.valueKey] ?? "—").toString()}
                     </span>
                     <span className="text-xs md:text-sm text-gray-500 flex-shrink-0">{stat.unit}</span>
                 </div>
@@ -61,7 +111,7 @@ export default function Details({currentProjectData} : {
                     Active
                     </span>
                 </div>
-                <p className="text-sm text-gray-600">Advanced rebalancing algorithm monitors yield opportunities across {currentProjectData.name.toLowerCase()} vaults and automatically adjusts allocations to maximize returns.</p>
+                <p className="text-sm text-gray-600">Advanced rebalancing algorithm monitors yield opportunities across {enrichedProjectData.name.toLowerCase()} vaults and automatically adjusts allocations to maximize returns.</p>
                 </div>
             </div>
 
@@ -101,7 +151,7 @@ export default function Details({currentProjectData} : {
                 <div className="space-y-4">
                     <div>
                     <div className="text-sm text-gray-600 mb-1">Monitoring</div>
-                    <div className="text-sm font-medium text-gray-900">Every {currentProjectData.frequency}</div>
+                    <div className="text-sm font-medium text-gray-900">Every {enrichedProjectData.frequency}</div>
                     </div>
                     <div>
                     <div className="text-sm text-gray-600 mb-1">Rebalancing</div>
@@ -109,7 +159,7 @@ export default function Details({currentProjectData} : {
                     </div>
                     <div>
                     <div className="text-sm text-gray-600 mb-1">Last check</div>
-                    <div className="text-sm font-medium text-green-600">{currentProjectData.latestUpdate} ago</div>
+                    <div className="text-sm font-medium text-green-600">{enrichedProjectData.latestUpdate} ago</div>
                     </div>
                 </div>
                 </div>
@@ -128,25 +178,25 @@ export default function Details({currentProjectData} : {
                 <div className="space-y-3">
                     <div className="flex justify-between">
                     <span className="text-sm text-gray-600">Operating since</span>
-                    <span className="text-sm font-medium text-gray-900">{currentProjectData.operatingSince}</span>
+                    <span className="text-sm font-medium text-gray-900">{enrichedProjectData.operatingSince}</span>
                     </div>
                     <div className="flex justify-between">
                     <span className="text-sm text-gray-600">Starting SharePrice</span>
-                    <span className="text-sm font-medium text-gray-900">{formatBalance(currentProjectData.initialSharePrice, currentProjectData.asset, currentProjectData.showDecimals)}</span>
+                    <span className="text-sm font-medium text-gray-900">{formatBalance(enrichedProjectData.initialSharePrice, enrichedProjectData.asset, enrichedProjectData.showDecimals)}</span>
                     </div>
                     <div className="flex justify-between">
                     <span className="text-sm text-gray-600">Latest SharePrice</span>
-                    <span className="text-sm font-medium text-gray-900">{formatBalance(currentProjectData.latestSharePrice, currentProjectData.asset, currentProjectData.showDecimals)}</span>
+                    <span className="text-sm font-medium text-gray-900">{formatBalance(enrichedProjectData.latestSharePrice, enrichedProjectData.asset, enrichedProjectData.showDecimals)}</span>
                     </div>
                     <div>
-                    <div className="text-sm text-gray-600 mb-1">Autopilot {currentProjectData.asset} Vault Address</div>
+                    <div className="text-sm text-gray-600 mb-1">Autopilot {enrichedProjectData.asset} Vault Address</div>
                     <a 
-                        href={`${getExplorerLink(chainId || 8453)}/address/${currentProjectData.vaultAddress}`}
+                        href={`${getExplorerLink(chainId || 8453)}/address/${enrichedProjectData.vaultAddress}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-xs font-mono text-gray-600 hover:text-gray-800 bg-gray-100 hover:bg-gray-200 p-2 rounded transition-colors flex items-center justify-between group"
                     >
-                        <span>{currentProjectData.vaultAddress}</span>
+                        <span>{enrichedProjectData.vaultAddress}</span>
                         <ExternalLink className="w-3 h-3 text-gray-900 opacity-50 group-hover:opacity-100 transition-opacity" />
                     </a>
                     </div>
@@ -160,13 +210,13 @@ export default function Details({currentProjectData} : {
                     <div className="flex justify-between">
                     <span className="text-sm text-gray-600">7d Average</span>
                     <span className="text-sm font-medium text-gray-900">
-                        {currentProjectData.apy7d.toFixed(2)} %
+                        {enrichedProjectData.apy7d.toFixed(2)} %
                     </span>
                     </div>
                     <div className="flex justify-between">
                     <span className="text-sm text-gray-600">30d Average</span>
                     <span className="text-sm font-medium text-gray-900">
-                        {currentProjectData.apy30d.toFixed(2)} %
+                        {enrichedProjectData.apy30d.toFixed(2)} %
                     </span>
                     </div>
                 </div>
@@ -178,7 +228,7 @@ export default function Details({currentProjectData} : {
                 <h4 className="text-sm font-semibold text-gray-900 mb-4 uppercase tracking-wide">Yield Sources</h4>
                 <div className="space-y-2">
                 {(() => {                   
-                    return currentProjectData.benchmarkData.filter(vault => !vault.isAutopilot && vault.name !== "Not invested").map(vault => (
+                    return enrichedProjectData.benchmarkData.filter(vault => !vault.isAutopilot && vault.name !== "Not invested").map(vault => (
                     <div key={vault.name} className="flex justify-between items-center py-2 px-3 bg-gray-50 rounded-lg">
                       <div className="flex-1 min-w-0">
                       <div className="text-sm font-medium text-gray-700">{vault.name}</div>
