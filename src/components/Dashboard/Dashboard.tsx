@@ -11,10 +11,10 @@ import Overview from "./Overview";
 import Earnings from "./Earnings";
 import HistoryTab from "./History";
 import Deposit from "./Deposit";
-import Benchamrk from "./Benchmark";
+import Benchmark from "./Benchmark";
 
 import { useVaultMetrics } from "@/providers/VaultMetricsProvider";
-import { fetchDefiLlamaAPY } from "@/hooks/useDefiLlamaAPY";
+
 
 type Tab = 'overview' | 'deposit' | 'earnings' | 'benchmark' | 'details' | 'history' | undefined;
 
@@ -55,14 +55,6 @@ export default function Dashboard({
   const globalData = useContext(GlobalContext);
   const user = globalData?.user;
   const { getMetricsForVault } = useVaultMetrics();
-
-  const [realTimeAPY, setRealTimeAPY] = useState<{ [vaultAddress: string]: number }>({});
-  const [apyLoading, setApyLoading] = useState(true);
-
-  const [benchmarkEnrichmentLoading, setBenchmarkEnrichmentLoading] = useState(true);
-  
-  const hasEnrichedRef = useRef(false);
-  const lastRealTimeAPYRef = useRef<string>('');
 
   const isOldUser = user?.status === 'old';
   const isNewUser = user?.status === "new";
@@ -152,67 +144,6 @@ export default function Dashboard({
     loadMetrics();
   }, [currentProjectData.vaultAddress, getMetricsForVault]);
 
-  useEffect(() => {
-    const fetchAPYData = async () => {
-      if (!currentProjectData.benchmarkData || currentProjectData.benchmarkData.length === 0) {
-        return;
-      }
-      
-      setApyLoading(true);
-      try {
-        const apyData = await fetchDefiLlamaAPY(currentProjectData.benchmarkData);
-        setRealTimeAPY(apyData);
-      } catch (error) {
-        console.error('Failed to fetch DefiLlama APY data:', error);
-      } finally {
-        setApyLoading(false);
-      }
-    };
-
-    fetchAPYData();
-  }, [currentProjectData.benchmarkData]);
-
-  useEffect(() => {
-    if (Object.keys(realTimeAPY).length > 0 && currentProjectData.benchmarkData && !apyLoading) {
-      
-      const realTimeAPYHash = JSON.stringify(realTimeAPY);
-      
-      if (hasEnrichedRef.current && lastRealTimeAPYRef.current === realTimeAPYHash) {
-        return;
-      }
-      
-      setBenchmarkEnrichmentLoading(true);
-      
-      let autopilotRealTimeAPY: number | undefined;
-      const enrichedBenchmarkData = currentProjectData.benchmarkData.map(benchmark => {
-        if (!benchmark.hVaultAddress) {
-          return benchmark;
-        }
-        
-        const realTimeValue = realTimeAPY[benchmark.hVaultAddress.toLowerCase()];
-        
-        if (benchmark.isAutopilot && realTimeValue !== undefined) {
-          autopilotRealTimeAPY = realTimeValue;
-        }
-        
-        return {
-          ...benchmark,
-          apy30dMean: realTimeValue !== undefined ? realTimeValue : benchmark.apy
-        };
-      });
-
-      setEnrichedProjectData(prev => ({
-        ...prev,
-        benchmarkData: enrichedBenchmarkData,
-        apy30d: autopilotRealTimeAPY !== undefined ? autopilotRealTimeAPY : prev.apy30d
-      }));
-
-      hasEnrichedRef.current = true;
-      lastRealTimeAPYRef.current = realTimeAPYHash;
-      
-      setBenchmarkEnrichmentLoading(false);
-    }
-  }, [realTimeAPY, apyLoading, currentProjectData.benchmarkData]); // Removed currentProjectData.benchmarkData from dependencies
 
   // Navigation handlers
   const handleNavigateToDeposit = () => {
@@ -342,9 +273,8 @@ export default function Dashboard({
 
               {/* Benchmark tab - always show regular content */}
               {activeTab === 'benchmark' && (
-                <Benchamrk
+                <Benchmark
                   benchmarkData={enrichedProjectData?.benchmarkData || []}
-                  loading={benchmarkEnrichmentLoading}
                 />
               )}
             </div>
