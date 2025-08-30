@@ -3,7 +3,7 @@ interface AutopilotIconProps {
   size?: number;
 }
 
-export function AutopilotIcon({ className = "", size = 24 }: AutopilotIconProps) {
+export function AutopilotIcon({ className = '', size = 24 }: AutopilotIconProps) {
   return (
     <svg
       width={size}
@@ -14,22 +14,10 @@ export function AutopilotIcon({ className = "", size = 24 }: AutopilotIconProps)
       className={className}
     >
       {/* Outer navigation ring */}
-      <circle
-        cx="12"
-        cy="12"
-        r="10"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        fill="none"
-      />
+      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5" fill="none" />
 
       {/* Inner automation core */}
-      <circle
-        cx="12"
-        cy="12"
-        r="3"
-        fill="currentColor"
-      />
+      <circle cx="12" cy="12" r="3" fill="currentColor" />
 
       {/* Navigation indicators (4 directional points) */}
       <circle cx="12" cy="3" r="1.5" fill="currentColor" />

@@ -1,20 +1,28 @@
-"use client"
-import Link from "next/link";
-import { usePathname } from 'next/navigation'
-import { TrendingUp, ChevronDown, BarChart3, Circle, X, Menu, Wallet, RefreshCw, LogOut, LucideUserCircle2 } from "lucide-react";
-import { useEffect, useState } from "react";
-import { SideBarOption } from "@/types/globalAppTypes";
-import { AutopilotIcon } from "./AutopilotIcon";
-import Image from "next/image";
+'use client';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import {
+  TrendingUp,
+  ChevronDown,
+  BarChart3,
+  Circle,
+  X,
+  Menu,
+  Wallet,
+  RefreshCw,
+  LogOut,
+  LucideUserCircle2,
+} from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { SideBarOption } from '@/types/globalAppTypes';
+import Image from 'next/image';
 
 export interface WalletState {
   isConnected: boolean;
   address: string | null;
 }
 
-export default function Sidebar({sideBarData} : {
-  sideBarData: SideBarOption[]
-}) {
+export default function Sidebar({ sideBarData }: { sideBarData: SideBarOption[] }) {
   const [isOpen, setIsOpen] = useState(false);
   const [morphoExpanded, setMorphoExpanded] = useState(true);
   // const [eulerExpanded, setEulerExpanded] = useState(true);
@@ -22,27 +30,27 @@ export default function Sidebar({sideBarData} : {
   const [url, setUrl] = useState<string>();
   const [isMobile, setIsMobile] = useState(false);
   const pathname = usePathname();
-  const morphoOptions = sideBarData.filter(option => option.protocol === "morpho");
+  const morphoOptions = sideBarData.filter(option => option.protocol === 'morpho');
   // const eulerOptions = sideBarData.filter(option => option.protocol === "euler");
   const [walletState, setWalletState] = useState<WalletState>({
     isConnected: false,
-    address: null
+    address: null,
   });
 
   const closeSidebar = () => {
     setIsOpen(false);
-  }
+  };
 
   const openSidebar = () => {
     setIsOpen(true);
-  }
+  };
 
   useEffect(() => {
     setUrl(pathname);
     closeSidebar();
   }, [pathname]);
 
-    useEffect(() => {
+  useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768);
     };
@@ -57,12 +65,12 @@ export default function Sidebar({sideBarData} : {
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
   };
 
- const handleWalletConnect = () => {
+  const handleWalletConnect = () => {
     // Simulate wallet connection
     const newAddress = '0xf4d2a7b8c3e1f9d6e8a2b4c7d1e9f3a8b2c5d8e1f991';
     setWalletState({
       isConnected: true,
-      address: newAddress
+      address: newAddress,
     });
   };
 
@@ -71,14 +79,14 @@ export default function Sidebar({sideBarData} : {
     const newAddress = '0xa1b2c3d4e5f6789012345678901234567890abcd';
     setWalletState({
       isConnected: true,
-      address: newAddress
+      address: newAddress,
     });
   };
 
   const handleWalletDisconnect = () => {
     setWalletState({
       isConnected: false,
-      address: null
+      address: null,
     });
   };
 
@@ -115,7 +123,7 @@ export default function Sidebar({sideBarData} : {
             alt="Wallet Avatar"
             className="w-8 h-8 rounded-full flex-shrink-0"
           /> */}
-          <LucideUserCircle2/>
+          <LucideUserCircle2 />
 
           {/* Wallet Info */}
           <div className="flex-1 min-w-0 text-left">
@@ -129,7 +137,9 @@ export default function Sidebar({sideBarData} : {
           </div>
 
           {/* Chevron */}
-          <ChevronDown className={`w-4 h-4 text-[#9159FF] transition-transform ${walletDropdownOpen ? 'rotate-180' : ''}`} />
+          <ChevronDown
+            className={`w-4 h-4 text-[#9159FF] transition-transform ${walletDropdownOpen ? 'rotate-180' : ''}`}
+          />
         </button>
 
         {/* Dropdown */}
@@ -173,21 +183,26 @@ export default function Sidebar({sideBarData} : {
     return (
       <>
         {/* Mobile Overlay */}
-        {isOpen ?
-          <div className="fixed inset-0 bg-black opacity-50 z-40 md:hidden" onClick={closeSidebar} />
-          :
+        {isOpen ? (
+          <div
+            className="fixed inset-0 bg-black opacity-50 z-40 md:hidden"
+            onClick={closeSidebar}
+          />
+        ) : (
           <button
             onClick={openSidebar}
             className="fixed top-[24.5px] left-[21px] z-[10000] rounded-md hover:bg-gray-100 text-gray-500 hover:text-gray-700 transition-colors"
           >
             <Menu className="w-5 h-5" />
           </button>
-        }
+        )}
 
         {/* Mobile Sidebar */}
-        <div className={`fixed inset-y-0 left-0 z-50 w-80 bg-white border-r border-gray-100 transform transition-transform duration-300 ease-in-out md:hidden ${
-          isOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}>
+        <div
+          className={`fixed inset-y-0 left-0 z-50 w-80 bg-white border-r border-gray-100 transform transition-transform duration-300 ease-in-out md:hidden ${
+            isOpen ? 'translate-x-0' : '-translate-x-full'
+          }`}
+        >
           <div className="flex flex-col h-full">
             {/* Mobile Header with Close Button */}
             <div className="p-4 border-b border-gray-100 flex items-center justify-between">
@@ -195,13 +210,13 @@ export default function Sidebar({sideBarData} : {
                 href="/"
                 className="flex items-center space-x-3 hover:opacity-80 transition-opacity"
               >
-                <div className="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center">
-                  <AutopilotIcon className="text-white" size={20} />
-                </div>
-                <div>
-                  <h1 className="text-lg font-bold text-gray-900">Autopilot</h1>
-                  <p className="text-sm text-gray-600">Smart yield optimization</p>
-                </div>
+                <Image
+                  width={136}
+                  height={35}
+                  src={'/logo.png'}
+                  alt="Autopilot"
+                  className="h-10 w-auto"
+                />
               </Link>
               <button
                 onClick={closeSidebar}
@@ -214,64 +229,81 @@ export default function Sidebar({sideBarData} : {
             {/* Navigation Content */}
             <div className="flex-1 overflow-y-auto">
               <div className="p-4 space-y-6">
-
                 {/* Wallet Connection */}
                 <WalletConnection />
 
                 {/* Portfolio Section */}
                 <div>
                   <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">Portfolio</h3>
+                    <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">
+                      Portfolio
+                    </h3>
                   </div>
 
                   <div className="space-y-2">
                     <Link
                       href="/"
-                      className={`w-full flex items-center space-x-3 p-3 rounded-xl transition-colors cursor-pointer shadow-lg hover:shadow-xl ${
+                      className={`w-full flex items-center space-x-3 p-3 rounded-xl transition-colors cursor-pointer ${
                         pathname === '/'
-                          ? 'bg-[#9159FF] text-white hover:bg-[#7c3aed]'
-                          : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                          ? 'bg-gray-50 text-gray-800'
+                          : 'bg-transparent text-gray-700 hover:bg-gray-50'
                       }`}
                     >
-                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                        pathname === '/'
-                          ? 'bg-[#8b5cf6]'
-                          : 'bg-white border border-gray-200'
-                      }`}>
-                        <BarChart3 className={`w-4 h-4 ${
-                          pathname === '/' ? 'text-white' : 'text-gray-600'
-                        }`} />
+                      <div
+                        className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                          pathname === '/'
+                            ? 'bg-white border border-gray-200'
+                            : 'bg-white border border-gray-200'
+                        }`}
+                      >
+                        <BarChart3
+                          className={`w-4 h-4 ${
+                            pathname === '/' ? 'text-gray-700' : 'text-gray-600'
+                          }`}
+                        />
                       </div>
                       <div className="flex-1 text-left">
                         <div className="font-medium">Positions</div>
-                        <div className={`text-xs ${
-                          pathname === '/' ? 'text-purple-100' : 'text-gray-500'
-                        }`}>View all holdings</div>
+                        <div
+                          className={`text-xs ${
+                            pathname === '/' ? 'text-gray-600' : 'text-gray-500'
+                          }`}
+                        >
+                          View all holdings
+                        </div>
                       </div>
                     </Link>
 
                     <Link
                       href="/earnings"
-                      className={`w-full flex items-center space-x-3 p-3 rounded-xl transition-colors cursor-pointer shadow-lg hover:shadow-xl ${
+                      className={`w-full flex items-center space-x-3 p-3 rounded-xl transition-colors cursor-pointer ${
                         pathname === '/earnings'
-                          ? 'bg-[#9159FF] text-white hover:bg-[#7c3aed]'
-                          : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                          ? 'bg-gray-50 text-gray-800'
+                          : 'bg-transparent text-gray-700 hover:bg-gray-50'
                       }`}
                     >
-                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                        pathname === '/earnings'
-                          ? 'bg-[#8b5cf6]'
-                          : 'bg-white border border-gray-200'
-                      }`}>
-                        <TrendingUp className={`w-4 h-4 ${
-                          pathname === '/earnings' ? 'text-white' : 'text-gray-600'
-                        }`} />
+                      <div
+                        className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                          pathname === '/earnings'
+                            ? 'bg-white border border-gray-200'
+                            : 'bg-white border border-gray-200'
+                        }`}
+                      >
+                        <TrendingUp
+                          className={`w-4 h-4 ${
+                            pathname === '/earnings' ? 'text-gray-700' : 'text-gray-600'
+                          }`}
+                        />
                       </div>
                       <div className="flex-1 text-left">
                         <div className="font-medium">Earnings</div>
-                        <div className={`text-xs ${
-                          pathname === '/earnings' ? 'text-purple-100' : 'text-gray-500'
-                        }`}>Full History</div>
+                        <div
+                          className={`text-xs ${
+                            pathname === '/earnings' ? 'text-gray-600' : 'text-gray-500'
+                          }`}
+                        >
+                          Full History
+                        </div>
                       </div>
                     </Link>
                   </div>
@@ -281,8 +313,16 @@ export default function Sidebar({sideBarData} : {
                 <div>
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center space-x-2">
-                      <Image width={14} height={14} src={"/projects/morpho.png"} alt="Morpho" className="w-4 h-4" />
-                      <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">Morpho Autopilot</h3>
+                      <Image
+                        width={14}
+                        height={14}
+                        src={'/projects/morpho.png'}
+                        alt="Morpho"
+                        className="w-4 h-4"
+                      />
+                      <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">
+                        Morpho Autopilot
+                      </h3>
                     </div>
                     <button
                       onClick={() => setMorphoExpanded(!morphoExpanded)}
@@ -296,37 +336,53 @@ export default function Sidebar({sideBarData} : {
 
                   {morphoExpanded && (
                     <div className="space-y-2">
-                      {morphoOptions.map((option) => {
+                      {morphoOptions.map(option => {
                         const route = `/base/morpho/${option.asset}`;
-                        return(
+                        return (
                           <Link
                             href={route}
                             key={option.asset}
-                            className={`w-full flex items-center space-x-3 p-3 rounded-lg transition-colors cursor-pointer ${
-                              url === route
-                                ? 'bg-purple-50 border border-purple-200'
-                                : 'hover:bg-purple-50/50'
+                            className={`w-full flex items-center space-x-3 p-3 rounded-lg transition-colors ${
+                              option.enabled
+                                ? 'cursor-pointer'
+                                : 'cursor-not-allowed pointer-events-none'
                             } ${
-                              !option.enabled && 'text-gray-400 cursor-not-allowed'
+                              url === route
+                                ? 'bg-gray-50'
+                                : option.asset === 'USDC'
+                                  ? 'hover:bg-purple-50/50'
+                                  : 'hover:bg-gray-50/50'
                             }`}
                           >
-                            <Image width={16} height={16} src={option.icon} alt={option.asset} className="w-6 h-6" />
+                            <Image
+                              width={16}
+                              height={16}
+                              src={option.icon}
+                              alt={option.asset}
+                              className={`w-6 h-6 ${!option.enabled ? 'opacity-60' : ''}`}
+                            />
                             <div className="flex-1 text-left">
-                              <div className="font-medium text-gray-900">{option.asset}</div>
+                              <div
+                                className={`font-medium ${option.asset !== 'USDC' ? 'text-gray-500' : 'text-gray-900'}`}
+                              >
+                                {option.asset}
+                              </div>
                               <div className="text-sm text-gray-500">Autopilot</div>
                             </div>
-                            {
-                              !option.enabled ?
-                              <span className="text-xs bg-gray-200 text-gray-500 px-2 py-1 rounded">
-                                Soon
-                              </span> :
+                            {!option.enabled ? (
+                              <span className="text-xs text-[#9159FF] bg-[#9159FF]/10 px-2 py-1 rounded-full font-medium border border-[#9159FF]/20">
+                                Coming Soon
+                              </span>
+                            ) : (
                               <div className="flex items-center space-x-1">
                                 <Circle className="w-2 h-2 fill-green-600 text-green-600" />
-                                <span className="text-xs text-green-600 font-medium">{option.apy}%</span>
-                            </div>
-                            }
+                                <span className="text-xs text-green-600 font-medium">
+                                  {option.apy}%
+                                </span>
+                              </div>
+                            )}
                           </Link>
-                        )
+                        );
                       })}
                     </div>
                   )}
@@ -391,44 +447,48 @@ export default function Sidebar({sideBarData} : {
     <div className="hidden md:flex w-80 bg-white border-r border-gray-100 flex-col min-h-screen">
       {/* Header */}
       <div className="p-6 border-b border-gray-100">
-        <Link
-          href={"/"}
-          className="flex items-center hover:opacity-80 transition-opacity"
-        >
-          <Image width={136} height={35} src={"/logo.png"} alt="Autopilot" className="h-10 w-auto" />
+        <Link href={'/'} className="flex items-center hover:opacity-80 transition-opacity">
+          <Image
+            width={136}
+            height={35}
+            src={'/logo.png'}
+            alt="Autopilot"
+            className="h-10 w-auto"
+          />
         </Link>
       </div>
 
       {/* Navigation */}
       <div className="flex-1 overflow-y-auto">
         <div className="p-6 space-y-6">
-
           {/* Wallet Connection */}
           <WalletConnection />
 
           {/* Portfolio Section */}
           <div>
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">Portfolio</h3>
+              <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">
+                Portfolio
+              </h3>
             </div>
 
             <div className="space-y-2">
               <Link
                 href="/"
                 className={`w-full flex items-center space-x-3 p-3 rounded-xl transition-all duration-200 cursor-pointer transform hover:scale-[1.02] ${
-                  pathname === '/'
-                    ? 'bg-gray-100 border border-gray-200'
-                    : 'hover:bg-gray-50'
+                  pathname === '/' ? 'bg-gray-100 border border-gray-200' : 'hover:bg-gray-50'
                 }`}
               >
-                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                  pathname === '/'
-                    ? 'bg-white border border-gray-300'
-                    : 'bg-white border border-gray-200'
-                }`}>
-                  <BarChart3 className={`w-4 h-4 ${
-                    pathname === '/' ? 'text-gray-700' : 'text-gray-600'
-                  }`} />
+                <div
+                  className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                    pathname === '/'
+                      ? 'bg-white border border-gray-300'
+                      : 'bg-white border border-gray-200'
+                  }`}
+                >
+                  <BarChart3
+                    className={`w-4 h-4 ${pathname === '/' ? 'text-gray-700' : 'text-gray-600'}`}
+                  />
                 </div>
                 <div className="flex-1 text-left">
                   <div className="font-medium text-gray-900">Positions</div>
@@ -444,14 +504,18 @@ export default function Sidebar({sideBarData} : {
                     : 'hover:bg-gray-50'
                 }`}
               >
-                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                  pathname === '/earnings'
-                    ? 'bg-white border border-gray-300'
-                    : 'bg-white border border-gray-200'
-                }`}>
-                  <TrendingUp className={`w-4 h-4 ${
-                    pathname === '/earnings' ? 'text-gray-700' : 'text-gray-600'
-                  }`} />
+                <div
+                  className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                    pathname === '/earnings'
+                      ? 'bg-white border border-gray-300'
+                      : 'bg-white border border-gray-200'
+                  }`}
+                >
+                  <TrendingUp
+                    className={`w-4 h-4 ${
+                      pathname === '/earnings' ? 'text-gray-700' : 'text-gray-600'
+                    }`}
+                  />
                 </div>
                 <div className="flex-1 text-left">
                   <div className="font-medium text-gray-900">Earnings</div>
@@ -465,8 +529,16 @@ export default function Sidebar({sideBarData} : {
           <div>
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center space-x-2">
-                <Image width={14} height={14} src={"/projects/morpho.png"} alt="Morpho" className="w-4 h-4" />
-                <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">Morpho Autopilots</h3>
+                <Image
+                  width={14}
+                  height={14}
+                  src={'/projects/morpho.png'}
+                  alt="Morpho"
+                  className="w-4 h-4"
+                />
+                <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">
+                  Morpho Autopilots
+                </h3>
               </div>
               <button
                 onClick={() => setMorphoExpanded(!morphoExpanded)}
@@ -480,21 +552,33 @@ export default function Sidebar({sideBarData} : {
 
             {morphoExpanded && (
               <div className="space-y-2">
-                {morphoOptions.map((option) => (
+                {morphoOptions.map(option => (
                   <Link
                     key={option.asset}
                     href={`/base/morpho/${option.asset}`}
                     className={`w-full flex items-center space-x-3 p-3 rounded-lg transition-colors ${
                       option.asset === 'USDC' ? 'cursor-pointer' : 'cursor-not-allowed'
                     } ${
-                        pathname === `/base/morpho/${option.asset}`
+                      pathname === `/base/morpho/${option.asset}`
                         ? 'bg-gray-100 border border-gray-200'
-                        : option.asset === 'USDC' ? 'hover:bg-purple-50/50' : 'hover:bg-gray-50/50'
+                        : option.asset === 'USDC'
+                          ? 'hover:bg-purple-50/50'
+                          : 'hover:bg-gray-50/50'
                     }`}
                   >
-                    <Image width={21} height={21} src={option.icon} alt={option.asset} className={`w-6 h-6 ${option.asset !== 'USDC' ? 'opacity-60' : ''}`} />
+                    <Image
+                      width={21}
+                      height={21}
+                      src={option.icon}
+                      alt={option.asset}
+                      className={`w-6 h-6 ${option.asset !== 'USDC' ? 'opacity-60' : ''}`}
+                    />
                     <div className="flex-1 text-left">
-                      <div className={`font-medium ${option.asset !== 'USDC' ? 'text-gray-500' : 'text-gray-900'}`}>{option.asset}</div>
+                      <div
+                        className={`font-medium ${option.asset !== 'USDC' ? 'text-gray-500' : 'text-gray-900'}`}
+                      >
+                        {option.asset}
+                      </div>
                       <div className="text-sm text-gray-500">Autopilot</div>
                     </div>
                     <div className="flex items-center space-x-1">
