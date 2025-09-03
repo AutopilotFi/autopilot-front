@@ -1,11 +1,13 @@
 "use client"
 
-import { Download, History, ChevronLeft, ChevronRight } from "lucide-react";
+import { Download, History, ChevronLeft, ChevronRight, ExternalLink } from "lucide-react";
 import { ProjectData, UserStats } from "@/types/globalAppTypes";
 import StatsGrid from "@/components/StatsGrid";
 import { generateUserHistoryStatsGridStructure } from "@/components/StatsGrid/gridStructure";
 import StandardCTAButton from "@/components/UI/StandardCTAButton";
 import { useState } from "react";
+import { useWallet } from "@/providers/WalletProvider";
+import { getExplorerLink } from "@/helpers/utils";
 
 export default function HistoryTab({currentProjectData, userStatsData, isNewUser, handleNavigateToDeposit } : {
     currentProjectData: ProjectData,
@@ -13,6 +15,7 @@ export default function HistoryTab({currentProjectData, userStatsData, isNewUser
     isNewUser: boolean,
     handleNavigateToDeposit: () => void,
 }){
+    const { chainId } = useWallet();
     const [currentPage, setCurrentPage] = useState(1);
     const transactionsPerPage = 10;
     
@@ -127,6 +130,7 @@ export default function HistoryTab({currentProjectData, userStatsData, isNewUser
                         <th className="text-right py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wide">Amount</th>
                         <th className="text-right py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wide">Status</th>
                         <th className="text-right py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wide">Time</th>
+                        <th className="text-right py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wide">TX</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -158,12 +162,27 @@ export default function HistoryTab({currentProjectData, userStatsData, isNewUser
                             <td className="py-4 px-4 text-right">
                                 <div className="text-sm text-gray-500">{formatDate} {formatTime}</div>
                             </td>
+                            <td className="py-4 px-4 text-right">
+                                {transaction.txHash ? (
+                                    <a 
+                                        href={`${getExplorerLink(chainId || 8453)}/tx/${transaction.txHash}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex items-center space-x-1 text-xs font-mono text-gray-500 hover:text-gray-800 hover:underline transition-colors group"
+                                    >
+                                        <span className="truncate max-w-[80px]">{transaction.txHash.slice(0, 6)}...{transaction.txHash.slice(-4)}</span>
+                                        <ExternalLink className="w-3 h-3 flex-shrink-0 opacity-60 group-hover:opacity-100 transition-opacity" />
+                                    </a>
+                                ) : (
+                                    <span className="text-xs text-gray-400">—</span>
+                                )}
+                            </td>
                             </tr>
                         );
                         })
                     ) : (
                         <tr>
-                            <td colSpan={4} className="py-12 text-center">
+                            <td colSpan={5} className="py-12 text-center">
                                 <div className="text-center">
                                     <History className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                                     <h4 className="text-lg font-semibold text-gray-900 mb-2">No Transaction History</h4>

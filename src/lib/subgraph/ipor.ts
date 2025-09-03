@@ -100,13 +100,13 @@ export async function fetchIporUserBalanceHistories(
         orderBy: timestamp,
         orderDirection: desc
       ) {
-        value, timestamp, plasmaVault{id}
+        value, timestamp, plasmaVault{id}, tx
       }
     }`;
 
-  type Resp = { plasmaUserBalanceHistories: Array<{ timestamp: string | number; value: string; plasmaVault: { id: string } }> };
+  type Resp = { plasmaUserBalanceHistories: Array<{ timestamp: string | number; value: string; plasmaVault: { id: string }; tx: string }> };
   
-  let userHistoryData: Array<{ timestamp: number; value: string; plasmaVault: { id: string } }> = [];
+  let userHistoryData: Array<{ timestamp: number; value: string; plasmaVault: { id: string }; tx: string }> = [];
   const finishTime = Math.ceil(new Date().getTime() / 1000);
 
   // Initial fetch
@@ -115,6 +115,7 @@ export async function fetchIporUserBalanceHistories(
     timestamp: typeof r.timestamp === "string" ? parseInt(r.timestamp, 10) : (r.timestamp || 0),
     value: r.value,
     plasmaVault: r.plasmaVault,
+    tx: r.tx,
   }));
 
   // Fetch additional pages if we got exactly 1000 records
@@ -125,6 +126,7 @@ export async function fetchIporUserBalanceHistories(
       timestamp: typeof r.timestamp === "string" ? parseInt(r.timestamp, 10) : (r.timestamp || 0),
       value: r.value,
       plasmaVault: r.plasmaVault,
+      tx: r.tx,
     }));
     userHistoryData = userHistoryData.concat(additionalRecords);
     

@@ -120,20 +120,26 @@ export default function Dashboard({
           totalWithdrawals: result.withdrawals.length ? result.withdrawals.reduce((a,b)=>a+b.amount,0).toString() : "—",
           totalActions: String(result.deposits.length + result.withdrawals.length + result.earningsSeries.length),
           transactions: [
-            ...result.deposits.map(deposit => ({
-              date: new Date(deposit.timestamp * 1000).toISOString(),
-              type: 'deposit',
-              amount: deposit.amount,
-              status: 'confirmed',
-              timestamp: deposit.timestamp // Keep original timestamp for sorting
-            })),
-            ...result.withdrawals.map(withdrawal => ({
-              date: new Date(withdrawal.timestamp * 1000).toISOString(),
-              type: 'withdrawal',
-              amount: withdrawal.amount,
-              status: 'confirmed',
-              timestamp: withdrawal.timestamp // Keep original timestamp for sorting
-            }))
+            ...result.deposits.map(deposit => {
+              return {
+                date: new Date(deposit.timestamp * 1000).toISOString(),
+                type: 'deposit',
+                amount: deposit.amount,
+                status: 'confirmed',
+                timestamp: deposit.timestamp, // Keep original timestamp for sorting
+                txHash: deposit.tx || undefined
+              };
+            }),
+            ...result.withdrawals.map(withdrawal => {
+              return {
+                date: new Date(withdrawal.timestamp * 1000).toISOString(),
+                type: 'withdrawal',
+                amount: withdrawal.amount,
+                status: 'confirmed',
+                timestamp: withdrawal.timestamp, // Keep original timestamp for sorting
+                txHash: withdrawal.tx || undefined
+              };
+            })
           ].sort((a, b) => b.timestamp - a.timestamp), // Sort by timestamp, newest first
         });
       } catch (error) {
