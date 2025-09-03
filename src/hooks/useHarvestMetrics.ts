@@ -20,6 +20,7 @@ type BalanceHistoryEntry = {
   sharePrice?: string | number | null;
   tvl?: string | number | null;
   apy?: string | number | null;
+  tx?: string;
 };
 
 type EnrichedDataEntry = VaultHistoryEntry & BalanceHistoryEntry & {
@@ -29,6 +30,7 @@ type EnrichedDataEntry = VaultHistoryEntry & BalanceHistoryEntry & {
   netChange: number;
   netChangeUsd: number;
   value: string | number | null;
+  tx?: string;
 };
 
 const calculateApy = (vaultHData: VaultHistoryEntry[], latestSharePriceValue: number, tokenDecimals: number, periodDays: number): string => {
@@ -122,7 +124,7 @@ const processBalanceAndVaultData = (
 
     const map = new Map();
     mergedData.forEach(item => {
-      const key = `${item.value}_${item.sharePrice}`;
+      const key = `${item.value}_${item.sharePrice}_${item.tx}`;
       map.set(key, item);
     });
 
@@ -188,9 +190,11 @@ const processBalanceAndVaultData = (
           balanceUsd,
           netChange,
           netChangeUsd,
+          value: item.value ?? null,
+          tx: item.tx,
         };
       })
-      .filter((item): item is EnrichedDataEntry => item !== null);
+      .filter((item): item is NonNullable<typeof item> => item !== null);
 
     // Calculate sums
     sumNetChange = enrichedData.reduce((sumValue, item) => {
@@ -253,8 +257,8 @@ export type Metrics = {
   latestUpdate: string;
   operatingSince: string;
   earningsSeries: Array<{ timestamp: number; amount: number; amountUsd: number }>;
-  deposits: Array<{ timestamp: number; amount: number; amountUsd: number; }>;
-  withdrawals: Array<{ timestamp: number; amount: number; amountUsd: number; }>;
+  deposits: Array<{ timestamp: number; amount: number; amountUsd: number; tx?: string; }>;
+  withdrawals: Array<{ timestamp: number; amount: number; amountUsd: number; tx?: string; }>;
   latestUnderlyingPrice: number;
 };
 
@@ -315,8 +319,8 @@ export async function getHarvestMetrics(
       latestUpdate,
       operatingSince,
       earningsSeries: earningsData.map(e => ({ timestamp: e.timestamp, amount: e.netChange, amountUsd: e.netChangeUsd })),
-      deposits: deposits.map(d => ({ timestamp: d.timestamp, amount: d.netChange, amountUsd: d.netChangeUsd })),
-      withdrawals: withdrawals.map(w => ({ timestamp: w.timestamp, amount: Math.abs(w.netChange), amountUsd: Math.abs(w.netChangeUsd) })),
+      deposits: deposits.map(d => ({ timestamp: d.timestamp, amount: d.netChange, amountUsd: d.netChangeUsd, tx: d.tx })),
+      withdrawals: withdrawals.map(w => ({ timestamp: w.timestamp, amount: Math.abs(w.netChange), amountUsd: Math.abs(w.netChangeUsd), tx: w.tx })),
       latestUnderlyingPrice: Number(vh[0]?.priceUnderlying || 1),
     };
   } catch (e: unknown) {

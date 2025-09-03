@@ -9,7 +9,6 @@ import EarningsPage from "@/components/EarningsPage";
 
 export default function Home() {
   const [earningsData, setEarningsData] = useState<EarningTransaction[]>([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
   const { account, chainId } = useWallet();
@@ -20,12 +19,10 @@ export default function Home() {
     const availableAutopilots = globalData?.availableAutopilots || [];
     
     if (!account?.address || !chainId || Object.keys(vaultMetrics).length === 0 || metricsLoading) {
-      setLoading(true);
       return;
     }
 
     try {
-      setLoading(false);
       setError(null);
       
       const allEarnings: EarningTransaction[] = [];
