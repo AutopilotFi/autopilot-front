@@ -182,6 +182,10 @@ export const formatBalance = (balance: number, asset: string, decimals?: number)
     })} ${asset}`;
   }
 
+  if(balance === 0) {
+    return `0 ${asset}`;
+  }
+
   if (balance < threshold) {
     return `<${threshold.toFixed(decimalPlaces)} ${asset}`;
   }

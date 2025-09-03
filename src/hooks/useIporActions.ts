@@ -61,16 +61,15 @@ export function useIporActions() {
     return { hash: tx as Hash, receipt };
   }, [account, approveIfNeeded, publicClient, walletClient, ensureClients]);
 
-  const withdraw = useCallback(async (vault: Address, shares: string, vaultDecimals: number) => {
+  const withdraw = useCallback(async (vault: Address, shares: string) => {
     ensureClients();
     const owner = account!.address as Address;
-    const _shares = parseUnits(shares, vaultDecimals);
 
     const tx = await walletClient!.writeContract({
       address: vault,
       abi: iporVaultAbi,
       functionName: "redeem",
-      args: [_shares, owner, owner],
+      args: [BigInt(shares), owner, owner],
       account: owner,
       chain: null,
     });

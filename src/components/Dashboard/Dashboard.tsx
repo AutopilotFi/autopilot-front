@@ -40,14 +40,14 @@ export default function Dashboard({
 
   const [enrichedProjectData, setEnrichedProjectData] = useState<ProjectData>(currentProjectData);
   const [enrichedUserStats, setEnrichedUserStats] = useState<UserStats>({
-    totalBalance: "—",
-    totalEarnings: "—",
-    monthlyForecast: "—",
+    totalBalance: "0",
+    totalEarnings: "0",
+    monthlyForecast: "0",
     updateFrequency: "—",
-    monthlyEarnings: "—",
-    dailyEarnings: "—",
-    totalDeposits: "—",
-    totalWithdrawals: "—",
+    monthlyEarnings: "0",
+    dailyEarnings: "0",
+    totalDeposits: "0",
+    totalWithdrawals: "0",
     totalActions: "0",
     transactions: [],
   });
@@ -116,8 +116,8 @@ export default function Dashboard({
           updateFrequency: result.frequency,
           monthlyEarnings: earnings30d.toString(),
           dailyEarnings: earnings24h.toString(),
-          totalDeposits: result.deposits.length ? result.deposits.reduce((a,b)=>a+b.amount,0).toString() : "—",
-          totalWithdrawals: result.withdrawals.length ? result.withdrawals.reduce((a,b)=>a+b.amount,0).toString() : "—",
+          totalDeposits: result.deposits.length ? result.deposits.reduce((a,b)=>a+b.amount,0).toString() : "0",
+          totalWithdrawals: result.withdrawals.length ? result.withdrawals.reduce((a,b)=>a+b.amount,0).toString() : "0",
           totalActions: String(result.deposits.length + result.withdrawals.length + result.earningsSeries.length),
           transactions: [
             ...result.deposits.map(deposit => {

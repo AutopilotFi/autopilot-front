@@ -165,7 +165,7 @@ export default function HistoryTab({currentProjectData, userStatsData, isNewUser
                             <td className="py-4 px-4 text-right">
                                 {transaction.txHash ? (
                                     <a 
-                                        href={`${getExplorerLink(chainId || 8453)}/tx/${transaction.txHash}`}
+                                        href={`${getExplorerLink(currentProjectData.chainId || 8453)}/tx/${transaction.txHash}`}
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         className="inline-flex items-center space-x-1 text-xs font-mono text-gray-500 hover:text-gray-800 hover:underline transition-colors group"

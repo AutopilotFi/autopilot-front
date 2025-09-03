@@ -41,12 +41,12 @@ export const VaultMetricsProvider: React.FC<VaultMetricsProviderProps> = ({ chil
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
-  const { account, chainId, isConnected } = useWallet();
+  const { account, isConnected } = useWallet();
   const globalData = useContext(GlobalContext);
   const availableAutopilots = globalData?.availableAutopilots || [];
 
   const fetchAllVaultMetrics = async () => {
-    if (!account?.address || !chainId || availableAutopilots.length === 0) {
+    if (availableAutopilots.length === 0) {
       return;
     }
 
@@ -69,7 +69,7 @@ export const VaultMetricsProvider: React.FC<VaultMetricsProviderProps> = ({ chil
           const result = await getHarvestMetrics(
             vaultData.vaultAddress as `0x${string}`,
             Number(vaultData.chain) as 1 | 137 | 324 | 8453 | 42161,
-            account.address,
+            account?.address ?? '0x0000000000000000000000000000000000000000',
             vaultData.decimals || '6',
             vaultData.vaultDecimals || '18'
           );
@@ -114,10 +114,8 @@ export const VaultMetricsProvider: React.FC<VaultMetricsProviderProps> = ({ chil
 
   // Fetch metrics when wallet connects or autopilots change
   useEffect(() => {
-    if(isConnected) {
-      fetchAllVaultMetrics();
-    }
-  }, [account?.address, chainId, availableAutopilots, isConnected]);
+    fetchAllVaultMetrics();
+  }, [account?.address, availableAutopilots, isConnected]);
 
   // Auto-refresh metrics every 5 minutes
   useEffect(() => {
