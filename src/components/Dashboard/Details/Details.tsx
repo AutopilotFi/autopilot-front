@@ -1,7 +1,6 @@
 import { ProjectData } from "@/types/globalAppTypes";
 import { Cpu, Settings, DollarSign, TrendingUp, Activity, BarChart2, Timer, ExternalLink } from "lucide-react";
 import { formatBalance, getExplorerLink } from "@/helpers/utils";
-import { useWallet } from "@/providers/WalletProvider";
 import { useEffect, useState } from "react";
 import { fetchDefiLlamaAPY } from "@/hooks/useDefiLlamaAPY";
 
@@ -26,7 +25,6 @@ import { fetchDefiLlamaAPY } from "@/hooks/useDefiLlamaAPY";
 export default function Details({currentProjectData} : {
     currentProjectData: ProjectData,
 }){
-    const { chainId } = useWallet();
     const [enrichedProjectData, setEnrichedProjectData] = useState<ProjectData>(currentProjectData);
 
     useEffect(() => {
@@ -191,7 +189,7 @@ export default function Details({currentProjectData} : {
                     <div>
                     <div className="text-sm text-gray-600 mb-1">Autopilot {enrichedProjectData.asset} Vault Address</div>
                     <a 
-                        href={`${getExplorerLink(chainId || 8453)}/address/${enrichedProjectData.vaultAddress}`}
+                        href={`${getExplorerLink(currentProjectData.chainId || 8453)}/address/${enrichedProjectData.vaultAddress}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-xs font-mono text-gray-600 hover:text-gray-800 bg-gray-100 hover:bg-gray-200 p-2 rounded transition-colors flex items-center justify-between group"
@@ -238,7 +236,7 @@ export default function Details({currentProjectData} : {
                           {vault.apy} %
                       </span>
                       <a 
-                          href={`${getExplorerLink(chainId || 8453)}/address/${vault.hVaultAddress}`}
+                          href={`${getExplorerLink(currentProjectData.chainId || 8453)}/address/${vault.hVaultAddress}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-xs font-mono text-gray-600 hover:text-gray-800 bg-white hover:bg-gray-50 px-2 py-1 rounded border transition-colors flex items-center space-x-1 group"

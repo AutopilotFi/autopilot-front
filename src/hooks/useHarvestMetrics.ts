@@ -79,7 +79,7 @@ const processBalanceAndVaultData = (
     });
   }
 
-  if (balanceData && balanceData.length > 0) {
+  if (balanceData) {
     balanceData.forEach(obj => {
       timestamps.push(obj.timestamp);
       const valueDecimals = Number(fromWei(obj.value || '0', vaultDecimals, vaultDecimals));
@@ -88,7 +88,7 @@ const processBalanceAndVaultData = (
     });
   }
 
-  if (balanceData && balanceData.length > 0 && uniqueVaultHData.length > 0) {
+  if (balanceData && uniqueVaultHData.length > 0) {
     let uniqueData: (VaultHistoryEntry & BalanceHistoryEntry)[] = [];
     let uniqueFixedData: (VaultHistoryEntry & BalanceHistoryEntry)[] = [];
     let lastUserEvent = false;
@@ -275,10 +275,9 @@ export async function getHarvestMetrics(
       fetchIporVaultHistories(chainId, vaultAddress.toLowerCase()),
       fetchIporUserBalanceHistories(chainId, vaultAddress.toLowerCase(), accountAddress.toLowerCase()),
     ]);
-    
+
     // Process the data using the comprehensive processing function
     const processedData = processBalanceAndVaultData(uh, vh, Number(tokenDecimals), Number(vaultDecimals));
-    
     // Calculate APYs using the new method
     const latestSharePrice = vh.length > 0 ? Number(fromWei(Number(vh[0]?.sharePrice), Number(tokenDecimals), Number(tokenDecimals))) : 1;
     const initialSharePrice = vh.length > 0 ? Number(fromWei(vh[vh.length - 1]?.sharePrice || '1', Number(tokenDecimals), Number(tokenDecimals))) : 1;
@@ -293,7 +292,7 @@ export async function getHarvestMetrics(
     const frequency = earningsData.length > 1 ? formatFrequency((earningsData[0].timestamp - earningsData[earningsData.length - 1].timestamp) / (earningsData.length - 1)) : "—";
     const latestUpdate = earningsData.length > 0 ? formatFrequency((Date.now() / 1000 - earningsData[0].timestamp)) : "—";
 
-    const operatingSince = earningsData.length > 0 ? formatDate(earningsData[earningsData.length - 1].timestamp) : "—";
+    const operatingSince = vh.length > 0 ? formatDate(vh[vh.length - 1].timestamp) : "—";
     
     // Calculate deposits and withdrawals
     const deposits = processedData.enrichedData.filter(item => item.event === 'Convert' && item.netChange > 0);

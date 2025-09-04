@@ -6,9 +6,10 @@ import { useIporActions } from "@/hooks/useIporActions";
 import { useBalances } from "@/hooks/useBalances";
 import { useWallet } from "@/providers/WalletProvider";
 import { useToastContext } from "@/providers/ToastProvider";
-import { Address } from "viem";
+import { Address, parseUnits } from "viem";
 import { CHAIN_NAMES } from "@/consts/constants";
 import { ConnectWalletButton } from "@/components/ConnectWalletButton";
+import { convertAssetsToVault } from "@/lib/contracts/iporVault";
 
 export default function Deposit({isNewUser, currentProjectData, setShowTermsModal, handleOpenBenchmark} : {
     isNewUser: boolean,
@@ -23,7 +24,7 @@ export default function Deposit({isNewUser, currentProjectData, setShowTermsModa
     const [txSuccess, setTxSuccess] = useState<string | null>(null);
     const [isRefreshingBalances, setIsRefreshingBalances] = useState(false);
 
-    const { isConnected, chainId, switchChain } = useWallet();
+    const { isConnected, chainId, switchChain, publicClient } = useWallet();
     const { deposit, withdraw } = useIporActions();
     const { showSuccess, showError } = useToastContext();
     
@@ -53,13 +54,11 @@ export default function Deposit({isNewUser, currentProjectData, setShowTermsModa
         tokenBalanceFormatted, 
         vaultBalanceFormatted, 
         loading: balancesLoading,
-        error: balancesError,
         refetch: refetchBalances 
     } = useBalances(
         currentProjectData.tokenAddress,
         currentProjectData.vaultAddress,
-        parseInt(currentProjectData.tokenDecimals),
-        parseInt(currentProjectData.vaultDecimals)
+        parseInt(currentProjectData.tokenDecimals)
     );
 
     const handleDeposit = async () => {
@@ -117,10 +116,17 @@ export default function Deposit({isNewUser, currentProjectData, setShowTermsModa
             setIsProcessing(true);
             setTxSuccess(null);
 
+            // Convert underlying token amount to vault shares
+            const underlyingAmount = parseUnits(depositAmount, parseInt(currentProjectData.tokenDecimals));
+            const vaultShares = await convertAssetsToVault(
+                publicClient,
+                currentProjectData.vaultAddress,
+                underlyingAmount
+            );
+
             const result = await withdraw(
                 currentProjectData.vaultAddress as Address,
-                depositAmount,
-                parseInt(currentProjectData.vaultDecimals)
+                vaultShares.toString()
             );
 
             setTxSuccess(`Withdrawal successful! Transaction: ${result.hash}`);
@@ -347,7 +353,9 @@ export default function Deposit({isNewUser, currentProjectData, setShowTermsModa
                     <button
                         key={percentage}
                         onClick={() => {
-                        const amount = (currentBalance * percentage / 100).toFixed(currentProjectData.asset === 'USDC' ? 2 : 6);
+                        const amount = percentage === 100 
+                            ? currentBalance.toString() // Use full balance without toFixed for 100%
+                            : (currentBalance * percentage / 100).toFixed(currentProjectData.asset === 'USDC' ? 2 : 6);
                         setDepositAmount(amount);
                         setTxSuccess(null);
                         }}

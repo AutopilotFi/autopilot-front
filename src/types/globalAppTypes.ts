@@ -291,7 +291,7 @@ export interface VaultContextData {
 declare global {
   // Minimal typing for the injected provider
   interface Window {
-    ethereum?: any;
+    ethereum?: any;// eslint-disable-line @typescript-eslint/no-explicit-any
   }
 }
 
