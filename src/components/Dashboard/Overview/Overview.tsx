@@ -77,7 +77,7 @@ export default function Overview({
                       Earnings
                     </div>
                     <div className="text-2xl font-bold text-green-500">
-                      {curContent || "—"}
+                      {curContent || ""}
                     </div>
                     {curDate && (
                       <div className="text-sm text-gray-500 mt-1">{curDate}</div>
