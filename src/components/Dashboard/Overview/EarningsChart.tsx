@@ -250,7 +250,7 @@ export default function EarningsChart({
   }
 
   // Handle insufficient earnings events (1-4 events)
-  if (earningsEvents.length > 0 && earningsEvents.length < 5) {
+  if (earningsEvents.length < 5) {
     return (
       <div className="h-72 bg-white rounded-lg flex items-center justify-center relative">
         {/* Show mock chart in the background with blur */}
@@ -259,24 +259,7 @@ export default function EarningsChart({
         {/* Simple text overlay */}
         <div className="relative z-10 text-center">
           <div className="text-gray-700 text-sm font-medium">
-            Chart will appear once 5 yield earning events are registered
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Handle no earnings events
-  if (!chartData.length) {
-    return (
-      <div className="h-72 bg-white rounded-lg flex items-center justify-center relative">
-        {/* Show mock chart in the background with blur */}
-        <MockChart />
-        
-        {/* Simple text overlay */}
-        <div className="relative z-10 text-center">
-          <div className="text-gray-700 text-sm font-medium">
-            Start earning to see your chart
+            Chart will appear once 5 yield earning events are registered.
           </div>
         </div>
       </div>
