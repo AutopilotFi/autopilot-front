@@ -259,7 +259,7 @@ export default function EarningsChart({
         {/* Simple text overlay */}
         <div className="relative z-10 text-center">
           <div className="text-gray-700 text-sm font-medium">
-            Chart will appear once 5 yield earning events are registered
+            Chart will appear once 5 yield earning events are registered.
           </div>
         </div>
       </div>
@@ -276,7 +276,7 @@ export default function EarningsChart({
         {/* Simple text overlay */}
         <div className="relative z-10 text-center">
           <div className="text-gray-700 text-sm font-medium">
-            Start earning to see your chart
+            Connect wallet to see Earnings Chart.
           </div>
         </div>
       </div>
