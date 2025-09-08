@@ -240,7 +240,7 @@ export default function EarningsChart({
         <MockChart />
         
         {/* Simple text overlay */}
-        <div className="relative z-10 text-center">
+        <div className="relative z-10 text-center mb-20">
           <div className="text-gray-700 text-sm font-medium">
             Connect your wallet to see your Earnings Chart
           </div>
@@ -257,7 +257,7 @@ export default function EarningsChart({
         <MockChart />
         
         {/* Simple text overlay */}
-        <div className="relative z-10 text-center">
+        <div className="relative z-10 text-center mb-20">
           <div className="text-gray-700 text-sm font-medium">
             Chart will appear once 5 yield earning events are registered.
           </div>
