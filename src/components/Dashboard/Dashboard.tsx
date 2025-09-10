@@ -1,5 +1,5 @@
 "use client"
-import { TrendingUp, ChevronLeft, BarChart3, Wallet, Trophy, History, Info, Circle } from "lucide-react";
+import { TrendingUp, ChevronLeft, BarChart3, Wallet, Trophy, History, Info, Circle, PieChart } from "lucide-react";
 import { useState, useEffect, useContext, useRef } from "react";
 import { GlobalContext } from "../../providers/GlobalDataProvider";
 import { ProjectData, UserStats } from "@/types/globalAppTypes";
@@ -10,13 +10,14 @@ import Overview from "./Overview";
 
 import Earnings from "./Earnings";
 import HistoryTab from "./History";
+import Allocations from "./Allocations";
 import Deposit from "./Deposit";
 import Benchmark from "./Benchmark";
 
 import { useVaultMetrics } from "@/providers/VaultMetricsProvider";
 
 
-type Tab = 'overview' | 'deposit' | 'earnings' | 'benchmark' | 'details' | 'history' | undefined;
+type Tab = 'overview' | 'deposit' | 'earnings' | 'benchmark' | 'details' | 'history' | 'allocations' | undefined;
 
 // Tab navigation configuration with icons
 const tabConfig = [
@@ -25,7 +26,8 @@ const tabConfig = [
   { key: 'earnings', label: 'Earnings', icon: TrendingUp },
   { key: 'benchmark', label: 'Benchmark', icon: Trophy },
   { key: 'details', label: 'Details', icon: Info },
-  { key: 'history', label: 'History', icon: History }
+  { key: 'history', label: 'History', icon: History },
+  { key: 'allocations', label: 'Allocations', icon: PieChart }
 ];
 
 interface DashboardProps {
@@ -62,7 +64,7 @@ export default function Dashboard({
   useEffect(() => {
     const hash = window.location.hash.substring(1);
     const isValidHash = (h?: string): h is Tab =>
-      ['overview', 'deposit', 'earnings', 'benchmark', 'details', 'history'].includes(h || "");
+      ['overview', 'deposit', 'earnings', 'benchmark', 'details', 'history', 'allocations'].includes(h || "");
     if(isValidHash(hash))
       setActiveTab(hash);
     else setActiveTab("overview");
@@ -259,6 +261,15 @@ export default function Dashboard({
                   handleNavigateToDeposit={handleNavigateToDeposit}
                   isNewUser={isNewUser}
                   userStatsData={enrichedUserStats}
+                />
+              )}
+
+              {/* Allocations tab - only new users get empty state */}
+              {activeTab === 'allocations' && (
+                <Allocations
+                  currentProjectData={enrichedProjectData}
+                  handleNavigateToDeposit={handleNavigateToDeposit}
+                  isNewUser={isNewUser}
                 />
               )}
 

@@ -14,11 +14,6 @@ interface DefiLlamaPool {
   apyMean30d: number;
   poolMeta?: string;
 }
-
-interface DefiLlamaLinkResponse {
-  [key: string]: string;
-}
-
 interface DefiLlamaPoolsResponse {
   status: string;
   data: DefiLlamaPool[];

@@ -242,7 +242,7 @@ export default function EarningsChart({
         {/* Simple text overlay */}
         <div className="relative z-10 text-center mb-20">
           <div className="text-gray-700 text-sm font-medium">
-            Connect your wallet to see your Earnings Chart
+            Connect wallet to see Earnings Chart
           </div>
         </div>
       </div>

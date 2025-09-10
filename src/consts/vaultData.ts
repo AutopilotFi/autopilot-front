@@ -61,7 +61,7 @@ export const getVaultDataFromAutopilots = (
 
   const tvl = parseFloat(autopilot.vault.totalValueLocked) || 0;
 
-  const totalBalance = parseFloat(autopilot.vault.plasmaHistory?.totalBalance || '0') || 0;
+  const totalBalance = parseFloat(autopilot.vault.plasmaHistory?.[autopilot.vault.plasmaHistory.length - 1]?.totalBalance || '0') || 0;
 
   // Process allocPointData to create allocations and benchmarkData
   const allocations = (autopilot.vault.allocPointData || [])
@@ -115,7 +115,7 @@ export const getVaultDataFromAutopilots = (
     latestSharePrice: 1,
     secondBestAPY: Number(autopilot.apy) / 100 - 0.005, // Approximate second best
     tvl: formatCurrency(tvl), // Format TVL as currency (e.g., "$3.67M")
-    totalBalance: autopilot.vault.plasmaHistory?.totalBalance || '0',
+    totalBalance: autopilot.vault.plasmaHistory?.[autopilot.vault.plasmaHistory.length - 1]?.totalBalance || '0',
     tokenAddress: autopilot.vault.tokenAddress,
     vaultAddress: autopilot.vault.vaultAddress,
     tokenDecimals: autopilot.vault.decimals,

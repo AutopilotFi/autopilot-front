@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { CheckCircle, XCircle, ExternalLink, X } from "lucide-react";
 
 export interface ToastProps {
@@ -17,10 +17,10 @@ export default function Toast({ id, type, title, message, txHash, duration = 500
   const [isVisible, setIsVisible] = useState(false);
   const [isExiting, setIsExiting] = useState(false);
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     setIsExiting(true);
     setTimeout(() => onClose(id), 300);
-  };
+  }, [onClose, id]);
 
   useEffect(() => {
     // Animate in
