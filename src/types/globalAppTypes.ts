@@ -276,7 +276,7 @@ export interface DexPositionBalance {
 
 
 export interface FullVaultData extends VaultData {
-  plasmaHistory?: VaultHistoryData | null;
+  plasmaHistory?: VaultHistoryData[] | [];
 }
 
 export interface VaultContextData {

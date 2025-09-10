@@ -37,7 +37,7 @@ async function fetchVaults(): Promise<{ base: FullVaultData[]; ipor: FullVaultDa
       // ...flatten(hv.zksync),
     ].filter(Boolean);
 
-    const withHistory = allVaults.map((v) => ({ ...v, plasmaHistory: null } as FullVaultData));
+    const withHistory = allVaults.map((v) => ({ ...v, plasmaHistory: [] } as FullVaultData));
     // Split: only IPOR vaults in iporVaultData, everything else in baseVaultData
     iporVaultData = withHistory.filter(v => v.isIPORVault === true && !v.inactive);
     baseVaultData = withHistory;
@@ -100,7 +100,7 @@ export default function VaultProvider({ children }: { children: ReactNode }) {
             console.warn('Failed to fetch IPOR history for vault:', v.vaultAddress, e);
             // ignore per-vault failures, keep others
           }
-          return { ...v, plasmaHistory: plasmaHistory && Array.isArray(plasmaHistory) && plasmaHistory.length > 0 ? plasmaHistory[plasmaHistory.length - 1] : null };
+          return { ...v, plasmaHistory: plasmaHistory && Array.isArray(plasmaHistory) && plasmaHistory.length > 0 ? plasmaHistory : [] };
         })
       );
 
