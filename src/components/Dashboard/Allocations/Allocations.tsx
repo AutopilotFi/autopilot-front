@@ -69,7 +69,6 @@ export default function Allocations({ currentProjectData, isNewUser, handleNavig
   const [currentPage, setCurrentPage] = useState(1);
   const rebalancesPerPage = 5;
   const { iporVaultData } = useIPORVaults();
-  console.log(iporVaultData);
 
   // Function to get vault name from marketId using allocPointData
   const getVaultNameFromMarketId = useCallback((marketId: string, allocPointData: { hVaultAddress?: string; hVaultId: string }[]) => {
