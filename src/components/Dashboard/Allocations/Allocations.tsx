@@ -69,7 +69,6 @@ export default function Allocations({ currentProjectData, isNewUser, handleNavig
   const [currentPage, setCurrentPage] = useState(1);
   const rebalancesPerPage = 5;
   const { iporVaultData } = useIPORVaults();
-  console.log(iporVaultData);
 
   // Function to get vault name from marketId using allocPointData
   const getVaultNameFromMarketId = useCallback((marketId: string, allocPointData: { hVaultAddress?: string; hVaultId: string }[]) => {
@@ -175,11 +174,12 @@ export default function Allocations({ currentProjectData, isNewUser, handleNavig
   }, [chartData]);
 
   const rebalances = realRebalances.length > 0 ? realRebalances : [];
-  const totalRebalances = rebalances.length;
+  const totalRebalances = Math.max(0, rebalances.length - 1);
   const totalPages = Math.ceil(totalRebalances / rebalancesPerPage);
   const startIndex = (currentPage - 1) * rebalancesPerPage;
   const endIndex = startIndex + rebalancesPerPage;
-  const currentRebalances = rebalances.slice(startIndex, endIndex);
+  const currentRebalances = rebalances.slice(1).slice(startIndex, endIndex);
+  const latestAllocation = rebalances.length > 0 ? rebalances[0] : null;
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -294,6 +294,60 @@ export default function Allocations({ currentProjectData, isNewUser, handleNavig
         <>
           {/* Allocation Chart */}
           <div className="bg-white rounded-xl border border-gray-100 p-6">
+            
+            {/* Live Allocation Display */}
+            {latestAllocation && (
+              <>
+                {/* Allocation Display */}
+                <div className="bg-gradient-to-r from-green-50 to-purple-50 border border-green-200 rounded-lg p-6 mb-6">
+                {/* Allocation Bar */}
+                <div className="flex items-center bg-gradient-to-r from-green-50 to-purple-50 border border-green-200 rounded-full px-4 py-2 space-x-2 shadow-sm mb-4 w-fit">
+                  {/* Live Status Dot with Animation */}
+                  <div className="relative flex items-center">
+                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                    <div className="absolute w-2 h-2 bg-green-400 rounded-full animate-ping opacity-75"></div>
+                  </div>
+                  
+                  <span className="text-xs font-medium text-gray-700">
+                    Live allocation to the best Morpho yield sources
+                  </span>
+                </div>
+                <div className="space-y-4">
+                  <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                    <div className="h-full flex">
+                      {latestAllocation?.allocations.map((allocation, allocIndex) => (
+                        <div 
+                          key={allocIndex}
+                          className="h-full" 
+                          style={{ 
+                            width: `${allocation.percentage}%`,
+                            backgroundColor: allocation.color
+                          }} 
+                          title={allocation.name}
+                        ></div>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  {/* Legend */}
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-xs">
+                    {latestAllocation?.allocations.map((allocation, allocIndex) => (
+                      <div key={allocIndex} className="flex items-center space-x-2">
+                        <div 
+                          className="w-2 h-2 rounded flex-shrink-0"
+                          style={{ backgroundColor: allocation.color }}
+                        ></div>
+                        <div className="min-w-0">
+                          <div className="font-medium text-gray-800 truncate">{allocation.name}</div>
+                          <div className="text-gray-600">{allocation.percentage}%</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              </>
+            )}
             <div className="mb-6">
               <div className="flex items-center">
                 <div className="flex items-center bg-gradient-to-r from-green-50 to-purple-50 border border-green-200 rounded-full px-3 py-1.5 space-x-2 shadow-sm">
@@ -305,12 +359,11 @@ export default function Allocations({ currentProjectData, isNewUser, handleNavig
                   
                   {/* Main Status Text */}
                   <span className="text-sm font-medium text-gray-700">
-                    Allocation
+                    Allocation Chart
                   </span>
                 </div>
               </div>
             </div>
-            
             {/* Chart Display */}
             <div className="bg-gradient-to-r from-green-50 to-purple-50 border border-green-200 rounded-lg pr-10 py-6">
               {chartData.length > 0 ? (
