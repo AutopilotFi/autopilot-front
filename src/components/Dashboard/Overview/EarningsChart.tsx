@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useMemo, useRef, useCallback } from "react";
-import { Area, AreaChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Line } from "recharts";
+import { Area, AreaChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from "recharts";
 import { ProjectData } from "@/types/globalAppTypes";
 import { formatBalance } from "@/helpers/utils";
 import { useWallet } from "@/providers/WalletProvider";
@@ -37,7 +37,7 @@ const mockChartData = [
 export default function EarningsChart({
   currentProjectData,
   timeframe,
-  onTimeframeChange, // unused here
+  onTimeframeChange, // eslint-disable-line @typescript-eslint/no-unused-vars
   setCurDate,
   setCurContent,
 }: EarningsChartProps) {
@@ -215,7 +215,11 @@ export default function EarningsChart({
             interval="preserveStartEnd"
             minTickGap={60}
           />
-          <YAxis hide />
+          <YAxis 
+            hide
+            domain={[0, 'dataMax']}
+            scale="linear"
+          />
           <Area
             type="monotone"
             dataKey="y"
@@ -290,7 +294,11 @@ export default function EarningsChart({
             interval="preserveStartEnd"
             minTickGap={60}
           />
-          <YAxis hide />
+          <YAxis 
+            hide
+            domain={[0, 'dataMax']}
+            scale="linear"
+          />
 
           {/* Keep Tooltip mounted so Recharts sets activeTooltipIndex; hide its UI */}
           <Tooltip contentStyle={{ display: "none" }} cursor={{ stroke: "#10b981", strokeWidth: 1, strokeDasharray: "5,5" }} />
