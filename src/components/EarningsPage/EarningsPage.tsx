@@ -1,18 +1,29 @@
 'use client';
 import { useState, useContext } from 'react';
-import { TrendingUp, ArrowUpRight, RotateCcw } from 'lucide-react';
-import Link from 'next/link';
+import { RotateCcw } from 'lucide-react';
 import { EarningTransaction } from '@/types/globalAppTypes';
-import { GlobalContext } from '../GlobalDataProvider';
+import { GlobalContext } from '@/providers/GlobalDataProvider';
 import Image from 'next/image';
+import { formatBalance, formatFrequency } from '@/helpers/utils';
+import Pagination from '../UI/Pagination';
+import clsx from 'clsx';
+import { useRouter } from 'next/navigation';
+import EmptyEarnings from '../Dashboard/Earnings/EmptyEarnings';
 
-export default function EarningsPage({ earningsData }: { earningsData: EarningTransaction[] }) {
+export default function EarningsPage({
+  earningsData,
+  isLoading,
+}: {
+  earningsData: EarningTransaction[];
+  isLoading: boolean;
+}) {
   const [currentPage, setCurrentPage] = useState(1);
   const [sortBy] = useState<'timestamp' | 'amount' | 'usdValue'>('timestamp');
   const [sortOrder] = useState<'asc' | 'desc'>('desc');
   const globalData = useContext(GlobalContext);
   const user = globalData?.user;
   const isMobile = globalData?.isMobile;
+  const router = useRouter();
 
   const itemsPerPage = 25;
   const isNewUser = user.status === 'new';
@@ -43,57 +54,25 @@ export default function EarningsPage({ earningsData }: { earningsData: EarningTr
   });
 
   // Paginate results
-  const totalPages = Math.ceil(sortedTransactions.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedTransactions = sortedTransactions.slice(startIndex, startIndex + itemsPerPage);
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedTransactions = sortedTransactions.slice(startIndex, endIndex);
 
   const getAssetIcon = (asset: string): string => {
     switch (asset) {
       case 'USDC':
-        return '/coins/usdc.png';
+        return '/coins/usdc.svg';
       case 'ETH':
-        return '/coins/eth.png';
+        return '/coins/eth.svg';
       case 'cbBTC':
-        return '/coins/cbBTC.png';
+        return '/coins/cbBTC.svg';
       default:
-        return '/coins/usdc.png';
+        return '/coins/usdc.svg';
     }
   };
 
   const getProtocolIcon = (protocol: string) => {
     return protocol === 'morpho' ? '/projects/morpho.png' : '/projects/euler.png';
-  };
-
-  const formatEarnedAmount = (amount: number, asset: string) => {
-    if (asset === 'USDC') {
-      return `+${amount.toFixed(2)} ${asset}`;
-    } else if (asset === 'ETH') {
-      return `+${amount.toFixed(6)} ${asset}`;
-    } else {
-      return `+${amount.toFixed(8)} ${asset}`;
-    }
-  };
-
-  const formatTimestamp = (timestamp: Date) => {
-    const now = new Date();
-    const diffMs = now.getTime() - timestamp.getTime();
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-    const diffDays = Math.floor(diffHours / 24);
-    const diffWeeks = Math.floor(diffDays / 7);
-    const diffMonths = Math.floor(diffDays / 30);
-
-    if (diffHours < 1) {
-      const diffMinutes = Math.floor(diffMs / (1000 * 60));
-      return `${diffMinutes}m`;
-    } else if (diffHours < 24) {
-      return `${diffHours}h`;
-    } else if (diffDays < 7) {
-      return `${diffDays}d`;
-    } else if (diffWeeks < 4) {
-      return `${diffWeeks}w`;
-    } else {
-      return `${diffMonths}m`;
-    }
   };
 
   const formatFullTimestamp = (timestamp: Date) => {
@@ -152,58 +131,41 @@ export default function EarningsPage({ earningsData }: { earningsData: EarningTr
       </header>
 
       <main className="flex-1">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {isNewUser ? (
-            <div className="bg-gradient-to-br from-purple-50 to-green-50 rounded-xl border border-purple-200 p-8 text-center">
-              <div className="w-16 h-16 bg-gradient-to-br from-[#9159FF] to-green-600 rounded-xl flex items-center justify-center mx-auto mb-6">
-                <TrendingUp className="w-8 h-8 text-white" />
-              </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">Start Earning Today</h2>
-              <p className="text-gray-600 mb-8 max-w-2xl mx-auto">
-                Your earnings history will appear here once you start using Autopilot. Choose a
-                strategy and begin earning optimized returns across multiple protocols.
-              </p>
-
-              <Link
-                href={`/base/morpho/USDC`}
-                className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-[#9159FF] to-green-600 hover:from-[#7c3aed] hover:to-green-700 text-white font-semibold rounded-lg transition-colors"
-              >
-                Get Started
-                <ArrowUpRight className="w-5 h-5 ml-2" />
-              </Link>
-            </div>
-          ) : (
-            <div className="space-y-6">
-              {/* Earnings Table */}
-              <div className="bg-white rounded-xl border border-gray-100 p-6 overflow-x-hidden">
-                {/* Desktop Earnings Table */}
-                {isMobile === false && (
-                  <div className="overflow-x-auto">
-                    <table className="w-full min-w-[600px]">
-                      <thead>
-                        <tr className="border-b border-gray-100">
-                          <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wide min-w-[200px]">
-                            Autopilot Product
-                          </th>
-                          <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wide min-w-[120px]">
-                            Action
-                          </th>
-                          <th className="text-right py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wide min-w-[120px]">
-                            Earned Amount
-                          </th>
-                          <th className="text-right py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wide min-w-[100px]">
-                            USD Value
-                          </th>
-                          <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wide min-w-[80px]">
-                            Time
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {paginatedTransactions.map(transaction => (
+        <div className="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-15">
+          <div className="space-y-6">
+            {/* Earnings Table */}
+            <div
+              className={clsx('bg-white rounded-xl border border-gray-100 p-6 overflow-x-hidden')}
+            >
+              {/* Desktop Earnings Table */}
+              {isMobile === false && (
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[600px]">
+                    <thead>
+                      <tr className="border-b border-gray-100">
+                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wide min-w-[200px]">
+                          Autopilot Product
+                        </th>
+                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wide min-w-[120px]">
+                          Action
+                        </th>
+                        <th className="text-right py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wide min-w-[120px]">
+                          Earned Amount
+                        </th>
+                        <th className="text-right py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wide min-w-[100px]">
+                          USD Value
+                        </th>
+                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wide min-w-[80px]">
+                          Time
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {earningsData.length > 0 ? (
+                        paginatedTransactions.map(transaction => (
                           <tr
                             key={transaction.id}
-                            className="border-b border-gray-50 hover:bg-purple-50 transition-colors"
+                            className="border-b border-gray-50 hover:bg-gray-50 transition-colors"
                           >
                             <td className="py-4 px-4">
                               <div className="flex items-center space-x-3">
@@ -234,12 +196,16 @@ export default function EarningsPage({ earningsData }: { earningsData: EarningTr
                             <td className="py-4 px-4">{getActionBadge()}</td>
                             <td className="py-4 px-4 text-right">
                               <div className="text-sm font-medium text-green-600 truncate">
-                                {formatEarnedAmount(transaction.amount, transaction.asset)}
+                                {formatBalance(
+                                  transaction.amount,
+                                  transaction.asset,
+                                  transaction.showDecimals
+                                )}
                               </div>
                             </td>
                             <td className="py-4 px-4 text-right">
                               <div className="text-sm font-medium text-gray-900 truncate">
-                                ${transaction.usdValue.toFixed(2)}
+                                {formatBalance(transaction.usdValue, 'USD', 2)}
                               </div>
                             </td>
                             <td className="py-4 px-4">
@@ -247,23 +213,42 @@ export default function EarningsPage({ earningsData }: { earningsData: EarningTr
                                 className="text-sm text-gray-500 cursor-help"
                                 title={formatFullTimestamp(transaction.timestamp)}
                               >
-                                {formatTimestamp(transaction.timestamp)}
+                                {formatFrequency(
+                                  Date.now() / 1000 - Number(transaction.timestamp) / 1000
+                                )}
                               </div>
                             </td>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={5}>
+                            {isLoading ? (
+                              <div className="bg-white rounded-xl border border-gray-100 p-6 text-center py-22">
+                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#9159FF] mx-auto mb-4"></div>
+                                <p className="text-gray-600">Loading earnings data...</p>
+                              </div>
+                            ) : (
+                              <EmptyEarnings
+                                handleAction={() => router.push(`/base/morpho/USDC#deposit`)}
+                              />
+                            )}
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              )}
 
-                {/* Mobile Earnings Cards */}
-                {isMobile === true && (
-                  <div className="space-y-4">
-                    {paginatedTransactions.map(transaction => (
+              {/* Mobile Earnings Cards */}
+              {isMobile === true && (
+                <div className="space-y-4">
+                  {earningsData.length > 0 ? (
+                    paginatedTransactions.map(transaction => (
                       <div
                         key={transaction.id}
-                        className="border border-gray-100 rounded-lg p-4 hover:bg-purple-50 transition-colors"
+                        className="border border-gray-100 rounded-lg p-4 hover:bg-gray-50 transition-colors"
                       >
                         {/* Header with Product and Action */}
                         <div className="flex items-center justify-between mb-3">
@@ -301,7 +286,11 @@ export default function EarningsPage({ earningsData }: { earningsData: EarningTr
                               Earned Amount
                             </span>
                             <div className="text-sm font-medium text-green-600 truncate">
-                              {formatEarnedAmount(transaction.amount, transaction.asset)}
+                              {formatBalance(
+                                transaction.amount,
+                                transaction.asset,
+                                transaction.showDecimals
+                              )}
                             </div>
                           </div>
                           <div className="flex items-center justify-between">
@@ -309,7 +298,7 @@ export default function EarningsPage({ earningsData }: { earningsData: EarningTr
                               USD Value
                             </span>
                             <div className="text-sm font-medium text-gray-900 truncate">
-                              ${transaction.usdValue.toFixed(2)}
+                              {formatBalance(transaction.usdValue, 'USD', 2)}
                             </div>
                           </div>
                           <div className="flex items-center justify-between">
@@ -320,75 +309,36 @@ export default function EarningsPage({ earningsData }: { earningsData: EarningTr
                               className="text-sm text-gray-500 cursor-help"
                               title={formatFullTimestamp(transaction.timestamp)}
                             >
-                              {formatTimestamp(transaction.timestamp)}
+                              {formatFrequency(
+                                Date.now() / 1000 - Number(transaction.timestamp) / 1000
+                              )}
                             </div>
                           </div>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                )}
-
-                {/* Pagination */}
-                {totalPages > 1 && (
-                  <div className="mt-6 pt-6 border-t border-gray-100">
-                    <div className="text-sm text-gray-500 mb-4">
-                      Showing {startIndex + 1} to{' '}
-                      {Math.min(startIndex + itemsPerPage, sortedTransactions.length)} of{' '}
-                      {sortedTransactions.length} earnings events
+                    ))
+                  ) : isLoading ? (
+                    <div className="bg-white rounded-xl border border-gray-100 p-6 text-center py-25">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#9159FF] mx-auto mb-4"></div>
+                      <p className="text-gray-600">Loading earnings data...</p>
                     </div>
+                  ) : (
+                    <EmptyEarnings handleAction={() => router.push(`/base/morpho/USDC#deposit`)} />
+                  )}
+                </div>
+              )}
 
-                    <div className="flex items-center justify-center space-x-2 overflow-x-auto">
-                      <button
-                        onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                        disabled={currentPage === 1}
-                        className="px-3 py-2 border border-gray-200 rounded-lg text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0"
-                      >
-                        Previous
-                      </button>
-
-                      <div className="flex items-center space-x-1 overflow-x-auto">
-                        {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                          let pageNum;
-                          if (totalPages <= 5) {
-                            pageNum = i + 1;
-                          } else if (currentPage <= 3) {
-                            pageNum = i + 1;
-                          } else if (currentPage >= totalPages - 2) {
-                            pageNum = totalPages - 4 + i;
-                          } else {
-                            pageNum = currentPage - 2 + i;
-                          }
-
-                          return (
-                            <button
-                              key={pageNum}
-                              onClick={() => setCurrentPage(pageNum)}
-                              className={`px-3 py-2 rounded-lg text-sm transition-colors flex-shrink-0 ${
-                                currentPage === pageNum
-                                  ? 'bg-[#9159FF] text-white'
-                                  : 'border border-gray-200 hover:bg-gray-50'
-                              }`}
-                            >
-                              {pageNum}
-                            </button>
-                          );
-                        })}
-                      </div>
-
-                      <button
-                        onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                        disabled={currentPage === totalPages}
-                        className="px-3 py-2 border border-gray-200 rounded-lg text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0"
-                      >
-                        Next
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
+              {/* Pagination */}
+              <Pagination
+                currentPage={currentPage}
+                setCurrentPage={setCurrentPage}
+                dataLength={allTransactions?.length}
+                startIndex={startIndex}
+                endIndex={endIndex}
+                dataPerPage={itemsPerPage}
+              />
             </div>
-          )}
+          </div>
         </div>
       </main>
     </div>

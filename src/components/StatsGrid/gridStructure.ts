@@ -1,90 +1,155 @@
-import { ProjectData, UserStatsGrid } from '@/types/globalAppTypes';
+import { ProjectData, UserStats, UserStatsGrid } from '@/types/globalAppTypes';
+import { formatBalance } from '@/helpers/utils';
 
-export const generateUserStatsGridStructure = (
-  currentProjectData: ProjectData
+export const generateOverviewGridStructure = (
+  currentProjectData: ProjectData,
+  userStats: UserStats
 ): UserStatsGrid[] => [
   {
     label: 'Total Balance',
-    valueKey: 'totalBalance',
-    unit: currentProjectData?.asset,
-    tooltip: `Your ${currentProjectData?.asset} balance will appear here once you make your first deposit`,
+    value: formatBalance(Number(userStats.totalBalance), currentProjectData.asset, undefined, true),
+    asset: currentProjectData.asset,
   },
   {
     label: 'Total Earnings',
-    valueKey: 'totalEarnings',
-    unit: currentProjectData?.asset,
-    tooltip: 'Track your accumulated earnings from yield optimization',
+    value: formatBalance(
+      Number(userStats.totalEarnings),
+      currentProjectData.asset,
+      undefined,
+      true
+    ),
+    asset: currentProjectData?.asset,
   },
   {
     label: 'Monthly Forecast',
-    valueKey: 'monthlyForecast',
-    unit: currentProjectData?.asset,
-    tooltip: 'Projected monthly earnings based on current APY and your balance',
+    value: formatBalance(
+      Number(userStats.monthlyForecast),
+      currentProjectData.asset,
+      undefined,
+      true
+    ),
+    asset: currentProjectData?.asset,
   },
   {
     label: 'Update Frequency',
-    valueKey: 'updateFrequency',
-    unit: 'min',
-    hasTooltip: true,
+    value: `${userStats.updateFrequency !== '—' ? '~' : ''}${userStats.updateFrequency}`,
     tooltipText:
       'This is an approximation based on historical data, when the Autopilot will harvest the earned yield and distribute it to your account.',
-    latestUpdate: 'Latest: 2min ago',
   },
 ];
 
-export const generateUserEarningStatsGridStructure = (
-  currentProjectData: ProjectData
+export const generateEarningsGridStructure = (
+  currentProjectData: ProjectData,
+  userStats: UserStats
 ): UserStatsGrid[] => [
   {
     label: 'Total Earnings',
-    valueKey: 'totalEarnings',
-    unit: currentProjectData.asset,
-    tooltip: 'Your total accumulated earnings will be displayed here',
+    value: formatBalance(
+      Number(userStats.totalEarnings),
+      currentProjectData.asset,
+      undefined,
+      true
+    ),
+    asset: currentProjectData.asset,
   },
   {
     label: '30D Earnings',
-    valueKey: 'monthlyEarnings',
-    unit: currentProjectData.asset,
-    tooltip: 'Earnings from the last 30 days',
+    value: formatBalance(
+      Number(userStats.monthlyEarnings),
+      currentProjectData.asset,
+      undefined,
+      true
+    ),
+    asset: currentProjectData.asset,
   },
   {
     label: '24H Earnings',
-    valueKey: 'dailyEarnings',
-    unit: currentProjectData.asset,
-    tooltip: 'Earnings from the last 24 hours',
+    value: formatBalance(
+      Number(userStats.dailyEarnings),
+      currentProjectData.asset,
+      undefined,
+      true
+    ),
+    asset: currentProjectData.asset,
   },
   {
     label: 'Update Frequency',
-    valueKey: 'updateFrequency',
-    unit: 'min',
+    value: `${userStats.updateFrequency !== '—' ? '~' : ''}${userStats.updateFrequency}`,
+    tooltipText:
+      'This is an approximation based on historical data, when the Autopilot will harvest the earned yield and distribute it to your account.',
   },
 ];
 
-export const generateUserHistoryStatsGridStructure = (
-  currentProjectData: ProjectData
+export const generateHistoryGridStructure = (
+  currentProjectData: ProjectData,
+  userStats: UserStats
 ): UserStatsGrid[] => [
   {
     label: 'Total Deposits',
-    valueKey: 'totalDeposits',
-    unit: currentProjectData.asset,
-    tooltip: "Total amount you've deposited",
+    value: formatBalance(
+      Number(userStats.totalDeposits),
+      currentProjectData.asset,
+      undefined,
+      true
+    ),
+    asset: currentProjectData.asset,
   },
   {
     label: 'Total Withdrawals',
-    valueKey: 'totalWithdrawals',
-    unit: currentProjectData.asset,
-    tooltip: "Total amount you've withdrawn",
-  },
-  {
-    label: 'Total Earnings',
-    valueKey: 'totalEarnings',
-    unit: currentProjectData.asset,
-    tooltip: 'All-time earnings from the Autopilot',
+    value: formatBalance(
+      Number(userStats.totalWithdrawals),
+      currentProjectData.asset,
+      undefined,
+      true
+    ),
+    asset: currentProjectData.asset,
   },
   {
     label: 'Total Actions',
-    valueKey: 'totalActions',
-    unit: '',
-    tooltip: 'Number of deposits, withdrawals, and other transactions',
+    value: userStats.totalActions,
+  },
+];
+
+export const generateDetailsGridStructure = (enrichedProjectData: ProjectData): UserStatsGrid[] => [
+  {
+    label: '7d APY',
+    value: enrichedProjectData.apy7d.toString(),
+    asset: '%',
+    hideAsseticon: true,
+  },
+  {
+    label: '30d APY',
+    value: enrichedProjectData.apy30d.toString(),
+    asset: '%',
+    hideAsseticon: true,
+  },
+  {
+    label: 'TVL',
+    value: enrichedProjectData.tvl,
+  },
+];
+
+export const generatePortfolioGridStructure = (
+  totalValue: number,
+  totalEarnings: number,
+  annualEarningsFromAPY: number
+): UserStatsGrid[] => [
+  {
+    label: 'Total Portfolio Value',
+    value: formatBalance(totalValue, 'USD', 2, true),
+    asset: 'USD',
+    hideAsseticon: true,
+  },
+  {
+    label: 'All-Time Earnings',
+    value: formatBalance(totalEarnings, 'USD', 2, true),
+    asset: 'USD',
+    hideAsseticon: true,
+  },
+  {
+    label: 'Est. Annual Earnings',
+    value: formatBalance(Math.round(annualEarningsFromAPY), 'USD', 2, true),
+    asset: 'USD',
+    hideAsseticon: true,
   },
 ];

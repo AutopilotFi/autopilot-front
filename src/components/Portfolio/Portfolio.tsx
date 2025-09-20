@@ -1,33 +1,141 @@
 'use client';
 import { useState, useEffect, useContext } from 'react';
-import { TrendingUp, Wallet, BarChart3, ArrowUpRight, Shield } from 'lucide-react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { LatestEarningData, PortfolioData } from '@/types/globalAppTypes';
-import { GlobalContext } from '../GlobalDataProvider';
-import Image from 'next/image';
+import { Allocations, LatestEarningData, PortfolioData } from '@/types/globalAppTypes';
+import { GlobalContext } from '@/providers/GlobalDataProvider';
 import DesktopPositions from './Positions/DesktopPostions';
 import MobilePositions from './Positions/MobilePositions';
 import DesktopLatestEarnings from './LatestEarnings/DesktopLatestEarnings';
 import MobileLatestEarnings from './LatestEarnings/MobileLatestEarnings';
+// import { useWallet } from '@/providers/WalletProvider';
+import { useVaultMetrics } from '@/providers/VaultMetricsProvider';
+import { getVaultDataFromAutopilots } from '@/consts/vaultData';
+import StatsGrid from '../StatsGrid';
+import { generatePortfolioGridStructure } from '../StatsGrid/gridStructure';
+import EmptyEarnings from '../Dashboard/Earnings/EmptyEarnings';
 
-export default function Portfolio({
-  portfolioData,
-  latestEarningsData,
-}: {
-  portfolioData: PortfolioData;
-  latestEarningsData: LatestEarningData;
-}) {
+export default function Portfolio() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [sortColumn] = useState<string | null>(null);
   const [sortDirection] = useState<'asc' | 'desc'>('asc');
-  const router = useRouter();
+  const [realPortfolioData, setRealPortfolioData] = useState<PortfolioData>([]);
+  const [realLatestEarningsData, setRealLatestEarningsData] = useState<LatestEarningData>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   const globalData = useContext(GlobalContext);
   const user = globalData?.user;
   const isMobile = globalData?.isMobile;
   const availableAutopilots = globalData?.availableAutopilots;
+  // const { account } = useWallet();
+  const { vaultMetrics, isLoading: metricsLoading, error: metricsError } = useVaultMetrics();
 
   const isNewUser = user.status === 'new';
+
+  const allocations: Allocations = availableAutopilots.reduce(
+    (acc, autopilot) => ({
+      ...acc,
+      [`${autopilot.protocol}-${autopilot.asset}`]: getVaultDataFromAutopilots(
+        availableAutopilots,
+        autopilot.protocol,
+        autopilot.asset
+      )?.benchmarkData?.filter(
+        allocation =>
+          !allocation.isAutopilot &&
+          Number(allocation.allocation) > 1e-8 &&
+          allocation.name !== 'Not invested'
+      ),
+    }),
+    {}
+  );
+
+  // Process portfolio data from VaultMetricsProvider
+  useEffect(() => {
+    if (
+      !availableAutopilots ||
+      availableAutopilots.length === 0 ||
+      Object.keys(vaultMetrics).length === 0 ||
+      metricsLoading
+    ) {
+      setLoading(true);
+      return;
+    }
+
+    try {
+      setLoading(false);
+      setError(null);
+
+      const portfolioData: PortfolioData = [];
+      const earningsData: LatestEarningData = [];
+
+      // Process data for each available autopilot using cached metrics
+      for (const autopilot of availableAutopilots) {
+        try {
+          const vaultData = autopilot.vault;
+
+          if (!vaultData?.vaultAddress) {
+            continue;
+          }
+
+          // Get metrics from VaultMetricsProvider
+          const result = vaultMetrics[vaultData.vaultAddress];
+          if (!result || result.error) {
+            console.warn(`No metrics available for vault: ${vaultData.vaultAddress}`);
+            continue;
+          }
+
+          // Find the highest APY from allocPointData
+          const secondBestAPY =
+            autopilot.vault.allocPointData && autopilot.vault.allocPointData.length > 0
+              ? Math.max(...autopilot.vault.allocPointData.map(item => Number(item.apy || 0)))
+              : 0;
+
+          const usdValue = result.metrics.totalBalance * result.metrics.latestUnderlyingPrice;
+
+          portfolioData.push({
+            protocol: autopilot.protocol,
+            asset: autopilot.asset,
+            showDecimals: autopilot.showDecimals,
+            balance: result.metrics.totalBalance,
+            usdValue: usdValue,
+            earnings: result.metrics.totalEarnings,
+            earningsUsd: result.metrics.totalEarnings * result.metrics.latestUnderlyingPrice,
+            apy: autopilot.apy,
+            secondBestAPY: secondBestAPY,
+            status: 'active',
+          });
+
+          const latestEarnings = result.metrics.earningsSeries.map(
+            (earning: { amount: number; amountUsd?: number; timestamp: number }) => ({
+              asset: autopilot.asset,
+              protocol: autopilot.protocol,
+              amount: earning.amount,
+              value: earning.amountUsd || earning.amount * result.metrics.latestUnderlyingPrice,
+              time: earning.timestamp,
+              icon: autopilot.icon,
+            })
+          );
+
+          earningsData.push(...latestEarnings);
+        } catch (vaultError) {
+          console.error(
+            `Error processing data for ${autopilot.protocol}-${autopilot.asset}:`,
+            vaultError
+          );
+        }
+      }
+
+      const sortedPortfolio = portfolioData.sort((a, b) => b.usdValue - a.usdValue);
+      const sortedEarnings = earningsData.sort((a, b) => b.time - a.time).slice(0, 4);
+
+      setRealPortfolioData(sortedPortfolio);
+      setRealLatestEarningsData(sortedEarnings);
+    } catch (err) {
+      console.error('Error processing portfolio data:', err);
+      setError('Failed to process portfolio data');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [availableAutopilots, vaultMetrics]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -41,20 +149,24 @@ export default function Portfolio({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isDropdownOpen]);
 
-  const portfolio = isNewUser ? [] : portfolioData;
+  const portfolio = isNewUser ? [] : realPortfolioData.length > 0 ? realPortfolioData : [];
 
-  const latestEarnings = isNewUser ? [] : latestEarningsData;
+  const latestEarnings = isNewUser
+    ? []
+    : realLatestEarningsData.length > 0
+      ? realLatestEarningsData
+      : [];
 
   const getAssetIcon = (asset: string) => {
     switch (asset) {
       case 'USDC':
-        return '/coins/usdc.png';
-      case 'ETH':
-        return '/coins/eth.png';
+        return '/coins/usdc.svg';
+      case 'WETH':
+        return '/coins/eth.svg';
       case 'cbBTC':
-        return '/coins/cbBTC.png';
+        return '/coins/cbBTC.svg';
       default:
-        return '/coins/usdc.png';
+        return '/coins/usdc.svg';
     }
   };
 
@@ -62,14 +174,20 @@ export default function Portfolio({
     return protocol === 'morpho' ? '/projects/morpho.png' : '/projects/euler.png';
   };
 
-  const totalValue = portfolio.reduce((sum, item) => sum + item.usdValue, 0);
-  const totalEarnings = portfolio.reduce((sum, item) => sum + item.earningsUsd, 0);
+  const totalValue = loading ? 0 : portfolio.reduce((sum, item) => sum + item.usdValue, 0);
+  const totalEarnings = loading ? 0 : portfolio.reduce((sum, item) => sum + item.earningsUsd, 0);
 
   // Calculate annual earnings based on actual Live APYs
   const morphoPositions = portfolio.filter(position => position.protocol === 'morpho');
-  const annualEarningsFromAPY = morphoPositions.reduce((sum, position) => {
-    return sum + position.usdValue * (position.apy / 100);
-  }, 0);
+  const annualEarningsFromAPY = loading
+    ? 0
+    : morphoPositions.reduce((sum, position) => {
+        return sum + position.usdValue * (position.apy / 100);
+      }, 0);
+
+  // Show loading state for portfolio stats if still loading
+  const showPortfolioStats =
+    !loading && !metricsLoading && !error && !metricsError && realPortfolioData.length > 0;
 
   // Sort portfolio data
   const sortedPortfolioData = portfolio.sort((a, b) => {
@@ -110,15 +228,8 @@ export default function Portfolio({
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <div>
-                <h1 className="font-semibold text-gray-900">Portfolio Overview</h1>
-                <p className="text-sm text-gray-500">
-                  {isNewUser ? 'Welcome to Autopilot' : 'Manage your positions'}
-                  {isNewUser && (
-                    <span className="ml-2 text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-medium">
-                      New User View
-                    </span>
-                  )}
-                </p>
+                <h1 className="font-semibold text-gray-900">Portfolio</h1>
+                <p className="text-sm text-gray-500">View all positions</p>
               </div>
             </div>
           </div>
@@ -127,231 +238,104 @@ export default function Portfolio({
 
       <main className="flex-1">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {isNewUser ? (
-            <div className="space-y-8">
-              {/* Welcome Section */}
-              <div className="bg-gradient-to-br from-blue-50 to-green-50 rounded-xl border border-blue-200 p-8 text-center">
-                <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-green-600 rounded-xl flex items-center justify-center mx-auto mb-6">
-                  <Wallet className="w-8 h-8 text-white" />
-                </div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">Welcome to Autopilot</h2>
-                <p className="text-gray-600 mb-8 max-w-2xl mx-auto">
-                  Start building your DeFi portfolio with automated yield optimization. Choose an
-                  Autopilot strategy and begin earning optimized returns across multiple protocols.
-                </p>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                  <div className="bg-white/80 rounded-lg p-6 border">
-                    <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-3">
-                      <TrendingUp className="w-5 h-5 text-green-600" />
-                    </div>
-                    <h3 className="font-semibold text-gray-900 mb-2">Auto-Optimization</h3>
-                    <p className="text-sm text-gray-600">
-                      Automatically rebalance across top-yielding vaults
-                    </p>
-                  </div>
-
-                  <div className="bg-white/80 rounded-lg p-6 border">
-                    <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-3">
-                      <BarChart3 className="w-5 h-5 text-blue-600" />
-                    </div>
-                    <h3 className="font-semibold text-gray-900 mb-2">Real-time Analytics</h3>
-                    <p className="text-sm text-gray-600">
-                      Track performance and earnings in real-time
-                    </p>
-                  </div>
-
-                  <div className="bg-white/80 rounded-lg p-6 border">
-                    <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center mx-auto mb-3">
-                      <Shield className="w-5 h-5 text-purple-600" />
-                    </div>
-                    <h3 className="font-semibold text-gray-900 mb-2">Secure Platform</h3>
-                    <p className="text-sm text-gray-600">
-                      Audited smart contracts and insurance options
-                    </p>
-                  </div>
-                </div>
-
-                <Link
-                  href="/base/morpho/USDC#deposit"
-                  className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white font-semibold rounded-lg transition-colors"
-                >
-                  Get Started
-                  <ArrowUpRight className="w-5 h-5 ml-2" />
-                </Link>
-              </div>
-
-              {/* Available Autopilots */}
-              <div className="bg-white rounded-xl border border-gray-100 p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-6">Available Autopilots</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {availableAutopilots?.map((autopilot, index) => (
-                    <button
-                      key={index}
-                      onClick={() =>
-                        router.push(`/base/${autopilot.protocol}/${autopilot.asset}#deposit`)
-                      }
-                      className="p-4 border border-gray-200 rounded-lg hover:border-green-300 hover:bg-green-50 transition-colors text-left group"
-                    >
-                      <div className="flex items-center space-x-3 mb-3">
-                        <Image
-                          width={28}
-                          height={28}
-                          src={getAssetIcon(autopilot.asset)}
-                          alt={autopilot.asset}
-                          className="w-8 h-8"
-                        />
-                        <Image
-                          width={21}
-                          height={21}
-                          src={getProtocolIcon(autopilot.protocol)}
-                          alt={autopilot.protocol}
-                          className="w-6 h-6"
-                        />
-                        <div className="flex-1">
-                          <div className="font-medium text-gray-900">
-                            {autopilot.asset} Autopilot
-                          </div>
-                          <div className="text-sm text-gray-500 capitalize">
-                            {autopilot.protocol}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-lg font-semibold text-green-600">
-                          {autopilot.apy.toFixed(2)}% APY
-                        </span>
-                        <ArrowUpRight className="w-4 h-4 text-gray-400 group-hover:text-green-600 transition-colors" />
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
+          {error ? (
+            <div className="bg-white rounded-xl border border-gray-100 p-8 text-center">
+              <div className="text-red-500 text-lg mb-2">Error</div>
+              <p className="text-gray-600">{error}</p>
+            </div>
+          ) : !loading && (!availableAutopilots || availableAutopilots.length === 0) ? (
+            <div className="bg-white rounded-xl border border-gray-100 p-8 text-center">
+              <div className="text-gray-500 text-lg mb-2">No Autopilots Available</div>
+              <p className="text-gray-600">
+                No autopilots are currently available on this network.
+              </p>
             </div>
           ) : (
             // Portfolio view for active users
             <div className="space-y-6">
               {/* Top Stats Row */}
-              {/* Desktop Layout - 3 columns */}
-              <div className="hidden md:grid grid-cols-3 gap-6">
-                {/* Total Portfolio Value */}
-                <div className="bg-white rounded-xl border border-gray-100 p-6">
-                  <h3 className="text-sm font-medium text-gray-600 mb-2">Total Portfolio Value</h3>
-                  <p className="text-xl font-bold text-gray-900">
-                    ${totalValue.toLocaleString('en-US', { useGrouping: true })}
-                    <span className="text-xs font-normal text-gray-500 ml-1">USD</span>
-                  </p>
-                </div>
 
-                {/* All-Time Earnings */}
-                <div className="bg-white rounded-xl border border-gray-100 p-6">
-                  <h3 className="text-sm font-medium text-gray-600 mb-2">All-Time Earnings</h3>
-                  <p className="text-xl font-bold text-gray-900">
-                    ${totalEarnings.toLocaleString('en-US', { useGrouping: true })}
-                    <span className="text-xs font-normal text-gray-900 ml-1">USD</span>
-                  </p>
-                </div>
-
-                {/* Est. Annual Earnings */}
-                <div className="bg-white rounded-xl border border-gray-100 p-6">
-                  <h3 className="text-sm font-medium text-gray-600 mb-2">Est. Annual Earnings</h3>
-                  <p className="text-xl font-bold text-gray-900">
-                    $
-                    {Math.round(annualEarningsFromAPY).toLocaleString('en-US', {
-                      useGrouping: true,
-                    })}
-                    <span className="text-xs font-normal text-gray-900 ml-1">USD</span>
-                  </p>
-                </div>
-              </div>
-
-              {/* Mobile Layout */}
-              <div className="md:hidden space-y-4">
-                {/* Total Portfolio Value - Full Width */}
-                <div className="bg-white rounded-xl border border-gray-100 p-6">
-                  <h3 className="text-sm font-medium text-gray-600 mb-2">Total Portfolio Value</h3>
-                  <p className="text-xl font-bold text-gray-900">
-                    ${totalValue.toLocaleString('en-US', { useGrouping: true })}
-                    <span className="text-xs font-normal text-gray-500 ml-1">USD</span>
-                  </p>
-                </div>
-
-                {/* Earnings Row - 2 columns */}
-                <div className="grid grid-cols-2 gap-4">
-                  {/* All-Time Earnings */}
-                  <div className="bg-white rounded-xl border border-gray-100 p-6">
-                    <h3 className="text-sm font-medium text-gray-600 mb-2">All-Time Earnings</h3>
-                    <p className="text-xl font-bold text-gray-900">
-                      ${totalEarnings.toLocaleString('en-US', { useGrouping: true })}
-                      <span className="text-xs font-normal text-gray-900 ml-1">USD</span>
-                    </p>
-                  </div>
-
-                  {/* Est. Annual Earnings */}
-                  <div className="bg-white rounded-xl border border-gray-100 p-6">
-                    <h3 className="text-sm font-medium text-gray-600 mb-2">Est. Annual Earnings</h3>
-                    <p className="text-xl font-bold text-gray-900">
-                      $
-                      {Math.round(annualEarningsFromAPY).toLocaleString('en-US', {
-                        useGrouping: true,
-                      })}
-                      <span className="text-xs font-normal text-gray-900 ml-1">USD</span>
-                    </p>
-                  </div>
-                </div>
-              </div>
+              <StatsGrid
+                gridStructure={generatePortfolioGridStructure(
+                  totalValue,
+                  totalEarnings,
+                  annualEarningsFromAPY
+                )}
+                desktopColumns={3}
+              />
 
               {/* Positions */}
               <div className="space-y-4">
                 <div className="bg-white rounded-xl border border-gray-100 p-6">
                   <h3 className="text-sm font-medium text-gray-600 mb-4">My Positions</h3>
-                  {/* Desktop Table */}
-                  {isMobile === false && (
-                    <DesktopPositions
-                      getAssetIcon={getAssetIcon}
-                      getProtocolIcon={getProtocolIcon}
-                      sortedPortfolioData={sortedPortfolioData}
-                    />
-                  )}
-                  {/* Mobile Cards */}
-                  {isMobile === true && (
-                    <MobilePositions
-                      getAssetIcon={getAssetIcon}
-                      getProtocolIcon={getProtocolIcon}
-                      sortedPortfolioData={sortedPortfolioData}
-                    />
+                  {!showPortfolioStats ? (
+                    <div className="bg-white rounded-xl border border-gray-100 p-6 text-center py-12">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#9159FF] mx-auto mb-4"></div>
+                      <p className="text-gray-600">Loading portfolio positions...</p>
+                    </div>
+                  ) : (
+                    <>
+                      {/* Desktop Table */}
+                      {isMobile === false && (
+                        <DesktopPositions
+                          allocations={allocations}
+                          getAssetIcon={getAssetIcon}
+                          getProtocolIcon={getProtocolIcon}
+                          sortedPortfolioData={sortedPortfolioData}
+                        />
+                      )}
+                      {/* Mobile Cards */}
+                      {isMobile === true && (
+                        <MobilePositions
+                          allocations={allocations}
+                          getAssetIcon={getAssetIcon}
+                          getProtocolIcon={getProtocolIcon}
+                          sortedPortfolioData={sortedPortfolioData}
+                        />
+                      )}
+                    </>
                   )}
                 </div>
               </div>
 
               {/* Latest Earnings Section */}
-              <div className="bg-white rounded-xl border border-gray-100 p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-sm font-medium text-gray-600 mb-2">Latest Earnings</h3>
-                  <Link
-                    href="/earnings"
-                    className="text-xs bg-[#9159FF] text-white px-3 py-1.5 rounded-md hover:bg-[#7c3aed] transition-colors"
-                  >
-                    View All
-                  </Link>
+              {!showPortfolioStats ? (
+                <div className="bg-white rounded-xl border border-gray-100 p-6 text-center py-12">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#9159FF] mx-auto mb-4"></div>
+                  <p className="text-gray-600">Loading earnings data...</p>
                 </div>
+              ) : latestEarnings.length > 0 ? (
+                <div className="bg-white rounded-xl border border-gray-100 p-6">
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-sm font-medium text-gray-600 mb-2">Latest Earnings</h3>
+                    <Link
+                      href="/earnings"
+                      className="text-xs bg-[#9159FF] text-white px-3 py-1.5 rounded-md hover:bg-[#7c3aed] transition-colors"
+                    >
+                      View All
+                    </Link>
+                  </div>
+                  {/* Desktop Table */}
+                  {isMobile === false && (
+                    <DesktopLatestEarnings
+                      getProtocolIcon={getProtocolIcon}
+                      latestEarnings={latestEarnings}
+                    />
+                  )}
 
-                {/* Desktop Table */}
-                {isMobile === false && (
-                  <DesktopLatestEarnings
-                    getProtocolIcon={getProtocolIcon}
-                    latestEarnings={latestEarnings}
-                  />
-                )}
-
-                {/* Mobile Cards */}
-                {isMobile === true && (
-                  <MobileLatestEarnings
-                    getProtocolIcon={getProtocolIcon}
-                    latestEarnings={latestEarnings}
-                  />
-                )}
-              </div>
+                  {/* Mobile Cards */}
+                  {isMobile === true && (
+                    <MobileLatestEarnings
+                      getProtocolIcon={getProtocolIcon}
+                      latestEarnings={latestEarnings}
+                    />
+                  )}
+                </div>
+              ) : (
+                <div className="bg-white rounded-xl border border-gray-100 p-6">
+                  <EmptyEarnings />
+                </div>
+              )}
             </div>
           )}
         </div>

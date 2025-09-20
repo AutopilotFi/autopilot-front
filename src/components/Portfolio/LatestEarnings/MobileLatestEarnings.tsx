@@ -1,3 +1,4 @@
+import { formatBalance, formatTimeAgo } from '@/helpers/utils';
 import { LatestEarningData } from '@/types/globalAppTypes';
 import Image from 'next/image';
 
@@ -15,7 +16,7 @@ export default function MobileLatestEarnings({
         .map((earning, index) => (
           <div
             key={index}
-            className="border border-gray-100 rounded-lg p-4 hover:bg-purple-50 transition-colors"
+            className="border border-gray-100 rounded-lg p-4 hover:bg-gray-50 transition-colors"
           >
             {/* Header with Asset and Protocol */}
             <div className="flex items-center justify-between mb-3">
@@ -48,26 +49,22 @@ export default function MobileLatestEarnings({
                   Amount
                 </span>
                 <div className="text-sm font-medium text-green-600">
-                  +
-                  {earning.asset === 'USDC'
-                    ? earning.amount.toFixed(2)
-                    : earning.asset === 'ETH'
-                      ? earning.amount.toFixed(4)
-                      : earning.amount.toFixed(6)}{' '}
-                  {earning.asset}
+                  {formatBalance(earning.amount, earning.asset)}
                 </div>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
                   USD Value
                 </span>
-                <div className="text-sm font-medium text-gray-900">${earning.value.toFixed(2)}</div>
+                <div className="text-sm font-medium text-gray-900">
+                  {formatBalance(earning.value, 'USD', 2)}
+                </div>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
                   Time
                 </span>
-                <div className="text-sm text-gray-500">{earning.time}</div>
+                <div className="text-sm text-gray-500">{formatTimeAgo(earning.time)}</div>
               </div>
             </div>
           </div>

@@ -1,6 +1,45 @@
+'use client';
+import { fetchDefiLlamaAPY } from '@/hooks/useDefiLlamaAPY';
 import { BenchmarkData } from '@/types/globalAppTypes';
+import { useEffect, useState } from 'react';
 
 export default function Benchamrk({ benchmarkData }: { benchmarkData: BenchmarkData[] }) {
+  const [syncedBenchmarkData, setSyncedBenchmarkData] = useState<BenchmarkData[]>([]);
+
+  useEffect(() => {
+    const validBenchmarks = benchmarkData.filter(benchmark => benchmark.name !== 'Not invested');
+    if (validBenchmarks.length === 0) {
+      setSyncedBenchmarkData(benchmarkData);
+      return;
+    }
+
+    const syncAPYData = async () => {
+      try {
+        const apyData = await fetchDefiLlamaAPY(validBenchmarks);
+        const result = validBenchmarks.map(item => ({
+          ...item,
+          apy30dMean: apyData[item.hVaultAddress?.toLowerCase()] || item.apy,
+        }));
+
+        const sortedResult = result.sort((a, b) => {
+          if (a.isAutopilot && !b.isAutopilot) return -1;
+          if (!a.isAutopilot && b.isAutopilot) return 1;
+
+          const aAPY = a.apy30dMean || a.apy;
+          const bAPY = b.apy30dMean || b.apy;
+          return bAPY - aAPY;
+        });
+
+        setSyncedBenchmarkData(sortedResult);
+      } catch (error) {
+        console.error('Failed to fetch APY data:', error);
+        setSyncedBenchmarkData(validBenchmarks);
+      }
+    };
+
+    syncAPYData();
+  }, [benchmarkData]);
+
   return (
     <div className="bg-white rounded-xl border border-gray-100 p-6">
       <div className="flex items-center justify-between mb-6">
@@ -13,7 +52,7 @@ export default function Benchamrk({ benchmarkData }: { benchmarkData: BenchmarkD
       </div>
 
       <div className="space-y-3">
-        {benchmarkData.map((item, index) => (
+        {syncedBenchmarkData.map((item, index) => (
           <div
             key={item.name}
             className={`p-4 rounded-xl border transition-all hover:shadow-md ${
@@ -61,7 +100,7 @@ export default function Benchamrk({ benchmarkData }: { benchmarkData: BenchmarkD
                 <div
                   className={`font-bold ${item.isAutopilot ? 'text-[#9159FF]' : 'text-gray-900'}`}
                 >
-                  {item.apy.toFixed(2)}%
+                  {item.apy30dMean ? item.apy30dMean.toFixed(2) : item.apy.toFixed(2)}%
                 </div>
                 <div className="text-xs text-gray-500">30d APY</div>
               </div>

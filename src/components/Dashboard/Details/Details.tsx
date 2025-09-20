@@ -8,26 +8,12 @@ import {
   BarChart2,
   ExternalLink,
 } from 'lucide-react';
-import Image from 'next/image';
 import CurrentAllocations from './CurrentAllocations';
-
-const detailsStats = [
-  {
-    label: '30d APY',
-    valueKey: 'monthlyApy' as keyof ProjectData,
-    unit: '%',
-  },
-  {
-    label: '90d APY',
-    valueKey: 'quateryApy' as keyof ProjectData,
-    unit: '%',
-  },
-  {
-    label: 'TVL',
-    valueKey: 'tvl' as keyof ProjectData,
-    unit: '',
-  },
-];
+import { useEffect, useState } from 'react';
+import { fetchDefiLlamaAPY } from '@/hooks/useDefiLlamaAPY';
+import { formatBalance, getExplorerLink } from '@/helpers/utils';
+import { generateDetailsGridStructure } from '@/components/StatsGrid/gridStructure';
+import StatsGrid from '@/components/StatsGrid';
 
 export default function Details({
   currentProjectData,
@@ -39,37 +25,65 @@ export default function Details({
   isOldUser: boolean;
   isMobile?: boolean;
 }) {
+  const [enrichedProjectData, setEnrichedProjectData] = useState<ProjectData>(currentProjectData);
+  const allocations = currentProjectData.benchmarkData.filter(
+    allocation => !allocation.isAutopilot && Number(allocation.allocation) > 1e-8
+  );
+
+  useEffect(() => {
+    if (!currentProjectData.benchmarkData || currentProjectData.benchmarkData.length === 0) {
+      return;
+    }
+
+    const validBenchmarks = currentProjectData.benchmarkData.filter(
+      benchmark => benchmark.hVaultAddress && benchmark.name !== 'Not invested'
+    );
+
+    if (validBenchmarks.length === 0) {
+      return;
+    }
+
+    const fetchAPYData = async () => {
+      try {
+        const apyData = await fetchDefiLlamaAPY(validBenchmarks);
+
+        const updatedProjectData = {
+          ...currentProjectData,
+          apy30d:
+            apyData[currentProjectData.vaultAddress?.toLowerCase()] || currentProjectData.apy30d,
+        };
+
+        const updatedBenchmarkData = currentProjectData.benchmarkData.map(benchmark => {
+          if (!benchmark.hVaultAddress) {
+            return benchmark;
+          }
+
+          const realTimeAPY = apyData[benchmark.hVaultAddress.toLowerCase()];
+          return {
+            ...benchmark,
+            apy: realTimeAPY !== undefined ? realTimeAPY : benchmark.apy,
+          };
+        });
+
+        setEnrichedProjectData({
+          ...updatedProjectData,
+          benchmarkData: updatedBenchmarkData,
+        });
+      } catch (error) {
+        console.error('Failed to fetch DefiLlama APY data:', error);
+        setEnrichedProjectData(currentProjectData);
+      }
+    };
+
+    fetchAPYData();
+  }, [currentProjectData]);
+
   return (
     <div className="space-y-8">
-      <div className="grid grid-cols-3 gap-3 md:gap-6">
-        {detailsStats.map((stat, index) => (
-          <div
-            key={index}
-            className="bg-white rounded-lg md:rounded-xl border border-gray-100 p-3 md:p-6 relative"
-          >
-            <div className="flex items-start justify-between mb-2 md:mb-3">
-              <p className="text-xs md:text-sm font-medium text-gray-600 leading-tight">
-                {stat.label}
-              </p>
-              {stat.unit !== '' && stat.unit !== '%' && (
-                <Image
-                  width={10}
-                  height={10}
-                  src={currentProjectData.assetIcon}
-                  alt={stat.unit}
-                  className="w-3 md:w-4 h-3 md:h-4 flex-shrink-0"
-                />
-              )}
-            </div>
-            <div className="flex items-baseline space-x-1 md:space-x-2">
-              <span className="text-lg md:text-2xl font-bold leading-none break-all text-gray-900">
-                {currentProjectData[stat.valueKey].toString()}
-              </span>
-              <span className="text-xs md:text-sm text-gray-500 flex-shrink-0">{stat.unit}</span>
-            </div>
-          </div>
-        ))}
-      </div>
+      <StatsGrid
+        gridStructure={generateDetailsGridStructure(enrichedProjectData)}
+        desktopColumns={3}
+      />
 
       {/* Automated Algorithm Active */}
       <div className="bg-white rounded-xl border border-gray-100 p-6">
@@ -87,7 +101,7 @@ export default function Details({
             </div>
             <p className="text-sm text-gray-600">
               Automated rebalancing algorithm monitors yield opportunities across connected{' '}
-              {currentProjectData.name.toLowerCase()} vaults and automatically adjusts allocations
+              {enrichedProjectData.name.toLowerCase()} vaults and automatically adjusts allocations
               to maximize yield potential.
             </p>
           </div>
@@ -135,24 +149,37 @@ export default function Details({
             <div className="space-y-3">
               <div className="flex justify-between">
                 <span className="text-sm text-gray-600">Operating since</span>
-                <span className="text-sm font-medium text-gray-900">March 2024</span>
+                <span className="text-sm font-medium text-gray-900">
+                  {enrichedProjectData.operatingSince}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-sm text-gray-600">Starting SharePrice</span>
                 <span className="text-sm font-medium text-gray-900">
-                  1.0000 {currentProjectData.asset}
+                  {formatBalance(
+                    enrichedProjectData.initialSharePrice,
+                    enrichedProjectData.asset,
+                    enrichedProjectData.showDecimals
+                  )}
                 </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-sm text-gray-600">Latest SharePrice</span>
                 <span className="text-sm font-medium text-gray-900">
-                  1.10013 {currentProjectData.asset}
+                  {formatBalance(
+                    enrichedProjectData.latestSharePrice,
+                    enrichedProjectData.asset,
+                    // enrichedProjectData.showDecimals
+                    5
+                  )}
                 </span>
               </div>
-              <div className="flex justify-between">
+              {/* <div className="flex justify-between">
                 <span className="text-sm text-gray-600">Latest SharePrice Update</span>
-                <span className="text-sm font-medium text-gray-900">1h 12min ago</span>
-              </div>
+                <span className="text-sm font-medium text-gray-900">
+                  {enrichedProjectData.latestUpdate} ago
+                </span>
+              </div> */}
             </div>
           </div>
 
@@ -165,20 +192,19 @@ export default function Details({
               <div className="flex justify-between">
                 <span className="text-sm text-gray-600">30d Average</span>
                 <span className="text-sm font-medium text-gray-900">
-                  {currentProjectData.monthlyApy}%
+                  {enrichedProjectData.apy30d}%
                 </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-sm text-gray-600">90d Average</span>
                 <span className="text-sm font-medium text-gray-900">
-                  {currentProjectData.quateryApy}%
+                  {/* {enrichedProjectData.quateryApy}% */}
                 </span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Yield Sources - Full Width List */}
         <div>
           <h4 className="text-sm font-semibold text-gray-900 mb-4 uppercase tracking-wide">
             Autopilot Vault
@@ -195,7 +221,8 @@ export default function Details({
                   <div className="min-w-0 flex-1">
                     <div className="text-sm font-medium text-gray-900">Main Vault Contract</div>
                     <div className="text-xs font-mono text-gray-600 break-all md:break-normal">
-                      0x742d35Cc...A8D9
+                      {enrichedProjectData.vaultAddress.slice(0, 5)}...
+                      {enrichedProjectData.vaultAddress.slice(-5)}
                     </div>
                   </div>
                 </div>
@@ -205,11 +232,16 @@ export default function Details({
                     <span className="hidden sm:inline">DeBank</span>
                     <span className="sm:hidden">View</span>
                   </button>
-                  <button className="flex items-center space-x-1 px-2 py-1 text-xs font-medium text-gray-600 hover:text-[#9159FF] transition-colors bg-white rounded border border-gray-200 flex-shrink-0">
+                  <a
+                    className="flex items-center space-x-1 px-2 py-1 text-xs font-medium text-gray-600 hover:text-[#9159FF] transition-colors bg-white rounded border border-gray-200 flex-shrink-0"
+                    href={`${getExplorerLink(currentProjectData.chainId || 8453)}/address/${enrichedProjectData.vaultAddress}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
                     <ExternalLink className="w-3 h-3" />
                     <span className="hidden sm:inline">Etherscan</span>
                     <span className="sm:hidden">View</span>
-                  </button>
+                  </a>
                 </div>
               </div>
             </div>
@@ -220,31 +252,43 @@ export default function Details({
       {/* Current Allocation Table - Always show for both user states */}
       <CurrentAllocations
         currentProjectData={currentProjectData}
+        allocations={allocations}
         isOldUser={isOldUser}
         isMobile={isMobile}
       />
 
+      {/* Yield Sources - Full Width List */}
       <div className="bg-white rounded-xl border border-gray-100 p-6">
         <div className="mb-6">
           <h4 className="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-4">
             Yield Sources
           </h4>
           <div className="space-y-2">
-            {currentProjectData.yieldSources.map(vault => (
-              <div
-                key={vault.name}
-                className="flex justify-between items-center py-3 px-4 bg-gray-50 rounded-lg"
-              >
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium text-gray-800">{vault.name}</div>
+            {enrichedProjectData.benchmarkData
+              .filter(vault => !vault.isAutopilot && vault.name !== 'Not invested')
+              .map(vault => (
+                <div
+                  key={vault.name}
+                  className="flex justify-between items-center py-3 px-4 bg-gray-50 rounded-lg"
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium text-gray-800">{vault.name}</div>
+                  </div>
+                  <div className="ml-3 flex-shrink-0">
+                    <a
+                      href={`${getExplorerLink(currentProjectData.chainId || 8453)}/address/${vault.hVaultAddress}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs font-mono text-gray-600 hover:text-gray-800 bg-white hover:bg-gray-50 px-2 py-1 rounded border transition-colors flex items-center space-x-1 group"
+                    >
+                      <span>
+                        {vault.hVaultAddress.slice(0, 6)}...{vault.hVaultAddress.slice(-4)}
+                      </span>
+                      <ExternalLink className="w-3 h-3 text-gray-900 opacity-50 group-hover:opacity-100 transition-opacity" />
+                    </a>
+                  </div>
                 </div>
-                <div className="ml-3 flex-shrink-0">
-                  <span className="text-xs font-mono text-gray-500 bg-white px-3 py-1.5 rounded border border-gray-200">
-                    {vault.address}
-                  </span>
-                </div>
-              </div>
-            ))}
+              ))}
           </div>
         </div>
       </div>

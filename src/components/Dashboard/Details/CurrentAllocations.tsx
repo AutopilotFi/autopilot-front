@@ -1,16 +1,21 @@
-import { ProjectData } from '@/types/globalAppTypes';
+'use client';
+import { formatBalance } from '@/helpers/utils';
+import { BenchmarkData, ProjectData } from '@/types/globalAppTypes';
 import { Zap, Layers } from 'lucide-react';
 import Image from 'next/image';
 
 export default function CurrentAllocations({
   currentProjectData,
+  allocations,
   isOldUser,
   isMobile,
 }: {
   currentProjectData: ProjectData;
+  allocations: BenchmarkData[];
   isOldUser: boolean;
   isMobile?: boolean;
 }) {
+  const filteredAllocations = allocations.filter(allocation => allocation.name !== 'Not invested');
   return (
     <div className="bg-white rounded-xl border border-gray-100 p-4 md:p-6">
       <div className="mb-4 md:mb-6">
@@ -46,14 +51,14 @@ export default function CurrentAllocations({
               </p>
             </div>
           </div>
-          <div
+          {/* <div
             className={`${isOldUser ? 'bg-white text-gray-700 border-gray-200/50' : 'bg-white text-green-700 border-green-200/50'} px-2 md:px-3 py-1 rounded-lg text-xs font-medium border flex-shrink-0`}
           >
             <span className="hidden sm:inline">
               {isOldUser ? 'Inactive' : 'Last rebalance: 2h'}
             </span>
             <span className="sm:hidden">{isOldUser ? 'Inactive' : '2h'}</span>
-          </div>
+          </div> */}
         </div>
       </div>
 
@@ -72,10 +77,10 @@ export default function CurrentAllocations({
       {/* Mobile card layout - Active Allocations */}
       {!isOldUser && isMobile && (
         <div className="space-y-3">
-          {currentProjectData.allocations.map((allocation, index) => (
+          {filteredAllocations.map((allocation, index) => (
             <div
-              key={index}
-              className="bg-gray-50 rounded-lg p-4 hover:bg-purple-50 transition-colors"
+              key={`${index}.${allocation.hVaultAddress}.${allocation.apy}`}
+              className="bg-gray-50 rounded-lg p-4 hover:bg-gray-50 transition-colors"
             >
               {/* Header with source and APY */}
               <div className="flex items-center justify-between mb-3">
@@ -99,7 +104,7 @@ export default function CurrentAllocations({
                         alt="Morpho"
                         className="w-3 h-3 flex-shrink-0"
                       />
-                      <span className="text-xs text-gray-500">Morpho</span>
+                      <span className="text-xs text-gray-500">{currentProjectData.name}</span>
                     </div>
                   </div>
                 </div>
@@ -113,16 +118,20 @@ export default function CurrentAllocations({
                 <div>
                   <div className="text-xs text-gray-500 mb-1">Amount</div>
                   <div className="text-sm font-medium text-gray-900">
-                    {allocation.amount.toLocaleString('en-US', {
-                      maximumFractionDigits: currentProjectData.asset === 'USDC' ? 0 : 4,
-                    })}{' '}
-                    {currentProjectData.asset}
+                    {formatBalance(
+                      allocation.amount ?? 0,
+                      currentProjectData.asset,
+                      currentProjectData.showDecimals
+                    )}
                   </div>
                 </div>
                 <div className="text-right">
                   <div className="text-xs text-gray-500 mb-1">Allocation</div>
                   <div className="text-sm font-medium text-gray-900">
-                    {allocation.allocation.toFixed(1)}%
+                    {(allocation.allocation ?? 0) < 0.01
+                      ? '<0.01'
+                      : (allocation.allocation ?? 0).toFixed(2)}
+                    %
                   </div>
                 </div>
               </div>
@@ -168,10 +177,10 @@ export default function CurrentAllocations({
                   </td>
                 </tr>
               ) : (
-                currentProjectData.allocations.map((allocation, index) => (
+                filteredAllocations.map((allocation, index) => (
                   <tr
                     key={index}
-                    className="border-b border-gray-50 hover:bg-purple-50 transition-colors"
+                    className="border-b border-gray-50 hover:bg-gray-50 transition-colors"
                   >
                     <td className="py-4 px-4">
                       <div className="flex items-center space-x-3">
@@ -192,7 +201,7 @@ export default function CurrentAllocations({
                               alt="Morpho"
                               className="w-3 h-3"
                             />
-                            <span className="text-xs text-gray-500">Morpho</span>
+                            <span className="text-xs text-gray-500">{currentProjectData.name}</span>
                           </div>
                         </div>
                       </div>
@@ -204,15 +213,19 @@ export default function CurrentAllocations({
                     </td>
                     <td className="py-4 px-4 text-right">
                       <div className="text-sm font-medium text-gray-900">
-                        {allocation.amount.toLocaleString('en-US', {
-                          maximumFractionDigits: currentProjectData.asset === 'USDC' ? 0 : 4,
-                        })}{' '}
-                        {currentProjectData.asset}
+                        {formatBalance(
+                          allocation.amount ?? 0,
+                          currentProjectData.asset,
+                          currentProjectData.showDecimals
+                        )}
                       </div>
                     </td>
                     <td className="py-4 px-4 text-right">
                       <div className="text-sm font-medium text-gray-900">
-                        {allocation.allocation.toFixed(1)}%
+                        {(allocation.allocation ?? 0) < 0.01
+                          ? '<0.01'
+                          : (allocation.allocation ?? 0).toFixed(2)}
+                        %
                       </div>
                     </td>
                   </tr>

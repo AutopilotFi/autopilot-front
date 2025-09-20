@@ -1,0 +1,301 @@
+import {
+  CHAIN_IDS,
+  MATICSCAN_URL,
+  ARBISCAN_URL,
+  BASESCAN_URL,
+  ZKSYNCSCAN_URL,
+  ETHERSCAN_URL,
+} from '@/consts/constants';
+import BigNumber from 'bignumber.js';
+
+/**
+ * Formats a number into a human-readable currency string with abbreviations
+ * @param value - The number to format
+ * @param currency - The currency symbol (default: '$')
+ * @param decimals - Number of decimal places to show (default: 2)
+ * @returns Formatted string like "$3.67M", "$1.2B", etc.
+ */
+export const formatCurrency = (
+  value: number,
+  currency: string = '$',
+  decimals: number = 2
+): string => {
+  if (value === 0) return `${currency}0`;
+
+  const absValue = Math.abs(value);
+  const sign = value < 0 ? '-' : '';
+
+  if (absValue >= 1e12) {
+    return `${sign}${currency}${(absValue / 1e12).toFixed(decimals)}T`;
+  } else if (absValue >= 1e9) {
+    return `${sign}${currency}${(absValue / 1e9).toFixed(decimals)}B`;
+  } else if (absValue >= 1e6) {
+    return `${sign}${currency}${(absValue / 1e6).toFixed(decimals)}M`;
+  } else if (absValue >= 1e3) {
+    return `${sign}${currency}${(absValue / 1e3).toFixed(decimals)}K`;
+  } else {
+    return `${sign}${currency}${absValue.toFixed(decimals)}`;
+  }
+};
+
+/**
+ * Formats a percentage value
+ * @param value - The percentage value (0-100)
+ * @param decimals - Number of decimal places to show (default: 2)
+ * @returns Formatted string like "8.75%"
+ */
+export const formatPercentage = (value: number, decimals: number = 2): string => {
+  return `${value.toFixed(decimals)}%`;
+};
+
+/**
+ * Formats a number with locale-specific formatting
+ * @param value - The number to format
+ * @param locale - The locale to use (default: 'en-US')
+ * @param options - Intl.NumberFormatOptions
+ * @returns Formatted string
+ */
+export const formatLocaleNumber = (
+  value: number,
+  locale: string = 'en-US',
+  options?: Intl.NumberFormatOptions
+): string => {
+  return new Intl.NumberFormat(locale, options).format(value);
+};
+
+export const getExplorerLink = (chainId: number): string => {
+  switch (chainId) {
+    case CHAIN_IDS.POLYGON:
+      return MATICSCAN_URL;
+    case CHAIN_IDS.ARBITRUM:
+      return ARBISCAN_URL;
+    case CHAIN_IDS.BASE:
+      return BASESCAN_URL;
+    case CHAIN_IDS.ZKSYNC:
+      return ZKSYNCSCAN_URL;
+    default:
+      return ETHERSCAN_URL;
+  }
+};
+
+export const fromWei = (
+  wei: string | number,
+  decimals: number,
+  decimalsToDisplay = 2,
+  format = false
+): string | number => {
+  let result: string | number = '0';
+
+  try {
+    if (wei != null) {
+      const weiAmountInBN = new BigNumber(wei);
+
+      if (!weiAmountInBN.isNaN() && weiAmountInBN.isGreaterThan(0)) {
+        // Ensure decimalsToDisplay is a valid number
+        const displayDecimals = parseInt(decimalsToDisplay.toString(), 10);
+        if (!isNaN(displayDecimals)) {
+          result = weiAmountInBN
+            .div(new BigNumber(10).exponentiatedBy(decimals))
+            .toFixed(displayDecimals);
+
+          if (format) {
+            result = parseFloat(result);
+          }
+        } else {
+          console.error('Invalid value for decimalsToDisplay:', decimalsToDisplay);
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Error converting wei to decimal:', error);
+  }
+
+  return result;
+};
+
+export const formatNumber = (value: number, decimals = 2): string => {
+  return value.toFixed(decimals);
+};
+
+export const formatFrequency = (value: number): string => {
+  if (value === 0 || !isFinite(value)) {
+    return '-';
+  }
+
+  const days = Math.floor(value / (24 * 3600));
+  const hours = Math.floor((value % (24 * 3600)) / 3600);
+  const minutes = Math.floor((value % 3600) / 60);
+
+  const daysText = days > 0 ? `${days}d` : '';
+  const hoursText = hours > 0 ? `${hours}h` : '';
+  const minutesText = minutes > 0 ? `${minutes}m` : '';
+
+  return [daysText, hoursText, minutesText].filter(Boolean).join(' ');
+};
+
+export const formatDate = (value: number): string => {
+  const date = new Date(value * 1000); // Convert seconds to milliseconds
+  const year = date.getFullYear();
+  const monthNames = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ];
+  const monthNum = date.getMonth();
+  const month = monthNames[monthNum];
+  const day = date.getDate();
+
+  return `${month} ${day} ${year}`;
+};
+
+export const formatBalance = (
+  balance: number,
+  asset: string,
+  decimals?: number,
+  hideAsset?: boolean
+): string => {
+  let decimalPlaces: number;
+
+  if (decimals !== undefined) {
+    decimalPlaces = decimals;
+  } else {
+    switch (asset) {
+      case 'USDC':
+      case 'USDT':
+      case 'DAI':
+        decimalPlaces = 2;
+        break;
+      case 'WETH':
+      case 'ETH':
+        decimalPlaces = 6;
+        break;
+      case 'WBTC':
+      case 'cbBTC':
+        decimalPlaces = 8;
+        break;
+      default:
+        decimalPlaces = 6;
+    }
+  }
+
+  const threshold = 1 / Math.pow(10, decimalPlaces);
+
+  if ((asset === 'USD' || asset === '$') && balance > threshold) {
+    return `${balance.toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })} ${!hideAsset ? asset : ''}`;
+  }
+
+  if (balance === 0) {
+    return `0 ${!hideAsset ? asset : ''}`;
+  }
+
+  if (balance < threshold) {
+    return `<${threshold.toFixed(decimalPlaces)} ${!hideAsset ? asset : ''}`;
+  }
+
+  return `${balance.toLocaleString('en-US', {
+    minimumFractionDigits: Math.min(decimalPlaces, 2),
+    maximumFractionDigits: decimalPlaces,
+  })} ${!hideAsset ? asset : ''}`;
+};
+
+export const toWei = (
+  token: string | number,
+  decimals: number,
+  decimalsToDisplay?: number
+): string => {
+  if (token != null) {
+    token = token.toString();
+  }
+  let tokenAmountInBN = new BigNumber(token);
+
+  if (typeof decimals !== 'undefined' && tokenAmountInBN.isGreaterThan(0)) {
+    tokenAmountInBN = tokenAmountInBN.multipliedBy(new BigNumber(10).exponentiatedBy(decimals));
+
+    if (typeof decimalsToDisplay !== 'undefined') {
+      tokenAmountInBN = tokenAmountInBN.decimalPlaces(decimalsToDisplay);
+    }
+
+    return tokenAmountInBN.toFixed();
+  }
+  return '0';
+};
+
+export const getChainIdFromNetwork = (network: string): number => {
+  switch (network.toLowerCase()) {
+    case 'ethereum':
+      return CHAIN_IDS.MAINNET;
+    case 'base':
+      return CHAIN_IDS.BASE;
+    case 'arbitrum':
+      return CHAIN_IDS.ARBITRUM;
+    case 'polygon':
+      return CHAIN_IDS.POLYGON;
+    case 'zksync':
+      return CHAIN_IDS.ZKSYNC;
+    default:
+      return CHAIN_IDS.BASE; // Default to Base
+  }
+};
+
+export const generateColor = (vaultList: Record<string, unknown>, key: string) => {
+  const colorPalette = [
+    '#9b7ede', // Dusty Purple
+    '#d6a737', // Goldenrod
+    '#5f9ea0', // Teal Grey
+    '#8a9a5b', // Olive Green
+    '#b68f40', // Spicy Mustard
+    '#708090', // Slate
+    '#b491c8', // Soft Lilac
+    '#c4a000', // Mustard
+    '#a39887', // Taupe
+    '#556b2f', // Forest Moss
+    '#d0893d', // Muted Amber
+    '#77bfa3', // Seafoam
+    '#d08ca7', // Clay Pink
+    '#7a9e9f', // Dust Blue
+    '#b87333', // Copper
+    '#4a90e2', // Blue
+    '#f39c12', // Orange
+    '#e74c3c', // Red
+    '#2ecc71', // Green
+    '#9b59b6', // Purple
+    '#1abc9c', // Turquoise
+    '#34495e', // Dark Blue Grey
+    '#e67e22', // Carrot
+    '#95a5a6', // Concrete
+    '#f1c40f', // Sun Flower
+  ];
+
+  let hash = 0;
+  for (let i = 0; i < key.length; i++) {
+    const char = key.charCodeAt(i);
+    hash = (hash << 5) - hash + char;
+    hash = hash & hash;
+  }
+
+  const index = Math.abs(hash) % colorPalette.length;
+  return colorPalette[index];
+};
+
+export const formatTimeAgo = (timestamp: number): string => {
+  const now = Math.floor(Date.now() / 1000);
+  const diffSeconds = now - timestamp;
+
+  if (diffSeconds < 60) return `${diffSeconds}s`;
+  if (diffSeconds < 3600) return `${Math.floor(diffSeconds / 60)}m`;
+  if (diffSeconds < 86400) return `${Math.floor(diffSeconds / 3600)}h`;
+  if (diffSeconds < 2592000) return `${Math.floor(diffSeconds / 86400)}d`;
+  return `${Math.floor(diffSeconds / 2592000)}mo`;
+};

@@ -1,15 +1,23 @@
 'use client';
 import { ProjectData } from '@/types/globalAppTypes';
-import { TooltipProvider, Tooltip, TooltipContent, TooltipTrigger } from '@/components/UI/Tooltip';
-import { Plus, Minus, Info, TrendingUp } from 'lucide-react';
-import Image from 'next/image';
+import { Plus, Minus, Info, Shield, Loader2, AlertTriangle } from 'lucide-react';
 import { Dispatch, SetStateAction, useState } from 'react';
+import { useIporActions } from '@/hooks/useIporActions';
+import { useBalances } from '@/hooks/useBalances';
+import { useWallet } from '@/providers/WalletProvider';
+import { useToastContext } from '@/providers/ToastProvider';
+import { Address, parseUnits } from 'viem';
+import { CHAIN_NAMES } from '@/consts/constants';
+import { ConnectWalletButton } from '@/components/ConnectWalletButton';
+import { convertAssetsToVault } from '@/lib/contracts/iporVault';
+import { formatBalance } from '@/helpers/utils';
+import Image from 'next/image';
 
 export default function Deposit({
   isNewUser,
   currentProjectData,
   setShowTermsModal,
-  handleOpenBenchmark,
+  // handleOpenBenchmark,
 }: {
   isNewUser: boolean;
   currentProjectData: ProjectData;
@@ -19,13 +27,212 @@ export default function Deposit({
   const [depositMode, setDepositMode] = useState<'enter' | 'exit'>('enter');
   const [insuranceEnabled, setInsuranceEnabled] = useState(false);
   const [depositAmount, setDepositAmount] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [txSuccess, setTxSuccess] = useState<string | null>(null);
+  const [isRefreshingBalances, setIsRefreshingBalances] = useState(false);
+
+  const { isConnected, chainId, switchChain, publicClient } = useWallet();
+  const { deposit, withdraw } = useIporActions();
+  const { showSuccess, showError } = useToastContext();
+
+  const isCorrectNetwork = chainId === currentProjectData.chainId;
+  const targetChainName =
+    CHAIN_NAMES[currentProjectData.chainId as keyof typeof CHAIN_NAMES] || 'Unknown Network';
+
+  const handleSwitchNetwork = async () => {
+    try {
+      await switchChain(currentProjectData.chainId);
+
+      showSuccess('Network Switched!', `Successfully switched to ${targetChainName} network`);
+    } catch (error) {
+      console.error('Network switching failed:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to switch network';
+
+      showError('Network Switch Failed', errorMessage);
+    }
+  };
+
+  // Fetch real-time balances
+  const {
+    tokenBalanceFormatted,
+    vaultBalanceFormatted,
+    loading: balancesLoading,
+    refetch: refetchBalances,
+  } = useBalances(
+    currentProjectData.tokenAddress,
+    currentProjectData.vaultAddress,
+    parseInt(currentProjectData.tokenDecimals)
+  );
+
+  const handleDeposit = async () => {
+    if (!depositAmount || parseFloat(depositAmount) <= 0) return;
+
+    try {
+      setIsProcessing(true);
+      setTxSuccess(null);
+
+      const result = await deposit(
+        currentProjectData.vaultAddress as Address,
+        currentProjectData.tokenAddress as Address,
+        depositAmount,
+        parseInt(currentProjectData.tokenDecimals)
+      );
+
+      setTxSuccess(`Deposit successful! Transaction: ${result.hash}`);
+      setDepositAmount('');
+      setInsuranceEnabled(false);
+
+      showSuccess(
+        'Deposit Successful!',
+        `${depositAmount} ${currentProjectData.asset} deposited successfully`,
+        result.hash
+      );
+
+      await refreshBalancesAfterTransaction();
+    } catch (error) {
+      let userMessage = 'Deposit failed';
+      if (error instanceof Error) {
+        if (error.message.includes('User rejected') || error.message.includes('User denied')) {
+          userMessage = 'Transaction was cancelled by user';
+        } else if (error.message.includes('insufficient funds')) {
+          userMessage = 'Insufficient funds for transaction';
+        } else if (error.message.includes('network')) {
+          userMessage = 'Network error occurred';
+        } else {
+          userMessage = 'Transaction failed. Please try again.';
+        }
+      }
+
+      showError('Deposit Failed', userMessage);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  // Handle withdraw transaction
+  const handleWithdraw = async () => {
+    if (!depositAmount || parseFloat(depositAmount) <= 0) return;
+
+    try {
+      setIsProcessing(true);
+      setTxSuccess(null);
+
+      // Convert underlying token amount to vault shares
+      const underlyingAmount = parseUnits(
+        depositAmount,
+        parseInt(currentProjectData.tokenDecimals)
+      );
+      const vaultShares = await convertAssetsToVault(
+        publicClient,
+        currentProjectData.vaultAddress,
+        underlyingAmount
+      );
+
+      const result = await withdraw(
+        currentProjectData.vaultAddress as Address,
+        vaultShares.toString()
+      );
+
+      setTxSuccess(`Withdrawal successful! Transaction: ${result.hash}`);
+      setDepositAmount('');
+
+      showSuccess(
+        'Withdrawal Successful!',
+        `${depositAmount} ${currentProjectData.asset} withdrawn successfully`,
+        result.hash
+      );
+
+      await refreshBalancesAfterTransaction();
+    } catch (error) {
+      console.error('Withdrawal failed:', error);
+
+      let userMessage = 'Withdrawal failed';
+      if (error instanceof Error) {
+        if (error.message.includes('User rejected') || error.message.includes('User denied')) {
+          userMessage = 'Transaction was cancelled by user';
+        } else if (error.message.includes('insufficient funds')) {
+          userMessage = 'Insufficient funds for transaction';
+        } else if (error.message.includes('network')) {
+          userMessage = 'Network error occurred';
+        } else {
+          userMessage = 'Transaction failed. Please try again.';
+        }
+      }
+
+      showError('Withdrawal Failed', userMessage);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleMainAction = async () => {
+    if (!isConnected) {
+      return;
+    }
+
+    // Check if network is correct first
+    if (!isCorrectNetwork) {
+      await handleSwitchNetwork();
+      return;
+    }
+
+    if (isNewUser && depositMode === 'enter') {
+      setShowTermsModal(true);
+      return;
+    }
+
+    if (depositMode === 'enter') {
+      await handleDeposit();
+    } else {
+      await handleWithdraw();
+    }
+  };
+
+  const refreshBalancesAfterTransaction = async () => {
+    setIsRefreshingBalances(true);
+    const maxAttempts = 3;
+    const delays = [1000, 2000, 3000]; // 1s, 2s, 3s delays
+
+    try {
+      for (let attempt = 0; attempt < maxAttempts; attempt++) {
+        try {
+          await new Promise(resolve => setTimeout(resolve, delays[attempt]));
+          await refetchBalances();
+          console.log(`Balance refresh successful on attempt ${attempt + 1}`);
+          break;
+        } catch (error) {
+          console.warn(`Balance refresh attempt ${attempt + 1} failed:`, error);
+          if (attempt === maxAttempts - 1) {
+            console.error('All balance refresh attempts failed');
+            // Show a warning to the user but don't override success message
+            if (!txSuccess) {
+            }
+          }
+        }
+      }
+    } finally {
+      setIsRefreshingBalances(false);
+    }
+  };
+
+  // Get current balance for display
+  const currentBalance =
+    depositMode === 'enter'
+      ? balancesLoading
+        ? currentProjectData.walletBalance
+        : tokenBalanceFormatted
+      : balancesLoading
+        ? isNewUser
+          ? 0
+          : currentProjectData.autopilotBalance
+        : vaultBalanceFormatted;
   return (
     <div className="space-y-6">
       <div className="flex flex-col lg:flex-row gap-6">
         {/* Left: Deposit Interface */}
-        <div className="w-full lg:w-[60%] bg-white rounded-xl pt-5 px-5 pb-0 border border-gray-100">
+        <div className="w-full lg:w-[60%] bg-white rounded-xl p-6 border border-gray-100">
           {/* Full Width Enter/Exit Toggle */}
-          <div className="relative bg-gray-100 rounded-2xl p-1 flex mb-5">
+          <div className="relative bg-gray-100 rounded-2xl p-1 flex mb-6">
             <div
               className={`absolute top-1 h-[calc(100%-8px)] bg-white rounded-xl transition-all duration-300 ease-in-out ${
                 depositMode === 'enter'
@@ -37,7 +244,7 @@ export default function Deposit({
             <button
               onClick={() => setDepositMode('enter')}
               className={`relative z-10 px-6 py-3 rounded-xl font-medium transition-all duration-300 flex items-center justify-center space-x-2 flex-1 ${
-                depositMode === 'enter' ? 'text-green-600' : 'text-gray-500 hover:text-gray-700'
+                depositMode === 'enter' ? 'text-[#9159FF]' : 'text-gray-500 hover:text-gray-700'
               }`}
             >
               <Plus
@@ -51,7 +258,7 @@ export default function Deposit({
             <button
               onClick={() => setDepositMode('exit')}
               className={`relative z-10 px-6 py-3 rounded-xl font-medium transition-all duration-300 flex items-center justify-center space-x-2 flex-1 ${
-                depositMode === 'exit' ? 'text-green-600' : 'text-gray-500 hover:text-gray-700'
+                depositMode === 'exit' ? 'text-[#9159FF]' : 'text-gray-500 hover:text-gray-700'
               }`}
               disabled={isNewUser}
             >
@@ -78,8 +285,20 @@ export default function Deposit({
             </div>
           )}
 
+          {txSuccess && (
+            <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+              <div className="flex items-center space-x-3">
+                <Shield className="w-5 h-5 text-green-500 flex-shrink-0" />
+                <div>
+                  <h4 className="text-sm font-medium text-green-900">Transaction Successful</h4>
+                  <p className="text-sm text-green-700">{txSuccess}</p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Available Balance Section with Integrated Top-up */}
-          <div className="bg-gray-50 rounded-xl p-4 mb-5">
+          <div className="bg-gray-50 rounded-xl p-4 mb-6">
             <div className="flex items-center justify-between">
               <div className="flex-1">
                 <p className="text-sm text-gray-500 mb-1">
@@ -95,37 +314,34 @@ export default function Deposit({
                     alt={currentProjectData.asset}
                     className="w-6 h-6"
                   />
-                  <span className="text-xl font-semibold text-gray-900">
-                    {depositMode === 'enter'
-                      ? currentProjectData.walletBalance.toLocaleString('en-US', {
-                          minimumFractionDigits: currentProjectData.asset === 'USDC' ? 2 : 6,
-                          maximumFractionDigits: currentProjectData.asset === 'USDC' ? 2 : 6,
-                        })
-                      : isNewUser
-                        ? '0.00'
-                        : currentProjectData.autopilotBalance.toLocaleString('en-US', {
-                            minimumFractionDigits: currentProjectData.asset === 'USDC' ? 2 : 6,
-                            maximumFractionDigits: currentProjectData.asset === 'USDC' ? 2 : 6,
-                          })}{' '}
-                    {currentProjectData.asset}
-                  </span>
+                  <div className="flex items-center space-x-2">
+                    {(balancesLoading || isRefreshingBalances) && (
+                      <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
+                    )}
+                    <span className="text-xl font-semibold text-gray-900">
+                      {formatBalance(currentBalance, currentProjectData.asset)}
+                    </span>
+                    {isRefreshingBalances && (
+                      <span className="text-xs text-blue-600 font-medium">Updating...</span>
+                    )}
+                  </div>
                 </div>
               </div>
 
               {/* {depositMode === 'enter' && (
-                        <button
-                            onClick={() => console.log('Top-up clicked')}
-                            className="bg-[#9159FF] hover:bg-[#7c3aed] text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-1.5"
-                        >
-                            <Plus className="w-3.5 h-3.5" />
-                            <span>Top-up</span>
-                        </button>
-                        )} */}
+                <button
+                  onClick={() => {}}
+                  className="bg-[#9159FF] hover:bg-[#7c3aed] text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-1.5"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Top-up</span>
+                </button>
+              )} */}
             </div>
           </div>
 
           {/* Amount Input */}
-          <div className="space-y-4 mb-5">
+          <div className="space-y-4 mb-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Amount to {depositMode === 'enter' ? 'Deposit' : 'Withdraw'}
@@ -134,9 +350,18 @@ export default function Deposit({
                 <input
                   type="text"
                   value={depositAmount}
-                  onChange={e => setDepositAmount(e.target.value.replace(/[^0-9.]/g, ''))}
+                  onChange={e => {
+                    setDepositAmount(e.target.value.replace(/[^0-9.]/g, ''));
+                    setTxSuccess(null);
+                  }}
                   placeholder="0.00"
-                  className="w-full p-4 pr-20 border border-gray-200 rounded-lg text-xl font-medium focus:ring-1 focus:ring-purple-300 focus:border-purple-400 transition-colors"
+                  disabled={
+                    balancesLoading ||
+                    isProcessing ||
+                    isRefreshingBalances ||
+                    (isConnected && !isCorrectNetwork)
+                  }
+                  className="w-full p-4 pr-20 border border-gray-200 rounded-lg text-xl font-medium focus:ring-1 focus:ring-purple-300 focus:border-purple-400 transition-colors disabled:bg-gray-50 disabled:cursor-not-allowed"
                 />
                 <div className="absolute right-4 top-1/2 transform -translate-y-1/2 flex items-center space-x-2">
                   <Image
@@ -159,18 +384,22 @@ export default function Deposit({
                 <button
                   key={percentage}
                   onClick={() => {
-                    const balance =
-                      depositMode === 'enter'
-                        ? currentProjectData.walletBalance
-                        : isNewUser
-                          ? 0
-                          : currentProjectData.autopilotBalance;
-                    const amount = ((balance * percentage) / 100).toFixed(
-                      currentProjectData.asset === 'USDC' ? 2 : 6
-                    );
+                    const amount =
+                      percentage === 100
+                        ? currentBalance.toString() // Use full balance without toFixed for 100%
+                        : ((currentBalance * percentage) / 100).toFixed(
+                            currentProjectData.asset === 'USDC' ? 2 : 6
+                          );
                     setDepositAmount(amount);
+                    setTxSuccess(null);
                   }}
-                  className="py-2.5 px-3 bg-gray-100 hover:bg-purple-100 hover:text-purple-700 rounded-lg text-sm font-medium text-gray-700 transition-colors"
+                  disabled={
+                    balancesLoading ||
+                    isProcessing ||
+                    isRefreshingBalances ||
+                    (isConnected && !isCorrectNetwork)
+                  }
+                  className="py-2.5 px-3 bg-gray-100 hover:bg-purple-100 hover:text-purple-700 disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed rounded-lg text-sm font-medium text-gray-700 transition-colors"
                 >
                   {percentage}%
                 </button>
@@ -178,57 +407,156 @@ export default function Deposit({
             </div>
           </div>
 
+          {/* Deposit Insurance - Added above supply button for Enter mode */}
+          {/* {depositMode === 'enter' && (
+            <div className="mb-6 p-4 border border-purple-200 rounded-lg bg-purple-50">
+              <div className="flex items-start space-x-3">
+                <div className="flex-shrink-0 mt-1">
+                  <Shield className="w-5 h-5 text-purple-600" />
+                </div>
+
+                <div className="flex-1">
+                  <div className="flex items-center justify-between mb-3">
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-900">
+                        30-Day Deposit Protection
+                      </h3>
+                      <p className="text-xs text-gray-600 mt-1">
+                        Optional coverage for your deposit against smart contract risks
+                      </p>
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                      <span className="text-xs text-gray-500">Powered by</span>
+                      <div className="flex items-center justify-center bg-blue-500/10 border border-blue-300/20 rounded-md px-3 py-1.5 h-8">
+                        <img src="/projects/openCover.png" alt="OpenCover" className="h-4 w-auto" />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <label className="flex items-center space-x-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={insuranceEnabled}
+                          onChange={e => setInsuranceEnabled(e.target.checked)}
+                          className="w-4 h-4 text-purple-600 bg-white border-2 border-gray-300 rounded focus:ring-purple-500 focus:ring-2 checked:bg-purple-600 checked:border-purple-600 transition-all"
+                        />
+                        <span className="text-sm text-gray-700">Enable protection</span>
+                      </label>
+
+                      <div className="group relative">
+                        <Info className="w-4 h-4 text-gray-400 cursor-help" />
+                        <div className="invisible group-hover:visible absolute z-10 w-64 p-2 mt-1 text-xs text-white bg-gray-900 rounded-md shadow-lg -translate-x-1/2 left-1/2">
+                          Covers up to 100% of your deposit against smart contract vulnerabilities
+                          and protocol risks for 30 days.
+                        </div>
+                      </div>
+                    </div>
+
+                    {depositAmount && parseFloat(depositAmount) > 0 && (
+                      <div className="text-right">
+                        <div className="text-sm font-medium text-gray-900">
+                          {(parseFloat(depositAmount) * 0.0024).toLocaleString('en-US', {
+                            minimumFractionDigits: currentProjectData.asset === 'USDC' ? 2 : 6,
+                            maximumFractionDigits: currentProjectData.asset === 'USDC' ? 2 : 6,
+                          })}{' '}
+                          {currentProjectData.asset}
+                        </div>
+                        <div className="text-xs text-gray-500">Coverage cost (0.24%)</div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )} */}
+
+          {/* Network Switching Indicator */}
+          {isConnected && !isCorrectNetwork && (
+            <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg flex items-center space-x-3">
+              <AlertTriangle className="w-5 h-5 text-yellow-500 flex-shrink-0" />
+              <div>
+                <h4 className="text-sm font-medium text-yellow-900">Network Mismatch</h4>
+                <p className="text-sm text-yellow-700">
+                  Your wallet is connected to{' '}
+                  {CHAIN_NAMES[chainId as keyof typeof CHAIN_NAMES] || 'an unknown network'}. This
+                  vault is deployed on {targetChainName}. Please use the button below to switch
+                  networks.
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* Supply Button with Dynamic Text */}
-          <button
-            onClick={() => {
-              if (isNewUser && depositMode === 'enter') {
-                setShowTermsModal(true);
-                return;
+          {!isConnected ? (
+            <div className="w-full">
+              <ConnectWalletButton />
+            </div>
+          ) : (
+            <button
+              onClick={handleMainAction}
+              disabled={
+                isProcessing ||
+                balancesLoading ||
+                isRefreshingBalances ||
+                (isNewUser && depositMode === 'exit') ||
+                (!isCorrectNetwork
+                  ? false
+                  : !depositAmount ||
+                    parseFloat(depositAmount) <= 0 ||
+                    (depositMode === 'enter' && parseFloat(depositAmount) > currentBalance) ||
+                    (depositMode === 'exit' && parseFloat(depositAmount) > currentBalance))
               }
-              if (!depositAmount) return;
-              console.log(
-                `${depositMode === 'enter' ? 'Depositing' : 'Withdrawing'} ${depositAmount} ${currentProjectData.asset}`
-              );
-              setDepositAmount('');
-              setInsuranceEnabled(false);
-            }}
-            disabled={isNewUser && depositMode === 'exit'}
-            className="w-full bg-[#9159FF] hover:bg-[#7c3aed] disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-medium py-4 rounded-lg transition-all duration-300 text-lg shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] mb-5"
-          >
-            {(() => {
-              if (isNewUser && depositMode === 'enter') {
-                return 'Accept Terms of Use';
-              }
+              className="w-full bg-[#9159FF] hover:bg-[#7c3aed] disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-medium py-4 rounded-lg transition-colors text-lg flex items-center justify-center space-x-2"
+            >
+              {isProcessing && <Loader2 className="w-5 h-5 animate-spin" />}
+              <span>
+                {(() => {
+                  if (isProcessing) {
+                    return depositMode === 'enter'
+                      ? 'Processing Deposit...'
+                      : 'Processing Withdrawal...';
+                  }
 
-              const amount = parseFloat(depositAmount);
-              const hasAmount = amount > 0;
+                  if (isNewUser && depositMode === 'enter') {
+                    return 'Accept Terms of Use';
+                  }
 
-              if (depositMode === 'enter') {
-                if (insuranceEnabled && hasAmount) {
-                  return `Supply ${amount.toLocaleString('en-US', {
-                    minimumFractionDigits: currentProjectData.asset === 'USDC' ? 2 : 4,
-                    maximumFractionDigits: currentProjectData.asset === 'USDC' ? 2 : 4,
-                  })} ${currentProjectData.asset} & Pay Insurance`;
-                } else if (hasAmount) {
-                  return `Supply ${amount.toLocaleString('en-US', {
-                    minimumFractionDigits: currentProjectData.asset === 'USDC' ? 2 : 4,
-                    maximumFractionDigits: currentProjectData.asset === 'USDC' ? 2 : 4,
-                  })} ${currentProjectData.asset}`;
-                } else {
-                  return `Supply ${currentProjectData.asset}`;
-                }
-              } else {
-                if (hasAmount) {
-                  return `Withdraw ${amount.toLocaleString('en-US', {
-                    minimumFractionDigits: currentProjectData.asset === 'USDC' ? 2 : 4,
-                    maximumFractionDigits: currentProjectData.asset === 'USDC' ? 2 : 4,
-                  })} ${currentProjectData.asset}`;
-                } else {
-                  return `Withdraw ${currentProjectData.asset}`;
-                }
-              }
-            })()}
-          </button>
+                  if (!isCorrectNetwork) {
+                    return `Change to ${targetChainName} Network`;
+                  }
+
+                  const amount = parseFloat(depositAmount);
+                  const hasAmount = amount > 0;
+
+                  // Check for insufficient balance
+                  if (hasAmount && amount > currentBalance) {
+                    return depositMode === 'enter'
+                      ? 'Insufficient Wallet Balance'
+                      : 'Insufficient Vault Balance';
+                  }
+
+                  if (depositMode === 'enter') {
+                    if (insuranceEnabled && hasAmount) {
+                      return `Supply ${formatBalance(amount, currentProjectData.asset)} & Pay Insurance`;
+                    } else if (hasAmount) {
+                      return `Supply ${formatBalance(amount, currentProjectData.asset)}`;
+                    } else {
+                      return `Supply ${currentProjectData.asset}`;
+                    }
+                  } else {
+                    if (hasAmount) {
+                      return `Withdraw ${formatBalance(amount, currentProjectData.asset)}`;
+                    } else {
+                      return `Withdraw ${currentProjectData.asset}`;
+                    }
+                  }
+                })()}
+              </span>
+            </button>
+          )}
         </div>
 
         {/* Right: Transaction Preview + Info Cards */}
@@ -236,6 +564,20 @@ export default function Deposit({
           {/* Transaction Preview */}
           <div className="bg-white rounded-xl p-6 border border-gray-100">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Transaction Preview</h3>
+
+            {/* Network Warning */}
+            {isConnected && !isCorrectNetwork && (
+              <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <div className="flex items-center space-x-2 text-yellow-800">
+                  <AlertTriangle className="w-4 h-4" />
+                  <span className="text-sm font-medium">Network Mismatch</span>
+                </div>
+                <p className="text-xs text-yellow-700 mt-1">
+                  Switch to {targetChainName} to interact with this vault
+                </p>
+              </div>
+            )}
+
             <div className="space-y-3 text-sm">
               <div className="flex justify-between">
                 <span className="text-gray-600">
@@ -246,22 +588,7 @@ export default function Deposit({
                 </span>
               </div>
               <div className="flex justify-between">
-                <div className="flex items-center space-x-1">
-                  <span className="text-gray-600">30d APY*</span>
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Info className="w-3 h-3 text-gray-400 cursor-help" />
-                      </TooltipTrigger>
-                      <TooltipContent side="top" className="max-w-xs">
-                        <p className="text-xs">
-                          Past performance is indicative only and does not guarantee future results.
-                          APY rates are variable and subject to market conditions.
-                        </p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                </div>
+                <span className="text-gray-600">Current APY</span>
                 <span className="font-medium text-green-600">
                   {(currentProjectData.currentAPY * 100).toFixed(2)}%
                 </span>
@@ -282,62 +609,33 @@ export default function Deposit({
                 <span className="text-gray-600">
                   {depositMode === 'enter' ? 'Entry Fee' : 'Exit Fee'}
                 </span>
-                <span className="font-medium">0.00 USDC</span>
+                <span className="font-medium">$0.00</span>
               </div>
 
               {depositMode === 'enter' ? (
                 <div className="border-t border-gray-100 pt-3 space-y-3">
                   <div className="flex justify-between">
-                    <div className="flex items-center space-x-1">
-                      <span className="text-gray-600">
-                        <span className="hidden sm:inline">
-                          Projected Yearly Earnings (at current rate)
-                        </span>
-                        <span className="sm:hidden">Projected Yearly Earnings</span>
-                      </span>
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Info className="w-3 h-3 text-gray-400 cursor-help" />
-                          </TooltipTrigger>
-                          <TooltipContent side="top" className="max-w-xs">
-                            <p className="text-xs">
-                              Calculated as a linear projection at the current rate. Actual results
-                              depend on compounding cadence, fees, and rate changes.
-                            </p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    </div>
+                    <span className="text-gray-600">Est. Yearly Earnings</span>
                     <span className="font-medium text-green-600 tabular-nums">
-                      +
-                      {(
-                        parseFloat(depositAmount || '0') * currentProjectData.currentAPY
-                      ).toLocaleString('en-US', {
-                        minimumFractionDigits: currentProjectData.asset === 'USDC' ? 2 : 6,
-                        maximumFractionDigits: currentProjectData.asset === 'USDC' ? 2 : 6,
-                      })}{' '}
-                      {currentProjectData.asset}
+                      +{' '}
+                      {formatBalance(
+                        parseFloat(depositAmount || '0') * currentProjectData.currentAPY,
+                        currentProjectData.asset
+                      )}
                     </span>
                   </div>
 
-                  <div className="hidden bg-green-50 border border-green-200 rounded-lg p-3">
+                  {/* <div className="bg-green-50 border border-green-200 rounded-lg p-3">
                     <div className="flex items-center justify-between mb-1">
                       <div className="flex items-center space-x-2">
                         <TrendingUp className="w-4 h-4 text-green-600" />
                         <span className="text-sm font-medium text-green-700">Yearly Advantage</span>
                       </div>
-                      <span className="font-semibold text-green-600 tabular-nums">
+                      <span className="font-semibold text-green-600 tabular-nums flex">
                         {parseFloat(depositAmount || '0') > 0 ? (
-                          `+${(
-                            parseFloat(depositAmount || '0') *
-                            (currentProjectData.currentAPY - currentProjectData.secondBestAPY)
-                          ).toLocaleString('en-US', {
-                            minimumFractionDigits: currentProjectData.asset === 'USDC' ? 2 : 6,
-                            maximumFractionDigits: currentProjectData.asset === 'USDC' ? 2 : 6,
-                          })} ${currentProjectData.asset}`
+                          `+ ${formatBalance(parseFloat(depositAmount || '0') * (currentProjectData.currentAPY - currentProjectData.secondBestAPY), currentProjectData.asset)}`
                         ) : (
-                          <span className="text-sm font-medium text-green-700">
+                          <span className="text-xs md:text-sm font-medium text-green-700 text-right">
                             Enter amount to see benefit
                           </span>
                         )}
@@ -347,7 +645,7 @@ export default function Deposit({
                       vs. Best {currentProjectData.name} Vault
                       {insuranceEnabled ? ' (after insurance cost)' : ''}
                     </p>
-                  </div>
+                  </div> */}
                 </div>
               ) : (
                 <div className="border-t border-gray-100 pt-3 space-y-3">
@@ -356,8 +654,7 @@ export default function Deposit({
                     <span className="font-medium text-gray-900 tabular-nums">
                       {Math.max(
                         0,
-                        (isNewUser ? 0 : currentProjectData.autopilotBalance) -
-                          parseFloat(depositAmount || '0')
+                        currentBalance - parseFloat(depositAmount || '0')
                       ).toLocaleString('en-US', {
                         minimumFractionDigits: currentProjectData.asset === 'USDC' ? 2 : 6,
                         maximumFractionDigits: currentProjectData.asset === 'USDC' ? 2 : 6,
@@ -366,7 +663,7 @@ export default function Deposit({
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Projected Forfeited Yearly Earnings</span>
+                    <span className="text-gray-600">Forfeited Yearly Earnings</span>
                     <span className="font-medium text-amber-600 tabular-nums">
                       -
                       {(
@@ -382,8 +679,8 @@ export default function Deposit({
               )}
             </div>
 
-            {depositMode === 'enter' && (
-              <div className="mt-4 pt-3 space-y-2">
+            {/* {depositMode === 'enter' && (
+              <div className="mt-4 pt-3">
                 <p className="text-xs text-gray-500">
                   *Based on 30-day{' '}
                   <button
@@ -394,48 +691,38 @@ export default function Deposit({
                   </button>{' '}
                   APY data
                 </p>
-                <p className="text-xs text-gray-500 leading-relaxed max-w-full">
-                  <span className="hidden sm:inline">
-                    Projection is illustrative. Based on 30-day APY of{' '}
-                    {(currentProjectData.currentAPY * 100).toFixed(2)}% and subject to compounding
-                    frequency and rate changes.
-                  </span>
-                  <span className="sm:hidden">
-                    Projection only; rates & compounding may change.
-                  </span>
-                </p>
               </div>
-            )}
+            )} */}
           </div>
 
           {/* Info Cards */}
-          {/* <div className="space-y-4">
-                    <div className="bg-green-50 border border-green-200 rounded-xl p-4">
-                        <div className="flex items-start space-x-3">
-                        <Shield className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-                        <div>
-                            <h4 className="font-semibold text-green-900 mb-1">Audited &amp; Secure</h4>
-                            <p className="text-sm text-green-700">
-                            Smart contracts have been audited by leading security firms
-                            </p>
-                        </div>
-                        </div>
-                    </div>
+          <div className="space-y-4">
+            {/* <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+              <div className="flex items-start space-x-3">
+                <Shield className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <h4 className="font-semibold text-green-900 mb-1">Audited &amp; Secure</h4>
+                  <p className="text-sm text-green-700">
+                    Smart contracts have been audited by leading security firms
+                  </p>
+                </div>
+              </div>
+            </div> */}
 
-                    {depositMode === 'enter' && (
-                        <div className="bg-purple-50 border border-purple-200 rounded-xl p-4">
-                            <div className="flex items-start space-x-3">
-                                <ExternalLink className="w-5 h-5 text-purple-600 flex-shrink-0 mt-0.5" />
-                                <div>
-                                <h4 className="font-semibold mb-1 text-purple-900">Exit Anytime</h4>
-                                <p className="text-sm text-purple-700">
-                                    Withdraw your funds at any time with no lock-up periods
-                                </p>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-                </div> */}
+            {/* {depositMode === 'enter' && (
+              <div className="bg-purple-50 border border-purple-200 rounded-xl p-4">
+                <div className="flex items-start space-x-3">
+                  <ExternalLink className="w-5 h-5 text-purple-600 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <h4 className="font-semibold mb-1 text-purple-900">Exit Anytime</h4>
+                    <p className="text-sm text-purple-700">
+                      Withdraw your funds at any time with no lock-up periods
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )} */}
+          </div>
         </div>
       </div>
     </div>

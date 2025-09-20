@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "lint-fix": "next lint --fix ./",
     "prettier": "prettier --write .",
     "prettier:check": "prettier --check ."
   },
@@ -17,7 +18,15 @@
     "next": "15.4.6",
     "react": "19.1.0",
     "react-dom": "19.1.0",
-    "tailwind-merge": "^3.3.1"
+    "tailwind-merge": "^3.3.1",
+    "@rainbow-me/rainbowkit": "^2.2.8",
+    "@tanstack/react-query": "^5.85.0",
+    "axios": "^1.11.0",
+    "bignumber.js": "^9.3.1",
+    "lodash": "^4.17.21",
+    "recharts": "^3.1.2",
+    "viem": "^2.33.3",
+    "wagmi": "^2.16.3"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
@@ -29,6 +38,7 @@
     "eslint-config-next": "15.4.6",
     "prettier": "^3.6.2",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "@types/bignumber.js": "^5.0.4"
   }
 }
