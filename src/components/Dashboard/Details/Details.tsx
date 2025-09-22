@@ -236,12 +236,12 @@ export default function Details({currentProjectData} : {
                           {vault.apy} %
                       </span>
                       <a 
-                          href={`${getExplorerLink(currentProjectData.chainId || 8453)}/address/${vault.hVaultAddress}`}
+                          href={`${getExplorerLink(currentProjectData.chainId || 8453)}/address/${vault.mVaultAddress}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-xs font-mono text-gray-600 hover:text-gray-800 bg-white hover:bg-gray-50 px-2 py-1 rounded border transition-colors flex items-center space-x-1 group"
                       >
-                          <span>{vault.hVaultAddress}</span>
+                          <span>{vault.mVaultAddress}</span>
                           <ExternalLink className="w-3 h-3 text-gray-900 opacity-50 group-hover:opacity-100 transition-opacity" />
                       </a>
                       </div>

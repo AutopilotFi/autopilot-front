@@ -1,5 +1,6 @@
 import { VaultOnlyData, SideBarOption } from "@/types/globalAppTypes";
 import { formatCurrency } from "@/helpers/utils";
+import { morphoVaultMap } from "@/consts/constants";
 
 // Helper function to convert hVaultId to readable name
 const convertHVaultIdToName = (hVaultId: string): string => {
@@ -74,7 +75,8 @@ export const getVaultDataFromAutopilots = (
         apy: parseFloat(item.apy),
         amount: amount,
         allocation: allocPoint,
-        hVaultAddress: item.hVaultAddress ?? null
+        hVaultAddress: item.hVaultAddress ?? null,
+        mVaultAddress: morphoVaultMap[item.hVaultId as keyof typeof morphoVaultMap] ?? null
       };
     })
     .sort((a, b) => b.allocation - a.allocation); // Sort by allocation descending

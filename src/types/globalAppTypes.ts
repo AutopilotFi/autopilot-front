@@ -105,7 +105,8 @@ export type BenchmarkData = {
   amount?: number,
   allocation?: number,
   isAutopilot?: boolean,
-  hVaultAddress: string
+  hVaultAddress: string,
+  mVaultAddress?: string
 }
 
 export type VaultOnlyData = {
