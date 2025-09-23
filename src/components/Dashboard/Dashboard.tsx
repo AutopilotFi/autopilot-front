@@ -94,6 +94,7 @@ export default function Dashboard({
           frequency: result.frequency,
           latestUpdate: result.latestUpdate,
           operatingSince: result.operatingSince,
+          uniqueVaultHData: result.uniqueVaultHData,
           recentEarnings: result.earningsSeries.map(e => ({ time: e.timestamp.toString(), amount: e.amount, amountUsd: e.amountUsd })),
         });
 

@@ -123,7 +123,8 @@ export const getVaultDataFromAutopilots = (
     tokenDecimals: autopilot.vault.decimals,
     vaultDecimals: autopilot.vault.vaultDecimals,
     showDecimals: autopilot.showDecimals,
-    benchmarkData: benchmarkData
+    benchmarkData: benchmarkData,
+    plasmaHistory: autopilot.vault.plasmaHistory
   };
   
   return vaultData;

@@ -29,16 +29,12 @@ export default async function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <div className="min-h-screen bg-gray-50 flex w-full max-w-none">
+        <div className="bg-gray-50">
           <Providers>
-            <div className="flex w-full max-w-none min-w-full">
-              <div className="w-80 flex-shrink-0">
-                <Sidebar/>
-              </div>
-              <main className="flex-1 min-w-0 w-full max-w-none" style={{ width: 'calc(100vw - 320px)' }}>
-                {children}
-              </main>
-            </div>
+            <Sidebar/>
+            <main className="ml-80">
+              {children}
+            </main>
           </Providers>
         </div>
       </body>

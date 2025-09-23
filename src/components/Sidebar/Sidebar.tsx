@@ -251,7 +251,7 @@ export default function Sidebar() {
 
   // Desktop Sidebar
   return (
-    <div className="hidden md:flex w-80 bg-white border-r border-gray-100 flex-col min-h-screen">
+    <div className="hidden md:flex w-80 bg-white border-r border-gray-100 flex-col h-screen fixed left-0 top-0">
       {/* Header */}
       <div className="p-6 border-b border-gray-100">
         <Link

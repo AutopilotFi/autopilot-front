@@ -3,6 +3,7 @@ import { Cpu, Settings, DollarSign, TrendingUp, Activity, BarChart2, Timer, Exte
 import { formatBalance, getExplorerLink } from "@/helpers/utils";
 import { useEffect, useState } from "react";
 import { fetchDefiLlamaAPY } from "@/hooks/useDefiLlamaAPY";
+import SharepriceChart from "./SharepriceChart";
 
   const detailsStats = [
     {
@@ -186,6 +187,10 @@ export default function Details({currentProjectData} : {
                     <span className="text-sm text-gray-600">Latest SharePrice</span>
                     <span className="text-sm font-medium text-gray-900">{formatBalance(enrichedProjectData.latestSharePrice, enrichedProjectData.asset, enrichedProjectData.showDecimals)}</span>
                     </div>
+                    <div className="flex justify-between">
+                    <span className="text-sm text-gray-600">Latest SharePrice Update</span>
+                    <span className="text-sm font-medium text-gray-900">{enrichedProjectData.latestUpdate} ago</span>
+                    </div>
                     <div>
                     <div className="text-sm text-gray-600 mb-1">Autopilot {enrichedProjectData.asset} Vault Address</div>
                     <a 
@@ -219,6 +224,14 @@ export default function Details({currentProjectData} : {
                     </div>
                 </div>
                 </div>
+            </div>
+
+            {/* Share Price History Chart */}
+            <div className="mb-8">
+                <h4 className="text-sm font-semibold text-gray-900 mb-4 uppercase tracking-wide">Share Price History</h4>
+                <SharepriceChart 
+                    uniqueVaultHData={enrichedProjectData.uniqueVaultHData}
+                />
             </div>
 
             {/* Yield Sources - Full Width List */}

@@ -257,6 +257,7 @@ export type Metrics = {
   latestUpdate: string;
   operatingSince: string;
   earningsSeries: Array<{ timestamp: number; amount: number; amountUsd: number }>;
+  uniqueVaultHData: VaultHistoryEntry[];
   deposits: Array<{ timestamp: number; amount: number; amountUsd: number; tx?: string; }>;
   withdrawals: Array<{ timestamp: number; amount: number; amountUsd: number; tx?: string; }>;
   latestUnderlyingPrice: number;
@@ -318,6 +319,7 @@ export async function getHarvestMetrics(
       latestUpdate,
       operatingSince,
       earningsSeries: earningsData.map(e => ({ timestamp: e.timestamp, amount: e.netChange, amountUsd: e.netChangeUsd })),
+      uniqueVaultHData: processedData.uniqueVaultHData,
       deposits: deposits.map(d => ({ timestamp: d.timestamp, amount: d.netChange, amountUsd: d.netChangeUsd, tx: d.tx })),
       withdrawals: withdrawals.map(w => ({ timestamp: w.timestamp, amount: Math.abs(w.netChange), amountUsd: Math.abs(w.netChangeUsd), tx: w.tx })),
       latestUnderlyingPrice: Number(vh[0]?.priceUnderlying || 1),
@@ -338,6 +340,7 @@ export async function getHarvestMetrics(
       latestUpdate: "—",
       operatingSince: "—",
       earningsSeries: [],
+      uniqueVaultHData: [],
       deposits: [],
       withdrawals: [],
       latestUnderlyingPrice: 1,
