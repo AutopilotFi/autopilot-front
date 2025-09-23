@@ -3,6 +3,7 @@ import { Cpu, Settings, DollarSign, TrendingUp, Activity, BarChart2, Timer, Exte
 import { formatBalance, getExplorerLink } from "@/helpers/utils";
 import { useEffect, useState } from "react";
 import { fetchDefiLlamaAPY } from "@/hooks/useDefiLlamaAPY";
+import SharepriceChart from "./SharepriceChart";
 
   const detailsStats = [
     {
@@ -186,6 +187,10 @@ export default function Details({currentProjectData} : {
                     <span className="text-sm text-gray-600">Latest SharePrice</span>
                     <span className="text-sm font-medium text-gray-900">{formatBalance(enrichedProjectData.latestSharePrice, enrichedProjectData.asset, enrichedProjectData.showDecimals)}</span>
                     </div>
+                    <div className="flex justify-between">
+                    <span className="text-sm text-gray-600">Latest SharePrice Update</span>
+                    <span className="text-sm font-medium text-gray-900">{enrichedProjectData.latestUpdate} ago</span>
+                    </div>
                     <div>
                     <div className="text-sm text-gray-600 mb-1">Autopilot {enrichedProjectData.asset} Vault Address</div>
                     <a 
@@ -221,6 +226,14 @@ export default function Details({currentProjectData} : {
                 </div>
             </div>
 
+            {/* Share Price History Chart */}
+            <div className="mb-8">
+                <h4 className="text-sm font-semibold text-gray-900 mb-4 uppercase tracking-wide">Share Price History</h4>
+                <SharepriceChart 
+                    uniqueVaultHData={enrichedProjectData.uniqueVaultHData}
+                />
+            </div>
+
             {/* Yield Sources - Full Width List */}
             <div>
                 <h4 className="text-sm font-semibold text-gray-900 mb-4 uppercase tracking-wide">Yield Sources</h4>
@@ -236,12 +249,12 @@ export default function Details({currentProjectData} : {
                           {vault.apy} %
                       </span>
                       <a 
-                          href={`${getExplorerLink(currentProjectData.chainId || 8453)}/address/${vault.hVaultAddress}`}
+                          href={`${getExplorerLink(currentProjectData.chainId || 8453)}/address/${vault.mVaultAddress}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-xs font-mono text-gray-600 hover:text-gray-800 bg-white hover:bg-gray-50 px-2 py-1 rounded border transition-colors flex items-center space-x-1 group"
                       >
-                          <span>{vault.hVaultAddress}</span>
+                          <span>{vault.mVaultAddress}</span>
                           <ExternalLink className="w-3 h-3 text-gray-900 opacity-50 group-hover:opacity-100 transition-opacity" />
                       </a>
                       </div>

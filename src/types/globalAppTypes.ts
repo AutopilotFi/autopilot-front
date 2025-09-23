@@ -1,5 +1,13 @@
 export type AutopilotProtocol = 'morpho' | 'euler';
 export type AutopilotAsset = 'USDC' | 'WETH' | 'cbBTC' | 'ETH';
+
+export type VaultHistoryEntry = {
+  timestamp: number;
+  sharePrice?: string | number | null;
+  tvl?: string | number | null;
+  apy?: string | number | null;
+  value?: string | number | null;
+};
 export type UserState = 'new' | 'active' | 'old';
 
 export interface AutopilotProduct {
@@ -94,7 +102,8 @@ export type ProjectData = {
   operatingSince: string,
   allocations?: { name: string, apy: number, amount: number, allocation: number }[],
   recentEarnings: { time: string, amount: number, amountUsd: number }[],
-  benchmarkData: BenchmarkData[]
+  benchmarkData: BenchmarkData[],
+  uniqueVaultHData: VaultHistoryEntry[]
 }
 
 export type BenchmarkData = {
@@ -105,7 +114,8 @@ export type BenchmarkData = {
   amount?: number,
   allocation?: number,
   isAutopilot?: boolean,
-  hVaultAddress: string
+  hVaultAddress: string,
+  mVaultAddress?: string
 }
 
 export type VaultOnlyData = {
@@ -126,7 +136,8 @@ export type VaultOnlyData = {
   tokenDecimals: string,
   vaultDecimals: string,
   showDecimals: number,
-  benchmarkData: BenchmarkData[]
+  benchmarkData: BenchmarkData[],
+  plasmaHistory?: VaultHistoryData[]
 }
 
 export type UserRelatedData = {
