@@ -61,6 +61,7 @@ export default function ClientDashboardPage({ params }: { params: RouteParams })
         latestUpdate: "—",
         operatingSince: "—",
         chainId: getChainIdFromNetwork(network),
+        uniqueVaultHData: [],
       }}
     />
   );
