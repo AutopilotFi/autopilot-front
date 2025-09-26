@@ -14,42 +14,8 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import { generateColor } from '@/helpers/utils';
+import { getCurrentAllocations } from '@/helpers/allocationUtils';
 
-const convertHVaultIdToName = (hVaultId: string): string => {
-  if (hVaultId === 'Not invested') return 'Not invested';
-  
-  const parts = hVaultId.split('_');
-  
-  if (parts.length >= 3) {
-    const protocol = parts[0].charAt(0).toUpperCase() + parts[0].slice(1);
-    const strategy = parts[1];
-    const asset = parts[2];
-    
-    if (protocol === 'Morpho') {
-      return `Morpho ${strategy} ${asset}`;
-    } else if (protocol === 'Euler') {
-      return `Euler ${strategy} ${asset}`;
-    } else if (protocol === 'Extrafi') {
-      return `Extrafi ${strategy} ${asset}`;
-    } else if (protocol === 'Moonwell') {
-      return `Moonwell ${strategy} ${asset}`;
-    } else if (protocol === 'Fortyacres') {
-      return `Forty Acres ${strategy} ${asset}`;
-    } else if (protocol === 'Fluid') {
-      return `Fluid ${strategy} ${asset}`;
-    } else if (protocol === 'Aave') {
-      return `Aave ${strategy} ${asset}`;
-    } else {
-      return `${protocol} ${strategy} ${asset}`;
-    }
-  } else if (parts.length === 2) {
-    const protocol = parts[0].charAt(0).toUpperCase() + parts[0].slice(1);
-    const asset = parts[1];
-    return `${protocol} ${asset}`;
-  }
-  
-  return hVaultId.charAt(0).toUpperCase() + hVaultId.slice(1);
-};
 
 interface RebalanceData {
   id: number;
@@ -74,7 +40,40 @@ export default function Allocations({ currentProjectData, isNewUser, handleNavig
   const getVaultNameFromMarketId = useCallback((marketId: string, allocPointData: { hVaultAddress?: string; hVaultId: string }[]) => {
     const allocPoint = allocPointData?.find(ap => ap.hVaultAddress?.toLowerCase() === marketId.toLowerCase());
     if (allocPoint) {
-      return convertHVaultIdToName(allocPoint.hVaultId);
+      const hVaultId = allocPoint.hVaultId;
+      if (hVaultId === 'Not invested') return 'Not invested';
+      
+      const parts = hVaultId.split('_');
+      
+      if (parts.length >= 3) {
+        const protocol = parts[0].charAt(0).toUpperCase() + parts[0].slice(1);
+        const strategy = parts[1];
+        const asset = parts[2];
+        
+        if (protocol === 'Morpho') {
+          return `Morpho ${strategy} ${asset}`;
+        } else if (protocol === 'Euler') {
+          return `Euler ${strategy} ${asset}`;
+        } else if (protocol === 'Extrafi') {
+          return `Extrafi ${strategy} ${asset}`;
+        } else if (protocol === 'Moonwell') {
+          return `Moonwell ${strategy} ${asset}`;
+        } else if (protocol === 'Fortyacres') {
+          return `Forty Acres ${strategy} ${asset}`;
+        } else if (protocol === 'Fluid') {
+          return `Fluid ${strategy} ${asset}`;
+        } else if (protocol === 'Aave') {
+          return `Aave ${strategy} ${asset}`;
+        } else {
+          return `${protocol} ${strategy} ${asset}`;
+        }
+      } else if (parts.length === 2) {
+        const protocol = parts[0].charAt(0).toUpperCase() + parts[0].slice(1);
+        const asset = parts[1];
+        return `${protocol} ${asset}`;
+      }
+      
+      return hVaultId.charAt(0).toUpperCase() + hVaultId.slice(1);
     }
     return `Vault ${marketId.slice(0, 6)}...`;
   }, []);
@@ -89,6 +88,9 @@ export default function Allocations({ currentProjectData, isNewUser, handleNavig
         const totalBalance = parseFloat(history.totalBalance) || 0;
         
         const allocations = history.marketBalances
+          .filter((marketBalance: MarketBalance) => 
+            marketBalance.protocol.toLowerCase() !== 'erc20'
+          )
           .map((marketBalance: MarketBalance) => {
             const balance = parseFloat(marketBalance.balance) || 0;
             const percentage = totalBalance > 0 ? (balance / totalBalance) * 100 : 0;
@@ -127,6 +129,19 @@ export default function Allocations({ currentProjectData, isNewUser, handleNavig
     return [];
   }, [iporVaultData, currentProjectData.vaultAddress, processPlasmaHistoryToRebalances]);
 
+  // Get current allocations using the shared utility function
+  const currentAllocations = useMemo(() => {
+    const currentVault = iporVaultData.find(vault => 
+      vault.vaultAddress.toLowerCase() === currentProjectData.vaultAddress.toLowerCase()
+    );
+    
+    if (currentVault?.plasmaHistory && currentVault.allocPointData) {
+      return getCurrentAllocations(currentVault.plasmaHistory, currentVault.allocPointData);
+    }
+    
+    return [];
+  }, [iporVaultData, currentProjectData.vaultAddress]);
+
   const chartData = useMemo(() => {
     const currentVault = iporVaultData.find(vault => 
       vault.vaultAddress.toLowerCase() === currentProjectData.vaultAddress.toLowerCase()
@@ -145,15 +160,19 @@ export default function Allocations({ currentProjectData, isNewUser, handleNavig
           timestamp: new Date(history.blockTimestamp).getTime(),
         };
 
-        history.marketBalances.forEach((marketBalance: MarketBalance) => {
-          const balance = parseFloat(marketBalance.balance) || 0;
-          const percentage = totalBalance > 0 ? (balance / totalBalance) * 100 : 0;
-          
-          if (percentage > 0.001) {
-            const vaultName = getVaultNameFromMarketId(marketBalance.marketId, currentVault.allocPointData || []);
-            chartEntry[vaultName] = Math.round(percentage * 100) / 100;
-          }
-        });
+        history.marketBalances
+          .filter((marketBalance: MarketBalance) => 
+            marketBalance.protocol.toLowerCase() !== 'erc20'
+          )
+          .forEach((marketBalance: MarketBalance) => {
+            const balance = parseFloat(marketBalance.balance) || 0;
+            const percentage = totalBalance > 0 ? (balance / totalBalance) * 100 : 0;
+            
+            if (percentage > 0.001) {
+              const vaultName = getVaultNameFromMarketId(marketBalance.marketId, currentVault.allocPointData || []);
+              chartEntry[vaultName] = Math.round(percentage * 100) / 100;
+            }
+          });
 
         return chartEntry;
       })
@@ -179,7 +198,16 @@ export default function Allocations({ currentProjectData, isNewUser, handleNavig
   const startIndex = (currentPage - 1) * rebalancesPerPage;
   const endIndex = startIndex + rebalancesPerPage;
   const currentRebalances = rebalances.slice(1).slice(startIndex, endIndex);
-  const latestAllocation = rebalances.length > 0 ? rebalances[0] : null;
+  
+  const latestAllocation = currentAllocations.length > 0 ? {
+    id: 0,
+    timestamp: Date.now(),
+    allocations: currentAllocations.map(allocation => ({
+      name: allocation.name,
+      percentage: allocation.percentage,
+      color: allocation.color
+    }))
+  } : null;
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
