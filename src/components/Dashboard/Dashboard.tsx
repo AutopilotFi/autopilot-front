@@ -1,6 +1,6 @@
 "use client"
 import { TrendingUp, ChevronLeft, BarChart3, Wallet, Trophy, History, Info, Circle, PieChart } from "lucide-react";
-import { useState, useEffect, useContext, useRef } from "react";
+import { useState, useEffect, useContext, useCallback } from "react";
 import { GlobalContext } from "../../providers/GlobalDataProvider";
 import { ProjectData, UserStats } from "@/types/globalAppTypes";
 import { TooltipProvider } from "../UI/Tooltip";
@@ -56,7 +56,8 @@ export default function Dashboard({
 
   const globalData = useContext(GlobalContext);
   const user = globalData?.user;
-  const { getMetricsForVault } = useVaultMetrics();
+  const { getMetricsForVault, refreshMetrics } = useVaultMetrics();
+
 
   const isOldUser = user?.status === 'old';
   const isNewUser = user?.status === "new";
@@ -72,86 +73,102 @@ export default function Dashboard({
   }, []);
 
   // Load metrics and enrich project data
-  useEffect(() => {
+  const loadMetrics = useCallback(() => {
     if (!currentProjectData.vaultAddress) {
       return;
     }
 
-    const loadMetrics = () => {
-      try {
-        const result = getMetricsForVault(currentProjectData.vaultAddress);
-        if (!result) {
-          return;
-        }
-
-        // Update enriched project data with APY values
-        setEnrichedProjectData({
-          ...currentProjectData,
-          apy7d: Number(result.apy7d),
-          apy30d: Number(result.apy30d),
-          initialSharePrice: result.initialSharePrice,
-          latestSharePrice: result.latestSharePrice,
-          frequency: result.frequency,
-          latestUpdate: result.latestUpdate,
-          operatingSince: result.operatingSince,
-          uniqueVaultHData: result.uniqueVaultHData,
-          recentEarnings: result.earningsSeries.map(e => ({ time: e.timestamp.toString(), amount: e.amount, amountUsd: e.amountUsd })),
-        });
-
-        // Calculate 24h and 30D earnings from earningsSeries
-        const now = Math.floor(Date.now() / 1000);
-        const oneDayAgo = now - (24 * 60 * 60);
-        const thirtyDaysAgo = now - (30 * 24 * 60 * 60);
-        
-        const earnings24h = result.earningsSeries
-          .filter(earning => earning.timestamp >= oneDayAgo)
-          .reduce((sum, earning) => sum + earning.amount, 0);
-        
-        const earnings30d = result.earningsSeries
-          .filter(earning => earning.timestamp >= thirtyDaysAgo)
-          .reduce((sum, earning) => sum + earning.amount, 0);
-        
-        // Update enriched user stats data
-        setEnrichedUserStats({
-          totalBalance: result.totalBalance.toString(),
-          totalEarnings: result.totalEarnings.toString(),
-          monthlyForecast: result.monthlyForecast.toString(),
-          updateFrequency: result.frequency,
-          monthlyEarnings: earnings30d.toString(),
-          dailyEarnings: earnings24h.toString(),
-          totalDeposits: result.deposits.length ? result.deposits.reduce((a,b)=>a+b.amount,0).toString() : "0",
-          totalWithdrawals: result.withdrawals.length ? result.withdrawals.reduce((a,b)=>a+b.amount,0).toString() : "0",
-          totalActions: String(result.deposits.length + result.withdrawals.length + result.earningsSeries.length),
-          transactions: [
-            ...result.deposits.map(deposit => {
-              return {
-                date: new Date(deposit.timestamp * 1000).toISOString(),
-                type: 'deposit',
-                amount: deposit.amount,
-                status: 'confirmed',
-                timestamp: deposit.timestamp, // Keep original timestamp for sorting
-                txHash: deposit.tx || undefined
-              };
-            }),
-            ...result.withdrawals.map(withdrawal => {
-              return {
-                date: new Date(withdrawal.timestamp * 1000).toISOString(),
-                type: 'withdrawal',
-                amount: withdrawal.amount,
-                status: 'confirmed',
-                timestamp: withdrawal.timestamp, // Keep original timestamp for sorting
-                txHash: withdrawal.tx || undefined
-              };
-            })
-          ].sort((a, b) => b.timestamp - a.timestamp), // Sort by timestamp, newest first
-        });
-      } catch (error) {
-        console.error('Error loading metrics:', error);
+    try {
+      const result = getMetricsForVault(currentProjectData.vaultAddress);
+      if (!result) {
+        return;
       }
-    };
 
+      // Update enriched project data with APY values
+      setEnrichedProjectData({
+        ...currentProjectData,
+        apy7d: Number(result.apy7d),
+        apy30d: Number(result.apy30d),
+        initialSharePrice: result.initialSharePrice,
+        latestSharePrice: result.latestSharePrice,
+        frequency: result.frequency,
+        latestUpdate: result.latestUpdate,
+        operatingSince: result.operatingSince,
+        uniqueVaultHData: result.uniqueVaultHData,
+        recentEarnings: result.earningsSeries.map(e => ({ time: e.timestamp.toString(), amount: e.amount, amountUsd: e.amountUsd })),
+      });
+
+      // Calculate 24h and 30D earnings from earningsSeries
+      const now = Math.floor(Date.now() / 1000);
+      const oneDayAgo = now - (24 * 60 * 60);
+      const thirtyDaysAgo = now - (30 * 24 * 60 * 60);
+      
+      const earnings24h = result.earningsSeries
+        .filter(earning => earning.timestamp >= oneDayAgo)
+        .reduce((sum, earning) => sum + earning.amount, 0);
+      
+      const earnings30d = result.earningsSeries
+        .filter(earning => earning.timestamp >= thirtyDaysAgo)
+        .reduce((sum, earning) => sum + earning.amount, 0);
+      
+      const subgraphBalance = result.totalBalance;
+      const finalTotalBalance = subgraphBalance;
+      
+      
+
+      // Update enriched user stats data
+      setEnrichedUserStats({
+        totalBalance: finalTotalBalance.toString(),
+        totalEarnings: result.totalEarnings.toString(),
+        monthlyForecast: result.monthlyForecast.toString(),
+        updateFrequency: result.frequency,
+        monthlyEarnings: earnings30d.toString(),
+        dailyEarnings: earnings24h.toString(),
+        totalDeposits: result.deposits.length ? result.deposits.reduce((a,b)=>a+b.amount,0).toString() : "0",
+        totalWithdrawals: result.withdrawals.length ? result.withdrawals.reduce((a,b)=>a+b.amount,0).toString() : "0",
+        totalActions: String(result.deposits.length + result.withdrawals.length + result.earningsSeries.length),
+        transactions: [
+          ...result.deposits.map(deposit => {
+            return {
+              date: new Date(deposit.timestamp * 1000).toISOString(),
+              type: 'deposit',
+              amount: deposit.amount,
+              status: 'confirmed',
+              timestamp: deposit.timestamp, // Keep original timestamp for sorting
+              txHash: deposit.tx || undefined
+            };
+          }),
+          ...result.withdrawals.map(withdrawal => {
+            return {
+              date: new Date(withdrawal.timestamp * 1000).toISOString(),
+              type: 'withdrawal',
+              amount: withdrawal.amount,
+              status: 'confirmed',
+              timestamp: withdrawal.timestamp, // Keep original timestamp for sorting
+              txHash: withdrawal.tx || undefined
+            };
+          })
+        ].sort((a, b) => b.timestamp - a.timestamp), // Sort by timestamp, newest first
+      });
+    } catch (error) {
+      console.error('Error loading metrics:', error);
+    }
+  }, [currentProjectData, getMetricsForVault]);
+
+  useEffect(() => {
     loadMetrics();
-  }, [currentProjectData.vaultAddress, getMetricsForVault]);
+  }, [loadMetrics]);
+
+  const refreshAllMetrics = async () => {
+    try {
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      await refreshMetrics();
+      loadMetrics();
+    } catch (error) {
+      console.error('Error refreshing metrics:', error);
+    }
+  };
 
 
   // Navigation handlers
@@ -286,6 +303,7 @@ export default function Dashboard({
                   currentProjectData={enrichedProjectData}
                   setShowTermsModal={setShowTermsModal}
                   handleOpenBenchmark={handleOpenBenchmark}
+                  refreshAllMetrics={refreshAllMetrics}
                 />
               )}
 

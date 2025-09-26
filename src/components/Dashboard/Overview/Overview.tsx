@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { TrendingUp, Coins, Clock, Zap, Layers } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -10,6 +10,8 @@ import { generateUserStatsGridStructure } from "@/components/StatsGrid/gridStruc
 import StandardCTAButton from "@/components/UI/StandardCTAButton";
 import { formatFrequency, formatBalance } from "@/helpers/utils";
 import EarningsChart from "./EarningsChart";
+import { useIPORVaults } from "@/providers/VaultProvider";
+import { getCurrentAllocations } from "@/helpers/allocationUtils";
 
 export default function Overview({
   currentProjectData,
@@ -24,6 +26,19 @@ export default function Overview({
   isOldUser: boolean;
   handleNavigateToDeposit: () => void;
 }) {
+  const { iporVaultData } = useIPORVaults();
+
+  const currentAllocations = useMemo(() => {
+    const currentVault = iporVaultData.find(vault => 
+      vault.vaultAddress.toLowerCase() === currentProjectData.vaultAddress.toLowerCase()
+    );
+    
+    if (currentVault?.plasmaHistory && currentVault.allocPointData) {
+      return getCurrentAllocations(currentVault.plasmaHistory, currentVault.allocPointData);
+    }
+    
+    return [];
+  }, [iporVaultData, currentProjectData.vaultAddress]);
   const router = useRouter();
 
   // Parent now owns timeframe + the displayed "current" values from the chart
@@ -284,12 +299,8 @@ export default function Overview({
                   </td>
                 </tr>
               ) : (
-                currentProjectData.benchmarkData
-                  .filter(
-                    (allocation) =>
-                      !allocation.isAutopilot && Number(allocation.allocation) > 1e-8
-                  )
-                  .map((allocation, index) => (
+                currentAllocations.length > 0 ? (
+                  currentAllocations.map((allocation, index) => (
                     <tr
                       key={index}
                       className="border-b border-gray-50 hover:bg-purple-50 transition-colors"
@@ -308,13 +319,13 @@ export default function Overview({
                       </td>
                       <td className="py-4 px-4 text-right">
                         <div className="text-sm font-medium text-gray-900">
-                          {allocation.apy.toFixed(2)}%
+                          {allocation.apy > 0 ? `${allocation.apy.toFixed(2)}%` : '—'}
                         </div>
                       </td>
                       <td className="py-4 px-4 text-right">
                         <div className="text-sm font-medium text-gray-900">
                           {formatBalance(
-                            allocation.amount ?? 0,
+                            allocation.amount,
                             currentProjectData.asset,
                             currentProjectData.showDecimals
                           )}
@@ -322,14 +333,23 @@ export default function Overview({
                       </td>
                       <td className="py-4 px-4 text-right">
                         <div className="text-sm font-medium text-gray-900">
-                          {(allocation.allocation ?? 0) < 0.01
+                          {allocation.percentage < 0.01
                             ? "<0.01"
-                            : (allocation.allocation ?? 0).toFixed(2)}
+                            : allocation.percentage.toFixed(2)}
                           %
                         </div>
                       </td>
                     </tr>
                   ))
+                ) : (
+                  <tr>
+                    <td colSpan={4} className="py-8 px-4 text-center">
+                      <div className="text-gray-500 text-sm">
+                        No allocation data available
+                      </div>
+                    </td>
+                  </tr>
+                )
               )}
             </tbody>
           </table>

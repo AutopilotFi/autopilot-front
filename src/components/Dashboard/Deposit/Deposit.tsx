@@ -11,11 +11,12 @@ import { CHAIN_NAMES } from "@/consts/constants";
 import { ConnectWalletButton } from "@/components/ConnectWalletButton";
 import { convertAssetsToVault } from "@/lib/contracts/iporVault";
 
-export default function Deposit({isNewUser, currentProjectData, setShowTermsModal, handleOpenBenchmark} : {
+export default function Deposit({isNewUser, currentProjectData, setShowTermsModal, handleOpenBenchmark, refreshAllMetrics} : {
     isNewUser: boolean,
     currentProjectData: ProjectData,
     setShowTermsModal: Dispatch<SetStateAction<boolean>>
     handleOpenBenchmark: () => void
+    refreshAllMetrics: () => Promise<void>
 }){
     const [depositMode, setDepositMode] = useState<'enter' | 'exit'>('enter');
     const [insuranceEnabled, setInsuranceEnabled] = useState(false);
@@ -208,15 +209,41 @@ export default function Deposit({isNewUser, currentProjectData, setShowTermsModa
                     }
                 }
             }
+            await refreshMetricsWithRetry();
         } finally {
             setIsRefreshingBalances(false);
         }
     };
 
-    // Get current balance for display
+    const refreshMetricsWithRetry = async () => {
+        const maxAttempts = 8;
+        const baseDelay = 3000; 
+        
+        for (let attempt = 0; attempt < maxAttempts; attempt++) {
+            try {
+                if (attempt > 0) {
+                    const delay = baseDelay * Math.pow(1.5, attempt - 1); // 3s, 4.5s, 6.75s, 10s, 15s, 22s, 33s
+                    console.log(`Waiting ${delay}ms before metrics retry ${attempt + 1}/${maxAttempts}...`);
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                }
+                
+                await refreshAllMetrics();
+                return; 
+                
+            } catch (error) {
+                console.warn(`Metrics refresh attempt ${attempt + 1} failed:`, error);
+                
+                if (attempt === maxAttempts - 1) {
+                    console.error('All metrics refresh attempts failed - subgraph may still be syncing');
+                }
+            }
+        }
+    };
+
+    // Get current balance for display - always use real-time balances
     const currentBalance = depositMode === 'enter' 
-        ? (balancesLoading ? currentProjectData.walletBalance : tokenBalanceFormatted)
-        : (balancesLoading ? (isNewUser ? 0 : currentProjectData.autopilotBalance) : vaultBalanceFormatted);
+        ? tokenBalanceFormatted
+        : (isNewUser ? 0 : vaultBalanceFormatted);
     return(
         <div className="space-y-6">
             <div className="flex flex-col lg:flex-row gap-6">
@@ -303,9 +330,6 @@ export default function Deposit({isNewUser, currentProjectData, setShowTermsModa
                                     maximumFractionDigits: currentProjectData.asset === 'USDC' ? 2 : 6
                                 })} {currentProjectData.asset}
                             </span>
-                            {isRefreshingBalances && (
-                                <span className="text-xs text-blue-600 font-medium">Updating...</span>
-                            )}
                         </div>
                     </div>
                     </div>
