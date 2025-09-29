@@ -1,1 +1,1 @@
-export {default} from "./StatsGrid"
+export { default } from './StatsGrid';

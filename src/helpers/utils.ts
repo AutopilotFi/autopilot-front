@@ -1,5 +1,13 @@
-import { CHAIN_IDS, MATICSCAN_URL, ARBISCAN_URL, BASESCAN_URL, ZKSYNCSCAN_URL, ETHERSCAN_URL } from "@/consts/constants";
-import BigNumber from "bignumber.js";
+import {
+  CHAIN_IDS,
+  MATICSCAN_URL,
+  ARBISCAN_URL,
+  BASESCAN_URL,
+  ZKSYNCSCAN_URL,
+  ETHERSCAN_URL,
+  CHAIN_NAMES,
+} from '@/consts/constants';
+import BigNumber from 'bignumber.js';
 
 /**
  * Formats a number into a human-readable currency string with abbreviations
@@ -9,15 +17,15 @@ import BigNumber from "bignumber.js";
  * @returns Formatted string like "$3.67M", "$1.2B", etc.
  */
 export const formatCurrency = (
-  value: number, 
-  currency: string = '$', 
+  value: number,
+  currency: string = '$',
   decimals: number = 2
 ): string => {
   if (value === 0) return `${currency}0`;
-  
+
   const absValue = Math.abs(value);
   const sign = value < 0 ? '-' : '';
-  
+
   if (absValue >= 1e12) {
     return `${sign}${currency}${(absValue / 1e12).toFixed(decimals)}T`;
   } else if (absValue >= 1e9) {
@@ -37,10 +45,7 @@ export const formatCurrency = (
  * @param decimals - Number of decimal places to show (default: 2)
  * @returns Formatted string like "8.75%"
  */
-export const formatPercentage = (
-  value: number, 
-  decimals: number = 2
-): string => {
+export const formatPercentage = (value: number, decimals: number = 2): string => {
   return `${value.toFixed(decimals)}%`;
 };
 
@@ -74,7 +79,12 @@ export const getExplorerLink = (chainId: number): string => {
   }
 };
 
-export const fromWei = (wei: string | number, decimals: number, decimalsToDisplay = 2, format = false): string | number => {
+export const fromWei = (
+  wei: string | number,
+  decimals: number,
+  decimalsToDisplay = 2,
+  format = false
+): string | number => {
   let result: string | number = '0';
 
   try {
@@ -148,9 +158,14 @@ export const formatDate = (value: number): string => {
   return `${month} ${day} ${year}`;
 };
 
-export const formatBalance = (balance: number, asset: string, decimals?: number): string => {
+export const formatBalance = (
+  balance: number,
+  asset: string,
+  decimals?: number,
+  hideAsset?: boolean
+): string => {
   let decimalPlaces: number;
-  
+
   if (decimals !== undefined) {
     decimalPlaces = decimals;
   } else {
@@ -172,31 +187,35 @@ export const formatBalance = (balance: number, asset: string, decimals?: number)
         decimalPlaces = 6;
     }
   }
-  
+
   const threshold = 1 / Math.pow(10, decimalPlaces);
 
   if ((asset === 'USD' || asset === '$') && balance > threshold) {
-    return `${balance.toLocaleString('en-US', {
+    return `${!hideAsset && asset === '$' ? asset : ''}${balance.toLocaleString('en-US', {
       minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    })} ${asset}`;
+      maximumFractionDigits: 2,
+    })} ${!hideAsset && asset === 'USD' ? asset : ''}`;
   }
 
-  if(balance === 0) {
-    return `0 ${asset}`;
+  if (balance === 0) {
+    return `0 ${!hideAsset ? asset : ''}`;
   }
 
   if (balance < threshold) {
-    return `<${threshold.toFixed(decimalPlaces)} ${asset}`;
+    return `<${!hideAsset && asset === '$' ? asset : ''}${threshold.toFixed(decimalPlaces)} ${!hideAsset && asset !== '$' ? asset : ''}`;
   }
-  
+
   return `${balance.toLocaleString('en-US', {
     minimumFractionDigits: Math.min(decimalPlaces, 2),
-    maximumFractionDigits: decimalPlaces
-  })} ${asset}`;
+    maximumFractionDigits: decimalPlaces,
+  })} ${!hideAsset ? asset : ''}`;
 };
 
-export const toWei = (token: string | number, decimals: number, decimalsToDisplay?: number): string => {
+export const toWei = (
+  token: string | number,
+  decimals: number,
+  decimalsToDisplay?: number
+): string => {
   if (token != null) {
     token = token.toString();
   }
@@ -216,12 +235,18 @@ export const toWei = (token: string | number, decimals: number, decimalsToDispla
 
 export const getChainIdFromNetwork = (network: string): number => {
   switch (network.toLowerCase()) {
-    case 'ethereum': return CHAIN_IDS.MAINNET;
-    case 'base': return CHAIN_IDS.BASE;
-    case 'arbitrum': return CHAIN_IDS.ARBITRUM;
-    case 'polygon': return CHAIN_IDS.POLYGON;
-    case 'zksync': return CHAIN_IDS.ZKSYNC;
-    default: return CHAIN_IDS.BASE; // Default to Base
+    case 'ethereum':
+      return CHAIN_IDS.MAINNET;
+    case 'base':
+      return CHAIN_IDS.BASE;
+    case 'arbitrum':
+      return CHAIN_IDS.ARBITRUM;
+    case 'polygon':
+      return CHAIN_IDS.POLYGON;
+    case 'zksync':
+      return CHAIN_IDS.ZKSYNC;
+    default:
+      return CHAIN_IDS.BASE; // Default to Base
   }
 };
 
@@ -252,16 +277,29 @@ export const generateColor = (vaultList: Record<string, unknown>, key: string) =
     '#e67e22', // Carrot
     '#95a5a6', // Concrete
     '#f1c40f', // Sun Flower
-  ]
-  
+  ];
+
   let hash = 0;
   for (let i = 0; i < key.length; i++) {
     const char = key.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
+    hash = (hash << 5) - hash + char;
     hash = hash & hash;
   }
-  
+
   const index = Math.abs(hash) % colorPalette.length;
   return colorPalette[index];
-}
+};
 
+export const formatTimeAgo = (timestamp: number): string => {
+  const now = Math.floor(Date.now() / 1000);
+  const diffSeconds = now - timestamp;
+
+  if (diffSeconds < 60) return `${diffSeconds}s`;
+  if (diffSeconds < 3600) return `${Math.floor(diffSeconds / 60)}m`;
+  if (diffSeconds < 86400) return `${Math.floor(diffSeconds / 3600)}h`;
+  if (diffSeconds < 2592000) return `${Math.floor(diffSeconds / 86400)}d`;
+  return `${Math.floor(diffSeconds / 2592000)}mo`;
+};
+
+export const getChainNameFromId = (id: number) =>
+  CHAIN_NAMES[id as keyof typeof CHAIN_NAMES] || 'Unknown Network';

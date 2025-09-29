@@ -1,7 +1,13 @@
-"use client";
+'use client';
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import type { VaultApiResponse, VaultContextData, VaultHistoryData, VaultData, FullVaultData } from '@/types/globalAppTypes';
+import type {
+  VaultApiResponse,
+  VaultContextData,
+  VaultHistoryData,
+  VaultData,
+  FullVaultData,
+} from '@/types/globalAppTypes';
 import { HARVEST_VAULT_API_URL, IPOR_API_URL } from '@/consts/constants';
 
 const defaultVaultData: VaultContextData = {
@@ -15,19 +21,25 @@ const defaultVaultData: VaultContextData = {
 export const VaultContext = createContext<VaultContextData>(defaultVaultData);
 
 async function fetchVaults(): Promise<{ base: FullVaultData[]; ipor: FullVaultData[] }> {
-  const harvestRes = HARVEST_VAULT_API_URL ? await fetch(HARVEST_VAULT_API_URL).then(res => res.json()).then(data => ({ data })) : { data: null };
+  const harvestRes = HARVEST_VAULT_API_URL
+    ? await fetch(HARVEST_VAULT_API_URL)
+        .then(res => res.json())
+        .then(data => ({ data }))
+    : { data: null };
 
   let baseVaultData: FullVaultData[] = [];
   let iporVaultData: FullVaultData[] = [];
 
   const hv: VaultApiResponse | null = harvestRes.data;
-  
+
   if (hv) {
     // Flatten chain sections into array
     const flatten = (net?: unknown) => {
       if (!net) return [];
       const arr = Object.values(net || {}) as unknown[];
-      return arr.flatMap(section => (section as { vaults?: unknown[] })?.vaults || section) as VaultData[];
+      return arr.flatMap(
+        section => (section as { vaults?: unknown[] })?.vaults || section
+      ) as VaultData[];
     };
     const allVaults = [
       // ...flatten(hv.eth),
@@ -37,12 +49,13 @@ async function fetchVaults(): Promise<{ base: FullVaultData[]; ipor: FullVaultDa
       // ...flatten(hv.zksync),
     ].filter(Boolean);
 
-    const withHistory = allVaults.map((v) => ({ ...v, plasmaHistory: [] } as FullVaultData));
+    const withHistory = allVaults.map(v => ({ ...v, plasmaHistory: [] }) as FullVaultData);
     // Split: only Morpho IPOR vaults in iporVaultData, everything else in baseVaultData
-    iporVaultData = withHistory.filter(v => 
-      v.isIPORVault === true && 
-      // !v.inactive &&
-      v.platform.includes('Autopilot - MORPHO')
+    iporVaultData = withHistory.filter(
+      v =>
+        v.isIPORVault === true &&
+        // !v.inactive &&
+        v.platform.includes('Autopilot - MORPHO')
     );
     baseVaultData = withHistory;
 
@@ -69,42 +82,59 @@ export default function VaultProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null);
 
   const load = async () => {
-    setLoading(true); setError(null);
+    setLoading(true);
+    setError(null);
     try {
       const { base, ipor } = await fetchVaults();
 
       // Enrich IPOR vaults with plasma histories from IPOR API
       const enriched = await Promise.all(
-        ipor.map(async (v) => {
-          const chainId: number = Number(v.chain)
+        ipor.map(async v => {
+          const chainId: number = Number(v.chain);
 
           let plasmaHistory: VaultHistoryData[] | null = null;
           try {
             const iporApiUrl = `${IPOR_API_URL}/fusion/vaults-history/${chainId}/${v.vaultAddress.toLowerCase()}`;
-            
+
             const response = await fetch(iporApiUrl);
             const data = await response.json();
-            
+
             if (data.history && Array.isArray(data.history)) {
               // Convert IPOR API format to VaultHistoryData format
-              plasmaHistory = data.history.map((h: { blockNumber?: number; blockTimestamp: string; assetsToSharesRatio?: string; tvl: string; totalBalance: string; apy: string; apr: string; marketBalances: unknown[] }) => ({
-                blockNumber: h.blockNumber ?? 0,
-                blockTimestamp: h.blockTimestamp,
-                sharePrice: h.assetsToSharesRatio ?? '1',
-                tvl: h.tvl,
-                totalBalance: h.totalBalance,
-                apy: h.apy,
-                apr: h.apr,
-                marketBalances: h.marketBalances,
-                txHash: undefined,
-              })) as VaultHistoryData[];
-              
+              plasmaHistory = data.history.map(
+                (h: {
+                  blockNumber?: number;
+                  blockTimestamp: string;
+                  assetsToSharesRatio?: string;
+                  tvl: string;
+                  totalBalance: string;
+                  apy: string;
+                  apr: string;
+                  marketBalances: unknown[];
+                }) => ({
+                  blockNumber: h.blockNumber ?? 0,
+                  blockTimestamp: h.blockTimestamp,
+                  sharePrice: h.assetsToSharesRatio ?? '1',
+                  tvl: h.tvl,
+                  totalBalance: h.totalBalance,
+                  apy: h.apy,
+                  apr: h.apr,
+                  marketBalances: h.marketBalances,
+                  txHash: undefined,
+                })
+              ) as VaultHistoryData[];
             }
           } catch (e) {
             console.warn('Failed to fetch IPOR history for vault:', v.vaultAddress, e);
             // ignore per-vault failures, keep others
           }
-          return { ...v, plasmaHistory: plasmaHistory && Array.isArray(plasmaHistory) && plasmaHistory.length > 0 ? plasmaHistory : [] };
+          return {
+            ...v,
+            plasmaHistory:
+              plasmaHistory && Array.isArray(plasmaHistory) && plasmaHistory.length > 0
+                ? plasmaHistory
+                : [],
+          };
         })
       );
 

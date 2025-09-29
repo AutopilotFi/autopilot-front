@@ -1,6 +1,6 @@
-import { AutopilotAsset, AutopilotProtocol } from "@/types/globalAppTypes";
+import { AutopilotAsset, AutopilotProtocol } from '@/types/globalAppTypes';
 
 export const isValidProtocol = (p: string): p is AutopilotProtocol =>
   ['morpho', 'euler'].includes(p);
 export const isValidAsset = (a: string): a is AutopilotAsset =>
-  ['USDC', 'WETH', 'cbBTC'].includes(a);
+  ['USDC', 'ETH', 'WETH', 'cbBTC'].includes(a);

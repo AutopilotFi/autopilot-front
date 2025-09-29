@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import type { Address } from "viem";
-import type { ChainId } from "@/lib/subgraph/harvest";
-import { fetchIporVaultHistories, fetchIporUserBalanceHistories } from "@/lib/subgraph/ipor";
-import { formatFrequency, formatDate, fromWei, formatNumber } from "@/helpers/utils";
+import type { Address } from 'viem';
+import type { ChainId } from '@/lib/subgraph/harvest';
+import { fetchIporVaultHistories, fetchIporUserBalanceHistories } from '@/lib/subgraph/ipor';
+import { formatFrequency, formatDate, fromWei, formatNumber } from '@/helpers/utils';
 type VaultHistoryEntry = {
   timestamp: number;
   sharePrice?: string | number | null;
@@ -23,33 +23,38 @@ type BalanceHistoryEntry = {
   tx?: string;
 };
 
-type EnrichedDataEntry = VaultHistoryEntry & BalanceHistoryEntry & {
-  event: string;
-  balance: number;
-  balanceUsd: number;
-  netChange: number;
-  netChangeUsd: number;
-  value: string | number | null;
-  tx?: string;
-};
+type EnrichedDataEntry = VaultHistoryEntry &
+  BalanceHistoryEntry & {
+    event: string;
+    balance: number;
+    balanceUsd: number;
+    netChange: number;
+    netChangeUsd: number;
+    value: string | number | null;
+    tx?: string;
+  };
 
-const calculateApy = (vaultHData: VaultHistoryEntry[], latestSharePriceValue: number, tokenDecimals: number, periodDays: number): string => {
+const calculateApy = (
+  vaultHData: VaultHistoryEntry[],
+  latestSharePriceValue: number,
+  tokenDecimals: number,
+  periodDays: number
+): string => {
   const cutoffTimestamp = vaultHData[0]?.timestamp - periodDays * 24 * 3600;
   const filteredData = vaultHData.filter(entry => Number(entry.timestamp) >= cutoffTimestamp);
 
   if (filteredData.length === 0) return '0%';
 
-  const initialSharePrice = Number(fromWei(
-    filteredData[filteredData.length - 1]?.sharePrice || '1',
-    tokenDecimals,
-    tokenDecimals,
-    false,
-  ))
-
-  return formatNumber(
-    ((latestSharePriceValue - initialSharePrice) / (periodDays / 365)) * 100,
-    2
+  const initialSharePrice = Number(
+    fromWei(
+      filteredData[filteredData.length - 1]?.sharePrice || '1',
+      tokenDecimals,
+      tokenDecimals,
+      false
+    )
   );
+
+  return formatNumber(((latestSharePriceValue - initialSharePrice) / (periodDays / 365)) * 100, 2);
 };
 
 const processBalanceAndVaultData = (
@@ -72,7 +77,9 @@ const processBalanceAndVaultData = (
     vaultData.forEach(obj => {
       if (!timestamps.includes(obj.timestamp)) {
         timestamps.push(obj.timestamp);
-        const sharePriceDecimals = Number(fromWei(obj.sharePrice || '1', tokenDecimals, tokenDecimals));
+        const sharePriceDecimals = Number(
+          fromWei(obj.sharePrice || '1', tokenDecimals, tokenDecimals)
+        );
         const modifiedObj = { ...obj, sharePrice: sharePriceDecimals };
         uniqueVaultHData.push(modifiedObj);
       }
@@ -104,12 +111,22 @@ const processBalanceAndVaultData = (
     const bl = processedBalanceData.length;
     const ul = uniqueVaultHData.length;
 
-    let i = 0, z = 0;
+    let i = 0,
+      z = 0;
     while (i < bl || z < ul) {
-      if (i < bl && (z >= ul || processedBalanceData[i].timestamp > (uniqueVaultHData[z]?.timestamp || 0))) {
+      if (
+        i < bl &&
+        (z >= ul || processedBalanceData[i].timestamp > (uniqueVaultHData[z]?.timestamp || 0))
+      ) {
         const balanceEntry = { ...processedBalanceData[i] };
-        balanceEntry.priceUnderlying = uniqueVaultHData[z]?.priceUnderlying || uniqueVaultHData[z - 1]?.priceUnderlying || lastKnownPriceUnderlying;
-        balanceEntry.sharePrice = uniqueVaultHData[z]?.sharePrice || uniqueVaultHData[z - 1]?.sharePrice || lastKnownSharePrice;
+        balanceEntry.priceUnderlying =
+          uniqueVaultHData[z]?.priceUnderlying ||
+          uniqueVaultHData[z - 1]?.priceUnderlying ||
+          lastKnownPriceUnderlying;
+        balanceEntry.sharePrice =
+          uniqueVaultHData[z]?.sharePrice ||
+          uniqueVaultHData[z - 1]?.sharePrice ||
+          lastKnownSharePrice;
         balanceEntry.tvl = uniqueVaultHData[z]?.tvl || 0;
         balanceEntry.apy = uniqueVaultHData[z]?.apy || 0;
         mergedData.push(balanceEntry);
@@ -139,7 +156,8 @@ const processBalanceAndVaultData = (
       }
 
       if (item.priceUnderlying === '0' || item.priceUnderlying === 0) {
-        item.priceUnderlying = lastKnownPriceUnderlying !== null ? lastKnownPriceUnderlying : item.priceUnderlying;
+        item.priceUnderlying =
+          lastKnownPriceUnderlying !== null ? lastKnownPriceUnderlying : item.priceUnderlying;
       } else {
         lastKnownPriceUnderlying = item.priceUnderlying || null;
       }
@@ -147,12 +165,14 @@ const processBalanceAndVaultData = (
       return item;
     });
 
-
-
     enrichedData = uniqueFixedData
       .map((item, index, array) => {
         const nextItem = array[index + 1];
-        let event: string, balance: number, balanceUsd: number, netChange: number, netChangeUsd: number;
+        let event: string,
+          balance: number,
+          balanceUsd: number,
+          netChange: number,
+          netChangeUsd: number;
 
         if (Number(item.value) === 0) {
           if (nextItem && Number(nextItem.value) === 0) {
@@ -258,8 +278,8 @@ export type Metrics = {
   operatingSince: string;
   earningsSeries: Array<{ timestamp: number; amount: number; amountUsd: number }>;
   uniqueVaultHData: VaultHistoryEntry[];
-  deposits: Array<{ timestamp: number; amount: number; amountUsd: number; tx?: string; }>;
-  withdrawals: Array<{ timestamp: number; amount: number; amountUsd: number; tx?: string; }>;
+  deposits: Array<{ timestamp: number; amount: number; amountUsd: number; tx?: string }>;
+  withdrawals: Array<{ timestamp: number; amount: number; amountUsd: number; tx?: string }>;
   latestUnderlyingPrice: number;
 };
 
@@ -270,40 +290,77 @@ export async function getHarvestMetrics(
   tokenDecimals: string,
   vaultDecimals: string
 ): Promise<Metrics> {
-  
   try {
     const [vh, uh] = await Promise.all([
       fetchIporVaultHistories(chainId, vaultAddress.toLowerCase()),
-      fetchIporUserBalanceHistories(chainId, vaultAddress.toLowerCase(), accountAddress.toLowerCase()),
+      fetchIporUserBalanceHistories(
+        chainId,
+        vaultAddress.toLowerCase(),
+        accountAddress.toLowerCase()
+      ),
     ]);
 
     // Process the data using the comprehensive processing function
-    const processedData = processBalanceAndVaultData(uh, vh, Number(tokenDecimals), Number(vaultDecimals));
+    const processedData = processBalanceAndVaultData(
+      uh,
+      vh,
+      Number(tokenDecimals),
+      Number(vaultDecimals)
+    );
     // Calculate APYs using the new method
-    const latestSharePrice = vh.length > 0 ? Number(fromWei(Number(vh[0]?.sharePrice), Number(tokenDecimals), Number(tokenDecimals))) : 1;
-    const initialSharePrice = vh.length > 0 ? Number(fromWei(vh[vh.length - 1]?.sharePrice || '1', Number(tokenDecimals), Number(tokenDecimals))) : 1;
-    const apy7d = vh.length >= 7 ? calculateApy(vh, latestSharePrice, Number(tokenDecimals), 7) : null;
-    const apy30d = vh.length >= 30 ? calculateApy(vh, latestSharePrice, Number(tokenDecimals), 30) : null;
+    const latestSharePrice =
+      vh.length > 0
+        ? Number(fromWei(Number(vh[0]?.sharePrice), Number(tokenDecimals), Number(tokenDecimals)))
+        : 1;
+    const initialSharePrice =
+      vh.length > 0
+        ? Number(
+            fromWei(
+              vh[vh.length - 1]?.sharePrice || '1',
+              Number(tokenDecimals),
+              Number(tokenDecimals)
+            )
+          )
+        : 1;
+    const apy7d =
+      vh.length >= 7 ? calculateApy(vh, latestSharePrice, Number(tokenDecimals), 7) : null;
+    const apy30d =
+      vh.length >= 30 ? calculateApy(vh, latestSharePrice, Number(tokenDecimals), 30) : null;
 
     // Calculate earnings data
     const earningsData = processedData.enrichedData.filter(item => item.event === 'Harvest');
 
     const totalEarnings = processedData.sumNetChange;
-    
-    const frequency = earningsData.length > 1 ? formatFrequency((earningsData[0].timestamp - earningsData[earningsData.length - 1].timestamp) / (earningsData.length - 1)) : "—";
-    const latestUpdate = earningsData.length > 0 ? formatFrequency((Date.now() / 1000 - earningsData[0].timestamp)) : "—";
 
-    const operatingSince = vh.length > 0 ? formatDate(vh[vh.length - 1].timestamp) : "—";
-    
+    const frequency =
+      earningsData.length > 1
+        ? formatFrequency(
+            (earningsData[0].timestamp - earningsData[earningsData.length - 1].timestamp) /
+              (earningsData.length - 1)
+          )
+        : '—';
+    const latestUpdate =
+      earningsData.length > 0
+        ? formatFrequency(Date.now() / 1000 - earningsData[0].timestamp)
+        : '—';
+
+    const operatingSince = vh.length > 0 ? formatDate(vh[vh.length - 1].timestamp) : '—';
+
     // Calculate deposits and withdrawals
-    const deposits = processedData.enrichedData.filter(item => item.event === 'Convert' && item.netChange > 0);
-    const withdrawals = processedData.enrichedData.filter(item => item.event === 'Revert' && item.netChange < 0);
-    
+    const deposits = processedData.enrichedData.filter(
+      item => item.event === 'Convert' && item.netChange > 0
+    );
+    const withdrawals = processedData.enrichedData.filter(
+      item => item.event === 'Revert' && item.netChange < 0
+    );
+
     // Current balance
-    const currentBalance = processedData.enrichedData.length > 0 ? processedData.enrichedData[0]?.balance || 0 : 0;
-    
+    const currentBalance =
+      processedData.enrichedData.length > 0 ? processedData.enrichedData[0]?.balance || 0 : 0;
+
     // Monthly forecast
-    const monthlyForecast = apy30d != null ? currentBalance * (Math.pow(1 + Number(apy30d) / 100, 30/365) - 1) : 0;
+    const monthlyForecast =
+      apy30d != null ? currentBalance * (Math.pow(1 + Number(apy30d) / 100, 30 / 365) - 1) : 0;
 
     return {
       loading: false,
@@ -318,10 +375,24 @@ export async function getHarvestMetrics(
       frequency,
       latestUpdate,
       operatingSince,
-      earningsSeries: earningsData.map(e => ({ timestamp: e.timestamp, amount: e.netChange, amountUsd: e.netChangeUsd })),
+      earningsSeries: earningsData.map(e => ({
+        timestamp: e.timestamp,
+        amount: e.netChange,
+        amountUsd: e.netChangeUsd,
+      })),
       uniqueVaultHData: processedData.uniqueVaultHData,
-      deposits: deposits.map(d => ({ timestamp: d.timestamp, amount: d.netChange, amountUsd: d.netChangeUsd, tx: d.tx })),
-      withdrawals: withdrawals.map(w => ({ timestamp: w.timestamp, amount: Math.abs(w.netChange), amountUsd: Math.abs(w.netChangeUsd), tx: w.tx })),
+      deposits: deposits.map(d => ({
+        timestamp: d.timestamp,
+        amount: d.netChange,
+        amountUsd: d.netChangeUsd,
+        tx: d.tx,
+      })),
+      withdrawals: withdrawals.map(w => ({
+        timestamp: w.timestamp,
+        amount: Math.abs(w.netChange),
+        amountUsd: Math.abs(w.netChangeUsd),
+        tx: w.tx,
+      })),
       latestUnderlyingPrice: Number(vh[0]?.priceUnderlying || 1),
     };
   } catch (e: unknown) {
@@ -336,9 +407,9 @@ export async function getHarvestMetrics(
       totalBalance: 0,
       totalEarnings: 0,
       monthlyForecast: 0,
-      frequency: "—",
-      latestUpdate: "—",
-      operatingSince: "—",
+      frequency: '—',
+      latestUpdate: '—',
+      operatingSince: '—',
       earningsSeries: [],
       uniqueVaultHData: [],
       deposits: [],
