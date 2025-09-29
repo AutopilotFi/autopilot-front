@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import {
   createContext,
@@ -8,7 +8,7 @@ import {
   useState,
   useCallback,
   ReactNode,
-} from "react";
+} from 'react';
 import {
   createPublicClient,
   createWalletClient,
@@ -19,17 +19,11 @@ import {
   type Account,
   type Chain,
   type Address,
-} from "viem";
-import { mainnet, base, polygon, arbitrum, zkSync } from "viem/chains";
+} from 'viem';
+import { mainnet, base, polygon, arbitrum, zkSync } from 'viem/chains';
 
 // ⬇️ Import your external RPC URLs (adjust path as needed)
-import {
-  MAINNET_URL,
-  MATIC_URL,
-  BASE_URL,
-  ARBITRUM_URL,
-  ZKSYNC_URL,
-} from "@/consts/constants";
+import { MAINNET_URL, MATIC_URL, BASE_URL, ARBITRUM_URL, ZKSYNC_URL } from '@/consts/constants';
 
 // ---- Types & constants ------------------------------------------------------
 
@@ -103,7 +97,7 @@ export const WalletContext = createContext<WalletContextData>(defaultWalletData)
 function makePublicClientFor(chain: Chain): PublicClient {
   const rpcUrl =
     RPC_URLS_BY_ID[chain.id] ??
-    chain.rpcUrls?.default?.http?.[0] /* fallback to viem’s default if env missing */;
+    chain.rpcUrls?.default?.http?.[0]; /* fallback to viem’s default if env missing */
 
   return createPublicClient({
     chain,
@@ -137,24 +131,27 @@ export default function WalletProvider({ children }: { children: ReactNode }) {
   const onDisconnectRef = useRef<(() => void) | undefined>(undefined);
 
   // Helper function to create wallet client when both account and chain are available
-  const createWalletClientIfReady = useCallback((accountAddress?: Address, currentChain?: Chain | null) => {
-    if (!accountAddress || !currentChain || !window?.ethereum) {
-      setWalletClient(null);
-      return;
-    }
+  const createWalletClientIfReady = useCallback(
+    (accountAddress?: Address, currentChain?: Chain | null) => {
+      if (!accountAddress || !currentChain || !window?.ethereum) {
+        setWalletClient(null);
+        return;
+      }
 
-    try {
-      const wc = createWalletClient({
-        chain: currentChain,
-        account: accountAddress,
-        transport: custom(window.ethereum),
-      }) as WalletClient;
-      setWalletClient(wc);
-    } catch (e) {
-      console.error("Failed to create walletClient:", e);
-      setWalletClient(null);
-    }
-  }, []);
+      try {
+        const wc = createWalletClient({
+          chain: currentChain,
+          account: accountAddress,
+          transport: custom(window.ethereum),
+        }) as WalletClient;
+        setWalletClient(wc);
+      } catch (e) {
+        console.error('Failed to create walletClient:', e);
+        setWalletClient(null);
+      }
+    },
+    []
+  );
 
   // 1) Always initialize a read-only public client (even if disconnected)
   useEffect(() => {
@@ -177,11 +174,11 @@ export default function WalletProvider({ children }: { children: ReactNode }) {
         if (!window?.ethereum) return;
 
         const accounts = (await window.ethereum.request({
-          method: "eth_accounts",
+          method: 'eth_accounts',
         })) as string[];
 
         const chainHex = (await window.ethereum.request({
-          method: "eth_chainId",
+          method: 'eth_chainId',
         })) as string;
 
         if (accounts?.length > 0) {
@@ -191,7 +188,7 @@ export default function WalletProvider({ children }: { children: ReactNode }) {
           setupEventListeners();
         }
       } catch (e) {
-        console.error("Initial connection check failed:", e);
+        console.error('Initial connection check failed:', e);
       }
     })();
 
@@ -219,19 +216,19 @@ export default function WalletProvider({ children }: { children: ReactNode }) {
     onChainChangedRef.current = onChainChanged;
     onDisconnectRef.current = onDisconnect;
 
-    window.ethereum.on("accountsChanged", onAccountsChanged);
-    window.ethereum.on("chainChanged", onChainChanged);
-    window.ethereum.on("disconnect", onDisconnect);
+    window.ethereum.on('accountsChanged', onAccountsChanged);
+    window.ethereum.on('chainChanged', onChainChanged);
+    window.ethereum.on('disconnect', onDisconnect);
   }
 
   function teardownEventListeners() {
     if (!window?.ethereum) return;
     if (onAccountsChangedRef.current)
-      window.ethereum.removeListener("accountsChanged", onAccountsChangedRef.current);
+      window.ethereum.removeListener('accountsChanged', onAccountsChangedRef.current);
     if (onChainChangedRef.current)
-      window.ethereum.removeListener("chainChanged", onChainChangedRef.current);
+      window.ethereum.removeListener('chainChanged', onChainChangedRef.current);
     if (onDisconnectRef.current)
-      window.ethereum.removeListener("disconnect", onDisconnectRef.current);
+      window.ethereum.removeListener('disconnect', onDisconnectRef.current);
     onAccountsChangedRef.current = undefined;
     onChainChangedRef.current = undefined;
     onDisconnectRef.current = undefined;
@@ -249,7 +246,7 @@ export default function WalletProvider({ children }: { children: ReactNode }) {
     }
 
     const addr = accounts[0] as Address;
-    const newAccount: Account = { address: addr, type: "json-rpc" };
+    const newAccount: Account = { address: addr, type: 'json-rpc' };
     setAccount(newAccount);
 
     // Create wallet client if we have both account and chain
@@ -263,7 +260,9 @@ export default function WalletProvider({ children }: { children: ReactNode }) {
 
       if (!isSupportedChainId(id)) {
         setChain(null);
-        setError("Unsupported chain. Please switch to Mainnet, Arbitrum, Base, Polygon, or zkSync.");
+        setError(
+          'Unsupported chain. Please switch to Mainnet, Arbitrum, Base, Polygon, or zkSync.'
+        );
         // Keep read-only client on DEFAULT_READONLY_CHAIN so the app still works
         setPublicClient(makePublicClientFor(DEFAULT_READONLY_CHAIN));
         setWalletClient(null);
@@ -281,8 +280,8 @@ export default function WalletProvider({ children }: { children: ReactNode }) {
         createWalletClientIfReady(account.address, nextChain);
       }
     } catch (e) {
-      console.error("Error handling chainChanged:", e);
-      setError("Failed to handle chain change.");
+      console.error('Error handling chainChanged:', e);
+      setError('Failed to handle chain change.');
     }
   }
 
@@ -290,7 +289,7 @@ export default function WalletProvider({ children }: { children: ReactNode }) {
 
   const connect = async () => {
     if (!window?.ethereum) {
-      setError("No wallet found. Please install MetaMask or another EIP‑1193 wallet.");
+      setError('No wallet found. Please install MetaMask or another EIP‑1193 wallet.');
       return;
     }
 
@@ -299,15 +298,15 @@ export default function WalletProvider({ children }: { children: ReactNode }) {
       setError(null);
 
       const accounts = (await window.ethereum.request({
-        method: "eth_requestAccounts",
+        method: 'eth_requestAccounts',
       })) as string[];
 
       const chainHex = (await window.ethereum.request({
-        method: "eth_chainId",
+        method: 'eth_chainId',
       })) as string;
 
       if (!accounts || accounts.length === 0) {
-        throw new Error("No accounts returned by wallet.");
+        throw new Error('No accounts returned by wallet.');
       }
 
       setIsConnected(true);
@@ -315,10 +314,9 @@ export default function WalletProvider({ children }: { children: ReactNode }) {
       await handleChainChanged(chainHex);
       setupEventListeners();
     } catch (err: unknown) {
-      const msg =
-        err instanceof Error ? err.message : "Failed to connect wallet.";
+      const msg = err instanceof Error ? err.message : 'Failed to connect wallet.';
       setError(msg);
-      console.error("Connection error:", err);
+      console.error('Connection error:', err);
       setIsConnected(false);
     } finally {
       setIsConnecting(false);
@@ -339,7 +337,7 @@ export default function WalletProvider({ children }: { children: ReactNode }) {
       // Keep a read-only public client alive for your default chain
       setPublicClient(makePublicClientFor(DEFAULT_READONLY_CHAIN));
     } catch (err) {
-      console.error("Disconnect error:", err);
+      console.error('Disconnect error:', err);
     }
   };
 
@@ -349,25 +347,23 @@ export default function WalletProvider({ children }: { children: ReactNode }) {
     try {
       setError(null);
       await window.ethereum.request({
-        method: "wallet_switchEthereumChain",
+        method: 'wallet_switchEthereumChain',
         params: [{ chainId: hexChainId(targetChainId) }],
       });
       // Wallet will emit 'chainChanged' which we handle
     } catch (err: unknown) {
       // 4902: chain not added to wallet yet
-      if (err && typeof err === "object" && "code" in err && err.code === 4902) {
+      if (err && typeof err === 'object' && 'code' in err && err.code === 4902) {
         const targetChain = CHAINS_BY_ID[targetChainId];
         if (!targetChain) {
-          setError("Cannot add unsupported chain.");
+          setError('Cannot add unsupported chain.');
           return;
         }
 
-        const rpcUrl =
-          RPC_URLS_BY_ID[targetChainId] ??
-          targetChain.rpcUrls?.default?.http?.[0];
+        const rpcUrl = RPC_URLS_BY_ID[targetChainId] ?? targetChain.rpcUrls?.default?.http?.[0];
 
         await window.ethereum.request({
-          method: "wallet_addEthereumChain",
+          method: 'wallet_addEthereumChain',
           params: [
             {
               chainId: hexChainId(targetChainId),
@@ -383,14 +379,13 @@ export default function WalletProvider({ children }: { children: ReactNode }) {
 
         // Try switching again after adding
         await window.ethereum.request({
-          method: "wallet_switchEthereumChain",
+          method: 'wallet_switchEthereumChain',
           params: [{ chainId: hexChainId(targetChainId) }],
         });
       } else {
-        const msg =
-          err instanceof Error ? err.message : "Failed to switch chain.";
+        const msg = err instanceof Error ? err.message : 'Failed to switch chain.';
         setError(msg);
-        console.error("Switch chain error:", err);
+        console.error('Switch chain error:', err);
       }
     }
   };
@@ -406,7 +401,7 @@ export default function WalletProvider({ children }: { children: ReactNode }) {
       const bal = await client.getBalance({ address: targetAddress });
       return bal;
     } catch (err) {
-      console.error("Get balance error:", err);
+      console.error('Get balance error:', err);
       return BigInt(0);
     }
   };
@@ -429,11 +424,7 @@ export default function WalletProvider({ children }: { children: ReactNode }) {
     clearError,
   };
 
-  return (
-    <WalletContext.Provider value={contextValue}>
-      {children}
-    </WalletContext.Provider>
-  );
+  return <WalletContext.Provider value={contextValue}>{children}</WalletContext.Provider>;
 }
 
 // ---- Hook -------------------------------------------------------------------
@@ -441,7 +432,7 @@ export default function WalletProvider({ children }: { children: ReactNode }) {
 export const useWallet = () => {
   const context = useContext(WalletContext);
   if (context === undefined) {
-    throw new Error("useWallet must be used within a WalletProvider");
+    throw new Error('useWallet must be used within a WalletProvider');
   }
   return context;
 };

@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useEffect } from 'react';
 import { useAccount } from 'wagmi';
@@ -6,10 +6,10 @@ import { useWallet } from '@/providers/WalletProvider';
 
 export function useWalletSync() {
   const { address: wagmiAddress, isConnected: wagmiConnected } = useAccount();
-  const { 
-    connect: walletProviderConnect, 
-    disconnect: walletProviderDisconnect, 
-    isConnected: walletProviderConnected 
+  const {
+    connect: walletProviderConnect,
+    disconnect: walletProviderDisconnect,
+    isConnected: walletProviderConnected,
   } = useWallet();
 
   useEffect(() => {
@@ -17,8 +17,7 @@ export function useWalletSync() {
       try {
         if (wagmiConnected && wagmiAddress && !walletProviderConnected) {
           await walletProviderConnect();
-        }
-        else if (!wagmiConnected && walletProviderConnected) {
+        } else if (!wagmiConnected && walletProviderConnected) {
           await walletProviderDisconnect();
         }
       } catch (error) {
@@ -29,11 +28,17 @@ export function useWalletSync() {
     if (wagmiConnected !== walletProviderConnected) {
       syncWalletState();
     }
-  }, [wagmiConnected, wagmiAddress, walletProviderConnected, walletProviderConnect, walletProviderDisconnect]);
+  }, [
+    wagmiConnected,
+    wagmiAddress,
+    walletProviderConnected,
+    walletProviderConnect,
+    walletProviderDisconnect,
+  ]);
 
   return {
     wagmiConnected,
     walletProviderConnected,
-    isSynced: wagmiConnected === walletProviderConnected
+    isSynced: wagmiConnected === walletProviderConnected,
   };
 }

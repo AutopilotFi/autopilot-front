@@ -13,7 +13,6 @@ import { ToastProvider } from './ToastProvider';
 
 const queryClient = new QueryClient();
 
-
 export default function Providers({ children }: { children: React.ReactNode }) {
   return (
     <ToastProvider>
@@ -23,12 +22,14 @@ export default function Providers({ children }: { children: React.ReactNode }) {
             <VaultMetricsProvider>
               <WagmiProvider config={config}>
                 <QueryClientProvider client={queryClient}>
-                  <RainbowKitProvider theme={lightTheme({
-                    ...lightTheme.accentColors.purple,
-                    accentColorForeground: 'white',
-                    borderRadius: 'medium',
-                    accentColor: '#7b3fe4',
-                  })}>
+                  <RainbowKitProvider
+                    theme={lightTheme({
+                      ...lightTheme.accentColors.purple,
+                      accentColorForeground: 'white',
+                      borderRadius: 'medium',
+                      accentColor: '#7b3fe4',
+                    })}
+                  >
                     {children}
                   </RainbowKitProvider>
                 </QueryClientProvider>

@@ -1,10 +1,10 @@
-"use client";
+'use client';
 
-import { useState, useCallback } from "react";
-import { ToastProps } from "@/components/UI/Toast";
+import { useState, useCallback } from 'react';
+import { ToastProps } from '@/components/UI/Toast';
 
 interface ToastData {
-  type: "success" | "error";
+  type: 'success' | 'error';
   title: string;
   message: string;
   txHash?: string;
@@ -32,24 +32,30 @@ export function useToast() {
     setToasts(prev => prev.filter(toast => toast.id !== id));
   }, []);
 
-  const showSuccess = useCallback((title: string, message: string, txHash?: string) => {
-    return addToast({
-      type: "success",
-      title,
-      message,
-      txHash,
-      duration: 8000, // Longer duration for success with tx hash
-    });
-  }, [addToast]);
+  const showSuccess = useCallback(
+    (title: string, message: string, txHash?: string) => {
+      return addToast({
+        type: 'success',
+        title,
+        message,
+        txHash,
+        duration: 8000, // Longer duration for success with tx hash
+      });
+    },
+    [addToast]
+  );
 
-  const showError = useCallback((title: string, message: string) => {
-    return addToast({
-      type: "error",
-      title,
-      message,
-      duration: 6000,
-    });
-  }, [addToast]);
+  const showError = useCallback(
+    (title: string, message: string) => {
+      return addToast({
+        type: 'error',
+        title,
+        message,
+        duration: 6000,
+      });
+    },
+    [addToast]
+  );
 
   return {
     toasts,

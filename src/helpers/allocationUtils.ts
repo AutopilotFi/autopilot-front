@@ -1,5 +1,5 @@
-import { MarketBalance, VaultHistoryData } from "@/types/globalAppTypes";
-import { generateColor } from "./utils";
+import { MarketBalance, VaultHistoryData } from '@/types/globalAppTypes';
+import { generateColor } from './utils';
 
 export interface AllocationData {
   name: string;
@@ -13,14 +13,14 @@ export interface AllocationData {
 
 const convertHVaultIdToName = (hVaultId: string): string => {
   if (hVaultId === 'Not invested') return 'Not invested';
-  
+
   const parts = hVaultId.split('_');
-  
+
   if (parts.length >= 3) {
     const protocol = parts[0].charAt(0).toUpperCase() + parts[0].slice(1);
     const strategy = parts[1];
     const asset = parts[2];
-    
+
     if (protocol === 'Morpho') {
       return `Morpho ${strategy} ${asset}`;
     } else if (protocol === 'Euler') {
@@ -43,30 +43,29 @@ const convertHVaultIdToName = (hVaultId: string): string => {
     const asset = parts[1];
     return `${protocol} ${asset}`;
   }
-  
+
   return hVaultId.charAt(0).toUpperCase() + hVaultId.slice(1);
 };
 
 // Function to get vault name and APY from marketId using allocPointData
 const getVaultDataFromMarketId = (
-  marketId: string, 
+  marketId: string,
   allocPointData: { hVaultAddress?: string; hVaultId: string; apy?: string }[]
 ): { name: string; apy: number } => {
-  const allocPoint = allocPointData?.find(ap => 
-    ap.hVaultAddress?.toLowerCase() === marketId.toLowerCase()
+  const allocPoint = allocPointData?.find(
+    ap => ap.hVaultAddress?.toLowerCase() === marketId.toLowerCase()
   );
   if (allocPoint) {
     return {
       name: convertHVaultIdToName(allocPoint.hVaultId),
-      apy: parseFloat(allocPoint.apy || '0')
+      apy: parseFloat(allocPoint.apy || '0'),
     };
   }
   return {
     name: `Vault ${marketId.slice(0, 6)}...`,
-    apy: 0
+    apy: 0,
   };
 };
-
 
 // Main function to get current allocations from marketBalances
 export const getCurrentAllocations = (
@@ -87,14 +86,14 @@ export const getCurrentAllocations = (
   }
 
   const totalBalance = parseFloat(latestHistory.totalBalance) || 0;
-  
+
   if (totalBalance <= 0) {
     return [];
   }
 
   // Filter out ERC20 tokens - only show actual vault protocols
-  const vaultBalances = latestHistory.marketBalances.filter((marketBalance: MarketBalance) => 
-    marketBalance.protocol.toLowerCase() !== 'erc20'
+  const vaultBalances = latestHistory.marketBalances.filter(
+    (marketBalance: MarketBalance) => marketBalance.protocol.toLowerCase() !== 'erc20'
   );
 
   const allocations = vaultBalances
@@ -102,7 +101,7 @@ export const getCurrentAllocations = (
       const balance = parseFloat(marketBalance.balance) || 0;
       const percentage = (balance / totalBalance) * 100;
       const vaultData = getVaultDataFromMarketId(marketBalance.marketId, allocPointData);
-      
+
       return {
         name: vaultData.name,
         percentage: Math.round(percentage * 100) / 100,
@@ -110,7 +109,7 @@ export const getCurrentAllocations = (
         color: generateColor({}, vaultData.name),
         protocol: marketBalance.protocol,
         marketId: marketBalance.marketId,
-        apy: vaultData.apy
+        apy: vaultData.apy,
       };
     })
     .filter(allocation => allocation.percentage > 0.01) // Only show allocations > 0.01%

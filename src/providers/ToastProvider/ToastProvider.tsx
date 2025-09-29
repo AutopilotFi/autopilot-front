@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { createContext, useContext, ReactNode } from "react";
-import { useToast } from "@/hooks/useToast";
-import ToastContainer from "@/components/UI/ToastContainer";
+import { createContext, useContext, ReactNode } from 'react';
+import { useToast } from '@/hooks/useToast';
+import ToastContainer from '@/components/UI/ToastContainer';
 
 interface ToastContextData {
   showSuccess: (title: string, message: string, txHash?: string) => string;
@@ -30,7 +30,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 export function useToastContext() {
   const context = useContext(ToastContext);
   if (context === undefined) {
-    throw new Error("useToastContext must be used within a ToastProvider");
+    throw new Error('useToastContext must be used within a ToastProvider');
   }
   return context;
 }

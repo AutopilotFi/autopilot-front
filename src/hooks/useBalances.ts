@@ -1,10 +1,10 @@
-"use client";
+'use client';
 
-import { useCallback, useEffect, useState } from "react";
-import { Address, formatUnits } from "viem";
-import { useWallet } from "@/providers/WalletProvider";
-import { erc20Abi } from "@/lib/contracts/erc20";
-import { convertVaultToAssets } from "@/lib/contracts/iporVault";
+import { useCallback, useEffect, useState } from 'react';
+import { Address, formatUnits } from 'viem';
+import { useWallet } from '@/providers/WalletProvider';
+import { erc20Abi } from '@/lib/contracts/erc20';
+import { convertVaultToAssets } from '@/lib/contracts/iporVault';
 
 export interface BalanceData {
   tokenBalance: string;
@@ -18,8 +18,8 @@ export interface BalanceData {
 export function useBalances(tokenAddress: string, vaultAddress: string, tokenDecimals: number) {
   const { publicClient, account, isConnected } = useWallet();
   const [balances, setBalances] = useState<BalanceData>({
-    tokenBalance: "0",
-    vaultBalance: "0",
+    tokenBalance: '0',
+    vaultBalance: '0',
     tokenBalanceFormatted: 0,
     vaultBalanceFormatted: 0,
     loading: false,
@@ -30,8 +30,8 @@ export function useBalances(tokenAddress: string, vaultAddress: string, tokenDec
     if (!publicClient || !account?.address || !isConnected) {
       setBalances(prev => ({
         ...prev,
-        tokenBalance: "0",
-        vaultBalance: "0",
+        tokenBalance: '0',
+        vaultBalance: '0',
         tokenBalanceFormatted: 0,
         vaultBalanceFormatted: 0,
         loading: false,
@@ -48,23 +48,28 @@ export function useBalances(tokenAddress: string, vaultAddress: string, tokenDec
         publicClient.readContract({
           address: tokenAddress as Address,
           abi: erc20Abi,
-          functionName: "balanceOf",
+          functionName: 'balanceOf',
           args: [account.address],
         }) as Promise<bigint>,
         // Get vault shares balance
         publicClient.readContract({
           address: vaultAddress as Address,
           abi: erc20Abi, // Vault tokens are ERC20-like
-          functionName: "balanceOf",
+          functionName: 'balanceOf',
           args: [account.address],
         }) as Promise<bigint>,
       ]);
 
       // Convert vault shares to underlying token amount
+
       let underlyingTokenAmount = BigInt(0);
       if (vaultSharesBalance > BigInt(0)) {
         try {
-          underlyingTokenAmount = await convertVaultToAssets(publicClient, vaultAddress, vaultSharesBalance);
+          underlyingTokenAmount = await convertVaultToAssets(
+            publicClient,
+            vaultAddress,
+            vaultSharesBalance
+          );
         } catch (error) {
           console.error('Error converting vault shares to assets:', error);
           underlyingTokenAmount = vaultSharesBalance;
@@ -83,11 +88,11 @@ export function useBalances(tokenAddress: string, vaultAddress: string, tokenDec
         error: null,
       });
     } catch (error) {
-      console.error("Error fetching balances:", error);
+      console.error('Error fetching balances:', error);
       setBalances(prev => ({
         ...prev,
         loading: false,
-        error: error instanceof Error ? error.message : "Failed to fetch balances",
+        error: error instanceof Error ? error.message : 'Failed to fetch balances',
       }));
     }
   }, [publicClient, account?.address, isConnected, tokenAddress, vaultAddress, tokenDecimals]);

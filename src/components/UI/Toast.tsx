@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
-import { useEffect, useState, useCallback } from "react";
-import { CheckCircle, XCircle, ExternalLink, X } from "lucide-react";
+import { useEffect, useState, useCallback } from 'react';
+import { CheckCircle, XCircle, ExternalLink, X } from 'lucide-react';
 
 export interface ToastProps {
   id: string;
-  type: "success" | "error";
+  type: 'success' | 'error';
   title: string;
   message: string;
   txHash?: string;
@@ -13,7 +13,15 @@ export interface ToastProps {
   onClose: (id: string) => void;
 }
 
-export default function Toast({ id, type, title, message, txHash, duration = 5000, onClose }: ToastProps) {
+export default function Toast({
+  id,
+  type,
+  title,
+  message,
+  txHash,
+  duration = 5000,
+  onClose,
+}: ToastProps) {
   const [isVisible, setIsVisible] = useState(false);
   const [isExiting, setIsExiting] = useState(false);
 
@@ -45,16 +53,14 @@ export default function Toast({ id, type, title, message, txHash, duration = 500
   return (
     <div
       className={`${type === 'error' ? 'max-w-lg' : 'max-w-md'} w-full bg-white rounded-lg shadow-lg border border-gray-200 transform transition-all duration-300 ${
-        isVisible && !isExiting
-          ? "translate-x-0 opacity-100"
-          : "translate-x-full opacity-0"
+        isVisible && !isExiting ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'
       }`}
     >
       <div className="p-4">
         <div className="flex items-start space-x-3">
           {/* Icon */}
           <div className="flex-shrink-0">
-            {type === "success" ? (
+            {type === 'success' ? (
               <CheckCircle className="w-6 h-6 text-green-500" />
             ) : (
               <XCircle className="w-6 h-6 text-red-500" />
@@ -65,7 +71,7 @@ export default function Toast({ id, type, title, message, txHash, duration = 500
           <div className="flex-1 min-w-0">
             <h4 className="text-sm font-semibold text-gray-900 break-words">{title}</h4>
             <p className="text-sm text-gray-600 mt-1 break-words leading-relaxed">{message}</p>
-            
+
             {/* Transaction Hash Link */}
             {txHash && (
               <a
@@ -95,10 +101,10 @@ export default function Toast({ id, type, title, message, txHash, duration = 500
         <div className="h-1 bg-gray-100">
           <div
             className={`h-full transition-all ease-linear ${
-              type === "success" ? "bg-green-500" : "bg-red-500"
+              type === 'success' ? 'bg-green-500' : 'bg-red-500'
             }`}
             style={{
-              width: "100%",
+              width: '100%',
               animation: `shrink ${duration}ms linear`,
             }}
           />

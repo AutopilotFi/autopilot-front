@@ -1,1 +1,1 @@
-export {default, GlobalContext} from "./GlobalDataProvider"
+export { default, GlobalContext } from './GlobalDataProvider';

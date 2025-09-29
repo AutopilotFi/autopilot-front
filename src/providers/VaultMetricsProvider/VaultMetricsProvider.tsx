@@ -1,4 +1,4 @@
-"use client"
+'use client';
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { useWallet } from '@/providers/WalletProvider';
@@ -40,7 +40,7 @@ export const VaultMetricsProvider: React.FC<VaultMetricsProviderProps> = ({ chil
   const [vaultMetrics, setVaultMetrics] = useState<VaultMetrics>({});
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+
   const { account, isConnected } = useWallet();
   const globalData = useContext(GlobalContext);
   const availableAutopilots = globalData?.availableAutopilots || [];
@@ -53,14 +53,14 @@ export const VaultMetricsProvider: React.FC<VaultMetricsProviderProps> = ({ chil
     try {
       setIsLoading(true);
       setError(null);
-      
+
       const newVaultMetrics: VaultMetrics = {};
-      
+
       // Fetch metrics for each available autopilot
       for (const autopilot of availableAutopilots) {
         try {
           const vaultData = autopilot.vault;
-          
+
           if (!vaultData?.vaultAddress) {
             continue;
           }
@@ -78,15 +78,17 @@ export const VaultMetricsProvider: React.FC<VaultMetricsProviderProps> = ({ chil
             metrics: result,
             lastUpdated: Date.now(),
           };
-
         } catch (vaultError) {
-          console.error(`Error fetching metrics for ${autopilot.protocol}-${autopilot.asset}:`, vaultError);
-          
+          console.error(
+            `Error fetching metrics for ${autopilot.protocol}-${autopilot.asset}:`,
+            vaultError
+          );
+
           // Store error state for this vault
           newVaultMetrics[autopilot.vault.vaultAddress] = {
             metrics: {} as Metrics,
             lastUpdated: Date.now(),
-            error: `Failed to fetch metrics: ${vaultError instanceof Error ? vaultError.message : 'Unknown error'}`
+            error: `Failed to fetch metrics: ${vaultError instanceof Error ? vaultError.message : 'Unknown error'}`,
           };
         }
       }
@@ -115,6 +117,7 @@ export const VaultMetricsProvider: React.FC<VaultMetricsProviderProps> = ({ chil
   // Fetch metrics when wallet connects or autopilots change
   useEffect(() => {
     fetchAllVaultMetrics();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [account?.address, availableAutopilots, isConnected]);
 
   // Auto-refresh metrics every 5 minutes
@@ -123,11 +126,15 @@ export const VaultMetricsProvider: React.FC<VaultMetricsProviderProps> = ({ chil
       return;
     }
 
-    const interval = setInterval(() => {
-      fetchAllVaultMetrics();
-    }, 5 * 60 * 1000); // 5 minutes
+    const interval = setInterval(
+      () => {
+        fetchAllVaultMetrics();
+      },
+      5 * 60 * 1000
+    ); // 5 minutes
 
     return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [account?.address, availableAutopilots]);
 
   const value: VaultMetricsContextType = {
@@ -138,9 +145,5 @@ export const VaultMetricsProvider: React.FC<VaultMetricsProviderProps> = ({ chil
     getMetricsForVault,
   };
 
-  return (
-    <VaultMetricsContext.Provider value={value}>
-      {children}
-    </VaultMetricsContext.Provider>
-  );
+  return <VaultMetricsContext.Provider value={value}>{children}</VaultMetricsContext.Provider>;
 };

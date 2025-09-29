@@ -10,7 +10,7 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 
-import { VaultHistoryEntry } from "@/types/globalAppTypes";
+import { VaultHistoryEntry } from '@/types/globalAppTypes';
 
 interface SharepriceChartProps {
   uniqueVaultHData?: VaultHistoryEntry[];
@@ -22,9 +22,7 @@ interface ChartDataPoint {
   timestamp: string;
 }
 
-const SharepriceChart: React.FC<SharepriceChartProps> = ({
-  uniqueVaultHData
-}) => {
+const SharepriceChart: React.FC<SharepriceChartProps> = ({ uniqueVaultHData }) => {
   const [chartData, setChartData] = useState<ChartDataPoint[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -36,14 +34,14 @@ const SharepriceChart: React.FC<SharepriceChartProps> = ({
 
     // Process the data for the chart
     const processedData: ChartDataPoint[] = uniqueVaultHData
-      .map((entry) => {
+      .map(entry => {
         const timestamp = entry.timestamp * 1000; // Convert to milliseconds
         const sharePrice = parseFloat(String(entry.sharePrice || '1'));
-        
+
         return {
           x: timestamp,
           y: sharePrice,
-          timestamp: new Date(timestamp).toISOString()
+          timestamp: new Date(timestamp).toISOString(),
         };
       })
       .sort((a, b) => a.x - b.x); // Sort by timestamp ascending
@@ -68,13 +66,11 @@ const SharepriceChart: React.FC<SharepriceChartProps> = ({
       const data = (payload[0] as { payload: ChartDataPoint }).payload;
       const date = new Date(data.x).toLocaleDateString();
       const sharePrice = data.y.toFixed(5);
-      
+
       return (
         <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-3">
           <p className="text-sm text-gray-600">{date}</p>
-          <p className="text-sm font-medium text-gray-900">
-            {sharePrice}
-          </p>
+          <p className="text-sm font-medium text-gray-900">{sharePrice}</p>
         </div>
       );
     }
@@ -101,13 +97,13 @@ const SharepriceChart: React.FC<SharepriceChartProps> = ({
   const yValues = chartData.map(d => d.y);
   const minY = Math.min(...yValues);
   const maxY = Math.max(...yValues);
-  
+
   // Create evenly spaced Y-axis ticks like in the design
   const range = maxY - minY;
   const tickCount = 5;
   const tickStep = range / (tickCount - 1);
   const yAxisTicks = Array.from({ length: tickCount }, (_, i) => {
-    const value = minY + (i * tickStep);
+    const value = minY + i * tickStep;
     return parseFloat(value.toFixed(5));
   });
 
@@ -121,9 +117,9 @@ const SharepriceChart: React.FC<SharepriceChartProps> = ({
               <stop offset="95%" stopColor="#FFFFFF" stopOpacity={0.1} />
             </linearGradient>
           </defs>
-          <CartesianGrid 
-            strokeDasharray="0" 
-            stroke="rgba(228, 228, 228, 0.3)" 
+          <CartesianGrid
+            strokeDasharray="0"
+            stroke="rgba(228, 228, 228, 0.3)"
             vertical={false}
             horizontal={true}
           />
