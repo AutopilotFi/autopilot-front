@@ -37,7 +37,7 @@ const mockChartData = [
 export default function EarningsChart({
   currentProjectData,
   timeframe,
-  // onTimeframeChange, // unused here
+  onTimeframeChange, // eslint-disable-line @typescript-eslint/no-unused-vars
   setCurDate,
   setCurContent,
 }: EarningsChartProps) {
@@ -53,13 +53,13 @@ export default function EarningsChart({
     let cumUsd = 0;
     const points = sorted.map(e => {
       cum += e.amount;
-      cumUsd += e.amountUsd;
+      cumUsd += e.value;
       return {
         timestamp: Number(e.time) * 1000,
         value: cum,
         valueUsd: cumUsd,
         amount: e.amount,
-        amountUsd: e.amountUsd,
+        amountUsd: e.value,
       };
     });
 
@@ -225,7 +225,7 @@ export default function EarningsChart({
             interval="preserveStartEnd"
             minTickGap={60}
           />
-          <YAxis hide />
+          <YAxis hide domain={[0, 'dataMax']} scale="linear" />
           <Area
             type="monotone"
             dataKey="y"
@@ -300,7 +300,7 @@ export default function EarningsChart({
             interval="preserveStartEnd"
             minTickGap={60}
           />
-          <YAxis hide />
+          <YAxis hide domain={[0, 'dataMax']} scale="linear" />
 
           {/* Keep Tooltip mounted so Recharts sets activeTooltipIndex; hide its UI */}
           <Tooltip

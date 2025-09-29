@@ -11,9 +11,12 @@ import {
 import CurrentAllocations from './CurrentAllocations';
 import { useEffect, useState } from 'react';
 import { fetchDefiLlamaAPY } from '@/hooks/useDefiLlamaAPY';
+import SharepriceChart from './SharepriceChart';
 import { formatBalance, getExplorerLink } from '@/helpers/utils';
 import { generateDetailsGridStructure } from '@/components/StatsGrid/gridStructure';
 import StatsGrid from '@/components/StatsGrid';
+import Image from 'next/image';
+import useCurrentAllocations from '@/hooks/useCurrentAllocations';
 
 export default function Details({
   currentProjectData,
@@ -25,10 +28,9 @@ export default function Details({
   isOldUser: boolean;
   isMobile?: boolean;
 }) {
+  const currentAllocations = useCurrentAllocations(currentProjectData.vaultAddress);
+
   const [enrichedProjectData, setEnrichedProjectData] = useState<ProjectData>(currentProjectData);
-  const allocations = currentProjectData.benchmarkData.filter(
-    allocation => !allocation.isAutopilot && Number(allocation.allocation) > 1e-8
-  );
 
   useEffect(() => {
     if (!currentProjectData.benchmarkData || currentProjectData.benchmarkData.length === 0) {
@@ -83,6 +85,7 @@ export default function Details({
       <StatsGrid
         gridStructure={generateDetailsGridStructure(enrichedProjectData)}
         desktopColumns={3}
+        isMobile={isMobile}
       />
 
       {/* Automated Algorithm Active */}
@@ -174,12 +177,12 @@ export default function Details({
                   )}
                 </span>
               </div>
-              {/* <div className="flex justify-between">
+              <div className="flex justify-between">
                 <span className="text-sm text-gray-600">Latest SharePrice Update</span>
                 <span className="text-sm font-medium text-gray-900">
                   {enrichedProjectData.latestUpdate} ago
                 </span>
-              </div> */}
+              </div>
             </div>
           </div>
 
@@ -216,22 +219,25 @@ export default function Details({
               <div className="flex flex-col space-y-3 md:flex-row md:items-center md:justify-between md:space-y-0">
                 <div className="flex items-center space-x-3 md:space-x-4 min-w-0 flex-1">
                   <div className="w-8 h-8 bg-[#9159FF] rounded-lg flex items-center justify-center flex-shrink-0">
-                    <span className="text-white text-xs font-bold">V</span>
+                    <Image width={28} height={28} src={'/icon.svg'} alt="icon" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="text-sm font-medium text-gray-900">Main Vault Contract</div>
-                    <div className="text-xs font-mono text-gray-600 break-all md:break-normal">
-                      {enrichedProjectData.vaultAddress.slice(0, 5)}...
-                      {enrichedProjectData.vaultAddress.slice(-5)}
+                    <div className="text-sm font-medium text-gray-900">Autopilot Contract</div>
+                    <div className="md:text-xs text-[9px] font-mono text-gray-600 break-all md:break-normal">
+                      {enrichedProjectData.vaultAddress}
                     </div>
                   </div>
                 </div>
                 <div className="flex items-center space-x-2 md:space-x-3 flex-shrink-0">
-                  <button className="flex items-center space-x-1 px-2 py-1 text-xs font-medium text-gray-600 hover:text-[#9159FF] transition-colors bg-white rounded border border-gray-200 flex-shrink-0">
+                  <a
+                    className="flex items-center space-x-1 px-2 py-1 text-xs font-medium text-gray-600 hover:text-[#9159FF] transition-colors bg-white rounded border border-gray-200 flex-shrink-0"
+                    href={`https://debank.com/profile/${enrichedProjectData.vaultAddress}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
                     <ExternalLink className="w-3 h-3" />
-                    <span className="hidden sm:inline">DeBank</span>
-                    <span className="sm:hidden">View</span>
-                  </button>
+                    <span>DeBank</span>
+                  </a>
                   <a
                     className="flex items-center space-x-1 px-2 py-1 text-xs font-medium text-gray-600 hover:text-[#9159FF] transition-colors bg-white rounded border border-gray-200 flex-shrink-0"
                     href={`${getExplorerLink(currentProjectData.chainId || 8453)}/address/${enrichedProjectData.vaultAddress}`}
@@ -239,8 +245,13 @@ export default function Details({
                     rel="noopener noreferrer"
                   >
                     <ExternalLink className="w-3 h-3" />
-                    <span className="hidden sm:inline">Etherscan</span>
-                    <span className="sm:hidden">View</span>
+                    <span>
+                      {currentProjectData.chainId === 1
+                        ? 'Etherscan'
+                        : currentProjectData.chainId === 8453
+                          ? 'BaseScan'
+                          : 'Block explorer'}
+                    </span>
                   </a>
                 </div>
               </div>
@@ -252,10 +263,18 @@ export default function Details({
       {/* Current Allocation Table - Always show for both user states */}
       <CurrentAllocations
         currentProjectData={currentProjectData}
-        allocations={allocations}
+        allocations={currentAllocations}
         isOldUser={isOldUser}
         isMobile={isMobile}
       />
+
+      {/* Share Price History Chart */}
+      <div className="mb-8">
+        <h4 className="text-sm font-semibold text-gray-900 mb-4 uppercase tracking-wide">
+          Share Price History
+        </h4>
+        <SharepriceChart uniqueVaultHData={enrichedProjectData.uniqueVaultHData} />
+      </div>
 
       {/* Yield Sources - Full Width List */}
       <div className="bg-white rounded-xl border border-gray-100 p-6">
@@ -276,13 +295,13 @@ export default function Details({
                   </div>
                   <div className="ml-3 flex-shrink-0">
                     <a
-                      href={`${getExplorerLink(currentProjectData.chainId || 8453)}/address/${vault.hVaultAddress}`}
+                      href={`${getExplorerLink(currentProjectData.chainId || 8453)}/address/${vault.mVaultAddress}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-xs font-mono text-gray-600 hover:text-gray-800 bg-white hover:bg-gray-50 px-2 py-1 rounded border transition-colors flex items-center space-x-1 group"
                     >
                       <span>
-                        {vault.hVaultAddress.slice(0, 6)}...{vault.hVaultAddress.slice(-4)}
+                        {vault?.mVaultAddress?.slice(0, 6)}...{vault?.mVaultAddress?.slice(-4)}
                       </span>
                       <ExternalLink className="w-3 h-3 text-gray-900 opacity-50 group-hover:opacity-100 transition-opacity" />
                     </a>

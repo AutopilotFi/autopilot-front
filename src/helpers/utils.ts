@@ -5,6 +5,7 @@ import {
   BASESCAN_URL,
   ZKSYNCSCAN_URL,
   ETHERSCAN_URL,
+  CHAIN_NAMES,
 } from '@/consts/constants';
 import BigNumber from 'bignumber.js';
 
@@ -190,10 +191,10 @@ export const formatBalance = (
   const threshold = 1 / Math.pow(10, decimalPlaces);
 
   if ((asset === 'USD' || asset === '$') && balance > threshold) {
-    return `${balance.toLocaleString('en-US', {
+    return `${!hideAsset && asset === '$' ? asset : ''}${balance.toLocaleString('en-US', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
-    })} ${!hideAsset ? asset : ''}`;
+    })} ${!hideAsset && asset === 'USD' ? asset : ''}`;
   }
 
   if (balance === 0) {
@@ -201,7 +202,7 @@ export const formatBalance = (
   }
 
   if (balance < threshold) {
-    return `<${threshold.toFixed(decimalPlaces)} ${!hideAsset ? asset : ''}`;
+    return `<${!hideAsset && asset === '$' ? asset : ''}${threshold.toFixed(decimalPlaces)} ${!hideAsset && asset !== '$' ? asset : ''}`;
   }
 
   return `${balance.toLocaleString('en-US', {
@@ -299,3 +300,6 @@ export const formatTimeAgo = (timestamp: number): string => {
   if (diffSeconds < 2592000) return `${Math.floor(diffSeconds / 86400)}d`;
   return `${Math.floor(diffSeconds / 2592000)}mo`;
 };
+
+export const getChainNameFromId = (id: number) =>
+  CHAIN_NAMES[id as keyof typeof CHAIN_NAMES] || 'Unknown Network';

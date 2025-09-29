@@ -16,9 +16,24 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Autopilot Finance',
-  description: 'Autopilot Finance app',
+  title: 'Autopilot App - Earn more on USDC, ETH and BTC',
+  description:
+    'Autopilot reallocates liquidity across the most efficient yield sources, keeping your assets productive 24/7 without the need for manual management.',
   icons: '/icon.svg',
+  twitter: {
+    card: 'summary_large_image',
+    site: 'Autopilot App - Earn more on USDC, ETH and BTC',
+    images: 'https://app.autopilot.finance/social-card.jpg',
+  },
+  openGraph: {
+    type: 'website',
+    url: 'https://app.autopilot.finance/',
+    title: 'Autopilot App - Earn more on USDC, ETH and BTC',
+    description:
+      'Autopilot reallocates liquidity across the most efficient yield sources, keeping your assets productive 24/7 without the need for manual management.',
+    siteName: 'Autopilot App - Earn more on USDC, ETH and BTC',
+    images: [{ url: 'https://app.autopilot.finance/social-card.jpg' }],
+  },
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {

@@ -61,13 +61,23 @@ export function useBalances(tokenAddress: string, vaultAddress: string, tokenDec
       ]);
 
       // Convert vault shares to underlying token amount
-      const underlyingTokenAmount =
-        vaultSharesBalance > BigInt(0)
-          ? await convertVaultToAssets(publicClient, vaultAddress, vaultSharesBalance)
-          : BigInt(0);
+
+      let underlyingTokenAmount = BigInt(0);
+      if (vaultSharesBalance > BigInt(0)) {
+        try {
+          underlyingTokenAmount = await convertVaultToAssets(
+            publicClient,
+            vaultAddress,
+            vaultSharesBalance
+          );
+        } catch (error) {
+          console.error('Error converting vault shares to assets:', error);
+          underlyingTokenAmount = vaultSharesBalance;
+        }
+      }
 
       const tokenBalanceFormatted = parseFloat(formatUnits(tokenBalance, tokenDecimals));
-      const vaultBalanceFormatted = parseFloat(formatUnits(underlyingTokenAmount, tokenDecimals)); // Use tokenDecimals for underlying amount
+      const vaultBalanceFormatted = parseFloat(formatUnits(underlyingTokenAmount, tokenDecimals));
 
       setBalances({
         tokenBalance: tokenBalance.toString(),

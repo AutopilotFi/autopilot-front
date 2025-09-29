@@ -1,7 +1,7 @@
 import clsx from 'clsx';
-import { ChevronDown, Circle } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 import Link from 'next/link';
-import { CommingSoon } from '../UI/Badges';
+import { ApyBadge, CommingSoon } from '../UI/Badges';
 import Image from 'next/image';
 import { SideBarOption } from '@/types/globalAppTypes';
 import { morphoTempDisabled } from '@/consts/constants';
@@ -10,26 +10,28 @@ import { useState } from 'react';
 export default function NavAutopilotLinks({
   options,
   url,
-  protocol,
+  name,
+  icon,
+  isDarkMode,
 }: {
   options: SideBarOption[];
   url?: string;
-  protocol: string;
+  name: string;
+  icon: string;
+  isDarkMode?: boolean;
 }) {
   const [linksExpanded, setLinksExpaned] = useState(true);
   return (
     <div>
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center space-x-2">
-          <Image
-            width={14}
-            height={14}
-            src={'/projects/morpho.png'}
-            alt="Morpho"
-            className="w-4 h-4"
-          />
-          <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">
-            {protocol} Autopilots
+          <Image width={14} height={14} src={icon} alt={name} className="w-4 h-4" />
+          <h3
+            className={`text-sm font-semibold uppercase tracking-wide ${
+              isDarkMode ? 'text-gray-100' : 'text-gray-900'
+            }`}
+          >
+            {name}
           </h3>
         </div>
         <button
@@ -59,37 +61,59 @@ export default function NavAutopilotLinks({
                     : undefined
                 }
                 key={option.asset}
-                className={clsx(
-                  'w-full flex items-center space-x-3 p-3 rounded-lg transition-colors',
-                  url === route && 'bg-gray-50',
-                  isDisabled ? 'cursor-not-allowed' : 'cursor-pointer hover:bg-purple-50/50'
-                )}
+                className={`w-full flex items-center space-x-3 p-3 rounded-lg transition-colors ${
+                  !isDisabled ? 'cursor-pointer' : 'cursor-not-allowed'
+                } ${
+                  url === route
+                    ? isDarkMode
+                      ? 'bg-gray-800 border border-gray-700'
+                      : 'bg-gray-100 border border-gray-200'
+                    : option.asset === 'USDC'
+                      ? isDarkMode
+                        ? 'hover:bg-purple-900/30'
+                        : 'hover:bg-purple-50/50'
+                      : isDarkMode
+                        ? 'hover:bg-gray-800/50'
+                        : 'hover:bg-gray-50/50'
+                }`}
               >
-                <Image
-                  width={16}
-                  height={16}
-                  src={option.icon}
-                  alt={option.asset}
-                  className={clsx('w-6 h-6', isDisabled && 'opacity-60')}
-                />
+                <div className="relative">
+                  <Image
+                    width={28}
+                    height={28}
+                    src={option.icon}
+                    alt={option.asset}
+                    className={`w-6 h-6 md:w-8 md:h-8 rounded-full object-cover ${isDisabled ? 'opacity-60' : ''}`}
+                  />
+
+                  <Image
+                    width={10.5}
+                    height={10.5}
+                    src={`/projects/${option.protocol}.png`}
+                    alt="Morpho"
+                    className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 md:w-3 md:h-3 rounded-full object-cover bg-white border border-gray-200 ${isDisabled ? 'opacity-60' : ''}`}
+                  />
+                </div>
                 <div className="flex-1 text-left">
                   <div
-                    className={clsx('font-medium', isDisabled ? 'text-gray-500' : 'text-gray-900')}
+                    className={clsx(
+                      'font-medium',
+                      isDisabled
+                        ? isDarkMode
+                          ? 'text-gray-500'
+                          : 'text-gray-500'
+                        : isDarkMode
+                          ? 'text-gray-100'
+                          : 'text-gray-900'
+                    )}
                   >
                     {option.asset}
                   </div>
-                  <div className="text-sm text-gray-500">Autopilot</div>
-                </div>
-                {isDisabled ? (
-                  <CommingSoon />
-                ) : (
-                  <div className="flex items-center space-x-1">
-                    <Circle className="w-2 h-2 fill-green-600 text-green-600" />
-                    <span className="text-xs text-green-600 font-medium">
-                      {option.apy.toFixed(2)}%
-                    </span>
+                  <div className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                    Autopilot
                   </div>
-                )}
+                </div>
+                {isDisabled ? <CommingSoon /> : <ApyBadge apy={option.apy.toFixed(2)} />}
               </Link>
             );
           })}

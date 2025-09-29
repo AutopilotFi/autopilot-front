@@ -1,28 +1,38 @@
 'use client';
 import { ProjectData } from '@/types/globalAppTypes';
-import { Plus, Minus, Info, Shield, Loader2, AlertTriangle } from 'lucide-react';
+import { Plus, Minus, Info, Loader2, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { Dispatch, SetStateAction, useState } from 'react';
 import { useIporActions } from '@/hooks/useIporActions';
 import { useBalances } from '@/hooks/useBalances';
 import { useWallet } from '@/providers/WalletProvider';
 import { useToastContext } from '@/providers/ToastProvider';
 import { Address, parseUnits } from 'viem';
-import { CHAIN_NAMES } from '@/consts/constants';
 import { ConnectWalletButton } from '@/components/ConnectWalletButton';
 import { convertAssetsToVault } from '@/lib/contracts/iporVault';
-import { formatBalance } from '@/helpers/utils';
+import { formatBalance, getChainNameFromId } from '@/helpers/utils';
 import Image from 'next/image';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/UI/TooltipMobileFriendly';
 
 export default function Deposit({
   isNewUser,
   currentProjectData,
   setShowTermsModal,
-  // handleOpenBenchmark,
+  refreshAllMetrics,
+  isMobile,
+  isDarkMode,
 }: {
   isNewUser: boolean;
   currentProjectData: ProjectData;
   setShowTermsModal: Dispatch<SetStateAction<boolean>>;
   handleOpenBenchmark: () => void;
+  refreshAllMetrics: () => Promise<void>;
+  isMobile?: boolean;
+  isDarkMode?: boolean;
 }) {
   const [depositMode, setDepositMode] = useState<'enter' | 'exit'>('enter');
   const [insuranceEnabled, setInsuranceEnabled] = useState(false);
@@ -36,8 +46,7 @@ export default function Deposit({
   const { showSuccess, showError } = useToastContext();
 
   const isCorrectNetwork = chainId === currentProjectData.chainId;
-  const targetChainName =
-    CHAIN_NAMES[currentProjectData.chainId as keyof typeof CHAIN_NAMES] || 'Unknown Network';
+  const targetChainName = getChainNameFromId(currentProjectData.chainId);
 
   const handleSwitchNetwork = async () => {
     try {
@@ -210,22 +219,39 @@ export default function Deposit({
           }
         }
       }
+      await refreshMetricsWithRetry();
     } finally {
       setIsRefreshingBalances(false);
     }
   };
 
+  const refreshMetricsWithRetry = async () => {
+    const maxAttempts = 8;
+    const baseDelay = 3000;
+
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      try {
+        if (attempt > 0) {
+          const delay = baseDelay * Math.pow(1.5, attempt - 1); // 3s, 4.5s, 6.75s, 10s, 15s, 22s, 33s
+          console.log(`Waiting ${delay}ms before metrics retry ${attempt + 1}/${maxAttempts}...`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+        }
+
+        await refreshAllMetrics();
+        return;
+      } catch (error) {
+        console.warn(`Metrics refresh attempt ${attempt + 1} failed:`, error);
+
+        if (attempt === maxAttempts - 1) {
+          console.error('All metrics refresh attempts failed - subgraph may still be syncing');
+        }
+      }
+    }
+  };
+
   // Get current balance for display
   const currentBalance =
-    depositMode === 'enter'
-      ? balancesLoading
-        ? currentProjectData.walletBalance
-        : tokenBalanceFormatted
-      : balancesLoading
-        ? isNewUser
-          ? 0
-          : currentProjectData.autopilotBalance
-        : vaultBalanceFormatted;
+    depositMode === 'enter' ? tokenBalanceFormatted : isNewUser ? 0 : vaultBalanceFormatted;
   return (
     <div className="space-y-6">
       <div className="flex flex-col lg:flex-row gap-6">
@@ -285,17 +311,17 @@ export default function Deposit({
             </div>
           )}
 
-          {txSuccess && (
+          {/* {txSuccess && (
             <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
               <div className="flex items-center space-x-3">
                 <Shield className="w-5 h-5 text-green-500 flex-shrink-0" />
                 <div>
                   <h4 className="text-sm font-medium text-green-900">Transaction Successful</h4>
-                  <p className="text-sm text-green-700">{txSuccess}</p>
+                  <p className="text-sm text-green-700 truncate">{txSuccess}</p>
                 </div>
               </div>
-            </div>
-          )}
+            </div>s
+          )} */}
 
           {/* Available Balance Section with Integrated Top-up */}
           <div className="bg-gray-50 rounded-xl p-4 mb-6">
@@ -321,9 +347,6 @@ export default function Deposit({
                     <span className="text-xl font-semibold text-gray-900">
                       {formatBalance(currentBalance, currentProjectData.asset)}
                     </span>
-                    {isRefreshingBalances && (
-                      <span className="text-xs text-blue-600 font-medium">Updating...</span>
-                    )}
                   </div>
                 </div>
               </div>
@@ -481,9 +504,8 @@ export default function Deposit({
                 <h4 className="text-sm font-medium text-yellow-900">Network Mismatch</h4>
                 <p className="text-sm text-yellow-700">
                   Your wallet is connected to{' '}
-                  {CHAIN_NAMES[chainId as keyof typeof CHAIN_NAMES] || 'an unknown network'}. This
-                  vault is deployed on {targetChainName}. Please use the button below to switch
-                  networks.
+                  {getChainNameFromId(Number(currentProjectData.chainId))}. This vault is deployed
+                  on {targetChainName}. Please use the button below to switch networks.
                 </p>
               </div>
             </div>
@@ -557,6 +579,83 @@ export default function Deposit({
               </span>
             </button>
           )}
+          {/* Attribution Footer */}
+          <div className="flex items-center justify-between pt-3 pb-5">
+            {/* Left: Audited */}
+            <TooltipProvider>
+              <Tooltip isMobile={isMobile} delayDuration={isMobile ? 0 : 500}>
+                <TooltipTrigger isMobile={isMobile} asChild>
+                  <div className="flex items-center space-x-1.5 cursor-help tooltip-trigger-mobile">
+                    <CheckCircle2
+                      className={`w-3.5 h-3.5 ${isDarkMode ? 'text-green-400' : 'text-green-600'}`}
+                    />
+                    <span
+                      className={`text-xs underline decoration-dotted decoration-1 underline-offset-2 ${
+                        isMobile ? 'mt-1' : '-mt-1'
+                      } ${isDarkMode ? 'text-muted-foreground' : 'text-gray-500'}`}
+                    >
+                      Audited
+                    </span>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent
+                  isMobile={isMobile}
+                  side={isMobile ? 'bottom' : 'top'}
+                  className="w-64 bg-gray-900 text-white"
+                  sideOffset={isMobile ? 8 : 4}
+                  align="center"
+                  avoidCollisions={true}
+                  collisionPadding={16}
+                >
+                  <p className="text-xs">
+                    This Autopilot setup underwent 3 audits in 2024/2025 from high profile auditing
+                    firms. See more in{' '}
+                    <a href="#" className="font-bold underline hover:no-underline">
+                      Documentation
+                    </a>
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+
+            {/* Right: IPOR Labs Attribution */}
+            <TooltipProvider>
+              <Tooltip isMobile={isMobile} delayDuration={isMobile ? 0 : 500}>
+                <TooltipTrigger isMobile={isMobile} asChild>
+                  <div className="flex items-center space-x-2 cursor-help tooltip-trigger-mobile">
+                    <span
+                      className={`text-xs underline decoration-dotted decoration-1 underline-offset-2 ${
+                        isDarkMode ? 'text-muted-foreground' : 'text-gray-500'
+                      }`}
+                    >
+                      Powered by IPOR Labs AG
+                    </span>
+                    <Image
+                      width={14}
+                      height={14}
+                      src={'/icons/ipor.png'}
+                      alt="IPOR Labs"
+                      className="w-4 h-4 rounded-full"
+                    />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent
+                  isMobile={isMobile}
+                  side={isMobile ? 'bottom' : 'top'}
+                  className="w-64 bg-gray-900 text-white"
+                  sideOffset={isMobile ? 8 : 4}
+                  align="center"
+                  avoidCollisions={true}
+                  collisionPadding={16}
+                >
+                  <p className="text-xs text-left">
+                    Some wallet providers might show IPOR instead of Autopilot as the contract or
+                    entity you&apos;ll be interacting with.
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
         </div>
 
         {/* Right: Transaction Preview + Info Cards */}

@@ -1,53 +1,32 @@
 'use client';
 import { useState, useEffect, useContext } from 'react';
 import Link from 'next/link';
-import { Allocations, LatestEarningData, PortfolioData } from '@/types/globalAppTypes';
+import { Earnings, PortfolioData } from '@/types/globalAppTypes';
 import { GlobalContext } from '@/providers/GlobalDataProvider';
 import DesktopPositions from './Positions/DesktopPostions';
 import MobilePositions from './Positions/MobilePositions';
-import DesktopLatestEarnings from './LatestEarnings/DesktopLatestEarnings';
-import MobileLatestEarnings from './LatestEarnings/MobileLatestEarnings';
-// import { useWallet } from '@/providers/WalletProvider';
+import DesktopEarnings from '../EarningsPage/DesktopEarnings';
+import MobileEarnings from '../EarningsPage/MobileEarnings';
 import { useVaultMetrics } from '@/providers/VaultMetricsProvider';
-import { getVaultDataFromAutopilots } from '@/consts/vaultData';
 import StatsGrid from '../StatsGrid';
 import { generatePortfolioGridStructure } from '../StatsGrid/gridStructure';
 import EmptyEarnings from '../Dashboard/Earnings/EmptyEarnings';
+import { getChainNameFromId } from '@/helpers/utils';
 
 export default function Portfolio() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [sortColumn] = useState<string | null>(null);
   const [sortDirection] = useState<'asc' | 'desc'>('asc');
   const [realPortfolioData, setRealPortfolioData] = useState<PortfolioData>([]);
-  const [realLatestEarningsData, setRealLatestEarningsData] = useState<LatestEarningData>([]);
+  const [realLatestEarningsData, setRealLatestEarningsData] = useState<Earnings>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const globalData = useContext(GlobalContext);
-  const user = globalData?.user;
-  const isMobile = globalData?.isMobile;
-  const availableAutopilots = globalData?.availableAutopilots;
+  const { user, isMobile, availableAutopilots, isDarkMode } = useContext(GlobalContext);
   // const { account } = useWallet();
   const { vaultMetrics, isLoading: metricsLoading, error: metricsError } = useVaultMetrics();
 
   const isNewUser = user.status === 'new';
-
-  const allocations: Allocations = availableAutopilots.reduce(
-    (acc, autopilot) => ({
-      ...acc,
-      [`${autopilot.protocol}-${autopilot.asset}`]: getVaultDataFromAutopilots(
-        availableAutopilots,
-        autopilot.protocol,
-        autopilot.asset
-      )?.benchmarkData?.filter(
-        allocation =>
-          !allocation.isAutopilot &&
-          Number(allocation.allocation) > 1e-8 &&
-          allocation.name !== 'Not invested'
-      ),
-    }),
-    {}
-  );
 
   // Process portfolio data from VaultMetricsProvider
   useEffect(() => {
@@ -66,7 +45,7 @@ export default function Portfolio() {
       setError(null);
 
       const portfolioData: PortfolioData = [];
-      const earningsData: LatestEarningData = [];
+      const earningsData: Earnings = [];
 
       // Process data for each available autopilot using cached metrics
       for (const autopilot of availableAutopilots) {
@@ -91,6 +70,7 @@ export default function Portfolio() {
               : 0;
 
           const usdValue = result.metrics.totalBalance * result.metrics.latestUnderlyingPrice;
+          const chainName = getChainNameFromId(Number(vaultData.chain));
 
           portfolioData.push({
             protocol: autopilot.protocol,
@@ -103,16 +83,18 @@ export default function Portfolio() {
             apy: autopilot.apy,
             secondBestAPY: secondBestAPY,
             status: 'active',
+            chainName: chainName,
+            vaultAddress: vaultData.vaultAddress,
           });
 
-          const latestEarnings = result.metrics.earningsSeries.map(
+          const latestEarnings: Earnings = result.metrics.earningsSeries.map(
             (earning: { amount: number; amountUsd?: number; timestamp: number }) => ({
               asset: autopilot.asset,
               protocol: autopilot.protocol,
               amount: earning.amount,
               value: earning.amountUsd || earning.amount * result.metrics.latestUnderlyingPrice,
               time: earning.timestamp,
-              icon: autopilot.icon,
+              chainName: chainName,
             })
           );
 
@@ -156,23 +138,6 @@ export default function Portfolio() {
     : realLatestEarningsData.length > 0
       ? realLatestEarningsData
       : [];
-
-  const getAssetIcon = (asset: string) => {
-    switch (asset) {
-      case 'USDC':
-        return '/coins/usdc.svg';
-      case 'WETH':
-        return '/coins/eth.svg';
-      case 'cbBTC':
-        return '/coins/cbBTC.svg';
-      default:
-        return '/coins/usdc.svg';
-    }
-  };
-
-  const getProtocolIcon = (protocol: string) => {
-    return protocol === 'morpho' ? '/projects/morpho.png' : '/projects/euler.png';
-  };
 
   const totalValue = loading ? 0 : portfolio.reduce((sum, item) => sum + item.usdValue, 0);
   const totalEarnings = loading ? 0 : portfolio.reduce((sum, item) => sum + item.earningsUsd, 0);
@@ -226,7 +191,7 @@ export default function Portfolio() {
       <header className="bg-white border-b border-gray-100 sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-10 sm:px-12 lg:px-14 py-4 ml-7 md:ml-auto">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-4 min-h-[49.25px]">
               <div>
                 <h1 className="font-semibold text-gray-900">Portfolio</h1>
                 <p className="text-sm text-gray-500">View all positions</p>
@@ -262,6 +227,7 @@ export default function Portfolio() {
                   annualEarningsFromAPY
                 )}
                 desktopColumns={3}
+                isMobile={isMobile}
               />
 
               {/* Positions */}
@@ -278,19 +244,15 @@ export default function Portfolio() {
                       {/* Desktop Table */}
                       {isMobile === false && (
                         <DesktopPositions
-                          allocations={allocations}
-                          getAssetIcon={getAssetIcon}
-                          getProtocolIcon={getProtocolIcon}
                           sortedPortfolioData={sortedPortfolioData}
+                          isDarkMode={isDarkMode}
                         />
                       )}
                       {/* Mobile Cards */}
                       {isMobile === true && (
                         <MobilePositions
-                          allocations={allocations}
-                          getAssetIcon={getAssetIcon}
-                          getProtocolIcon={getProtocolIcon}
                           sortedPortfolioData={sortedPortfolioData}
+                          isDarkMode={isDarkMode}
                         />
                       )}
                     </>
@@ -317,23 +279,17 @@ export default function Portfolio() {
                   </div>
                   {/* Desktop Table */}
                   {isMobile === false && (
-                    <DesktopLatestEarnings
-                      getProtocolIcon={getProtocolIcon}
-                      latestEarnings={latestEarnings}
-                    />
+                    <DesktopEarnings earnings={latestEarnings} isDarkMode={isDarkMode} hideAction />
                   )}
 
                   {/* Mobile Cards */}
                   {isMobile === true && (
-                    <MobileLatestEarnings
-                      getProtocolIcon={getProtocolIcon}
-                      latestEarnings={latestEarnings}
-                    />
+                    <MobileEarnings earnings={latestEarnings} isDarkMode={isDarkMode} showNetwork />
                   )}
                 </div>
               ) : (
                 <div className="bg-white rounded-xl border border-gray-100 p-6">
-                  <EmptyEarnings />
+                  <EmptyEarnings balance={totalValue} />
                 </div>
               )}
             </div>

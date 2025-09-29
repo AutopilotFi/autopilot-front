@@ -21,7 +21,7 @@ function shortenAddress(addr?: string, chars = 4) {
   return `${addr.slice(0, 2 + chars)}…${addr.slice(-chars)}`;
 }
 
-export function ConnectWalletButton() {
+export function ConnectWalletButton({ isDarkMode }: { isDarkMode?: boolean }) {
   const { disconnectAsync } = useDisconnect();
   const { disconnect: walletProviderDisconnect } = useWallet();
   const [menuOpen, setMenuOpen] = React.useState(false);
@@ -108,7 +108,11 @@ export function ConnectWalletButton() {
                 <button
                   type="button"
                   onClick={() => setMenuOpen(v => !v)}
-                  className="w-full flex items-center space-x-3 p-3 bg-purple-50 hover:bg-purple-100 border border-[#9159FF] rounded-lg transition-all duration-200 group cursor-pointer"
+                  className={`w-full flex items-center space-x-3 p-3 border border-[#9159FF] rounded-lg transition-all duration-200 group ${
+                    isDarkMode
+                      ? 'bg-gray-800 hover:bg-gray-700'
+                      : 'bg-purple-50 hover:bg-purple-100'
+                  }`}
                   aria-haspopup="menu"
                   aria-expanded={menuOpen}
                 >
@@ -116,14 +120,24 @@ export function ConnectWalletButton() {
 
                   {/* Wallet Info */}
                   <div className="flex-1 min-w-0 text-left">
-                    <div className="text-sm font-semibold text-gray-900 truncate">
+                    <div
+                      className={`text-sm font-semibold truncate ${
+                        isDarkMode ? 'text-gray-100' : 'text-gray-900'
+                      }`}
+                    >
                       {shortenAddress(addr)}
                     </div>
 
                     <div className="flex items-center space-x-2">
                       {/* Green status dot (use <Circle> or a div dot fallback) */}
                       <span className="w-2 h-2 rounded-full bg-green-600 inline-block" />
-                      <span className="text-xs font-normal text-black">{networkLabel}</span>
+                      <span
+                        className={`text-xs font-normal ${
+                          isDarkMode ? 'text-gray-300' : 'text-black'
+                        }`}
+                      >
+                        {networkLabel}
+                      </span>
                     </div>
                   </div>
 

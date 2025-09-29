@@ -1,6 +1,7 @@
 'use client';
+import { AllocationData } from '@/helpers/allocationUtils';
 import { formatBalance } from '@/helpers/utils';
-import { BenchmarkData, ProjectData } from '@/types/globalAppTypes';
+import { ProjectData } from '@/types/globalAppTypes';
 import { Zap, Layers } from 'lucide-react';
 import Image from 'next/image';
 
@@ -11,7 +12,7 @@ export default function CurrentAllocations({
   isMobile,
 }: {
   currentProjectData: ProjectData;
-  allocations: BenchmarkData[];
+  allocations: AllocationData[];
   isOldUser: boolean;
   isMobile?: boolean;
 }) {
@@ -77,9 +78,9 @@ export default function CurrentAllocations({
       {/* Mobile card layout - Active Allocations */}
       {!isOldUser && isMobile && (
         <div className="space-y-3">
-          {filteredAllocations.map((allocation, index) => (
+          {filteredAllocations.map(allocation => (
             <div
-              key={`${index}.${allocation.hVaultAddress}.${allocation.apy}`}
+              key={allocation.marketId}
               className="bg-gray-50 rounded-lg p-4 hover:bg-gray-50 transition-colors"
             >
               {/* Header with source and APY */}
@@ -108,15 +109,15 @@ export default function CurrentAllocations({
                     </div>
                   </div>
                 </div>
-                <div className="text-sm font-medium text-gray-900 flex-shrink-0">
+                {/* <div className="text-sm font-medium text-gray-900 flex-shrink-0">
                   {allocation.apy.toFixed(2)}%
-                </div>
+                </div> */}
               </div>
 
               {/* Bottom row with amount and allocation */}
               <div className="flex items-center justify-between pt-3 border-t border-gray-200">
                 <div>
-                  <div className="text-xs text-gray-500 mb-1">Amount</div>
+                  <div className="text-xs text-gray-500 mb-1">AUTOPILOT TVL</div>
                   <div className="text-sm font-medium text-gray-900">
                     {formatBalance(
                       allocation.amount ?? 0,
@@ -128,9 +129,9 @@ export default function CurrentAllocations({
                 <div className="text-right">
                   <div className="text-xs text-gray-500 mb-1">Allocation</div>
                   <div className="text-sm font-medium text-gray-900">
-                    {(allocation.allocation ?? 0) < 0.01
+                    {(allocation.percentage ?? 0) < 0.01
                       ? '<0.01'
-                      : (allocation.allocation ?? 0).toFixed(2)}
+                      : (allocation.percentage ?? 0).toFixed(2)}
                     %
                   </div>
                 </div>
@@ -149,11 +150,11 @@ export default function CurrentAllocations({
                 <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wide">
                   Yield Source
                 </th>
-                <th className="text-right py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wide">
+                {/* <th className="text-right py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wide">
                   7d APY
-                </th>
+                </th> */}
                 <th className="text-right py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wide">
-                  Amount
+                  AUTOPILOT TVL
                 </th>
                 <th className="text-right py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wide">
                   Allocation
@@ -206,11 +207,11 @@ export default function CurrentAllocations({
                         </div>
                       </div>
                     </td>
-                    <td className="py-4 px-4 text-right">
+                    {/* <td className="py-4 px-4 text-right">
                       <div className="text-sm font-medium text-gray-900">
                         {allocation.apy.toFixed(2)}%
                       </div>
-                    </td>
+                    </td> */}
                     <td className="py-4 px-4 text-right">
                       <div className="text-sm font-medium text-gray-900">
                         {formatBalance(
@@ -222,9 +223,9 @@ export default function CurrentAllocations({
                     </td>
                     <td className="py-4 px-4 text-right">
                       <div className="text-sm font-medium text-gray-900">
-                        {(allocation.allocation ?? 0) < 0.01
+                        {(allocation.percentage ?? 0) < 0.01
                           ? '<0.01'
-                          : (allocation.allocation ?? 0).toFixed(2)}
+                          : (allocation.percentage ?? 0).toFixed(2)}
                         %
                       </div>
                     </td>

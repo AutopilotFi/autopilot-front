@@ -1,5 +1,5 @@
 import { UserStatsGrid } from '@/types/globalAppTypes';
-import { Tooltip, TooltipTrigger, TooltipContent } from '../UI/Tooltip';
+import { Tooltip, TooltipTrigger, TooltipContent } from '../UI/TooltipMobileFriendly';
 import { Info } from 'lucide-react';
 import clsx from 'clsx';
 import Image from 'next/image';
@@ -7,9 +7,11 @@ import Image from 'next/image';
 export default function StatsGrid({
   gridStructure,
   desktopColumns,
+  isMobile,
 }: {
   gridStructure: UserStatsGrid[];
   desktopColumns?: number;
+  isMobile?: boolean;
 }) {
   const gridContainerCalsses = clsx(
     desktopColumns ? `md:grid-cols-${desktopColumns}` : 'md:grid-cols-4',
@@ -32,11 +34,16 @@ export default function StatsGrid({
                 {stat.label}
               </p>
               {stat.tooltipText ? (
-                <Tooltip>
-                  <TooltipTrigger asChild>
+                <Tooltip isMobile={isMobile}>
+                  <TooltipTrigger asChild isMobile={isMobile}>
                     <Info className="w-3 md:w-4 h-3 md:h-4 text-gray-400 cursor-help flex-shrink-0" />
                   </TooltipTrigger>
-                  <TooltipContent>
+                  <TooltipContent
+                    isMobile={isMobile}
+                    side={isMobile ? 'bottom' : 'top'}
+                    sideOffset={isMobile ? 8 : 4}
+                    align="center"
+                  >
                     <p className="max-w-xs text-xs">{stat.tooltipText}</p>
                   </TooltipContent>
                 </Tooltip>

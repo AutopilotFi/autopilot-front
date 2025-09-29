@@ -1,13 +1,14 @@
 'use clinet';
-
-import { ArrowDown, ArrowUp, Download, History } from 'lucide-react';
+import { Download, History } from 'lucide-react';
 import { ProjectData, UserStats } from '@/types/globalAppTypes';
 import StatsGrid from '@/components/StatsGrid';
 import { generateHistoryGridStructure } from '@/components/StatsGrid/gridStructure';
 import StandardCTAButton from '@/components/UI/StandardCTAButton';
 import { useState } from 'react';
-import { getExplorerLink } from '@/helpers/utils';
 import Pagination from '@/components/UI/Pagination';
+import MobileHistory from './MobileHistory';
+import DesktopHistory from './DesktopHistory';
+import { formatBalance } from '@/helpers/utils';
 
 export default function HistoryTab({
   currentProjectData,
@@ -15,16 +16,17 @@ export default function HistoryTab({
   isNewUser,
   handleNavigateToDeposit,
   isMobile,
+  isDarkMode,
 }: {
   currentProjectData: ProjectData;
   userStatsData: UserStats;
   isNewUser: boolean;
   handleNavigateToDeposit: () => void;
   isMobile?: boolean;
+  isDarkMode?: boolean;
 }) {
   const [currentPage, setCurrentPage] = useState(1);
   const dataPerPage = 10;
-
   const totalTransactions = userStatsData?.transactions?.length || 0;
   const startIndex = (currentPage - 1) * dataPerPage;
   const endIndex = startIndex + dataPerPage;
@@ -58,7 +60,10 @@ export default function HistoryTab({
       const row = [
         currentProjectData.asset,
         transaction.type.charAt(0).toUpperCase() + transaction.type.slice(1),
-        transaction.amount.toString(),
+        formatBalance(transaction.amount, currentProjectData.asset, undefined, true).replace(
+          ',',
+          ' '
+        ),
         transaction.status,
         formatDate,
         formatTime,
@@ -86,6 +91,7 @@ export default function HistoryTab({
       <StatsGrid
         gridStructure={generateHistoryGridStructure(currentProjectData, userStatsData)}
         desktopColumns={3}
+        isMobile={isMobile}
       />
       {isNewUser || totalTransactions === 0 ? (
         <div className="bg-white rounded-xl border border-gray-100 p-6">
@@ -117,171 +123,19 @@ export default function HistoryTab({
 
           {/* Mobile card layout */}
           {isMobile && (
-            <div className="md:hidden space-y-3">
-              {currentTransactions.map((transaction, index) => {
-                const date = new Date(transaction.date);
-                const formatDate = date.toLocaleDateString('en-US', {
-                  month: 'short',
-                  day: 'numeric',
-                });
-                const formatTime = date.toLocaleTimeString('en-US', {
-                  hour: 'numeric',
-                  minute: '2-digit',
-                  hour12: true,
-                });
-                const truncatedHash = `${transaction?.txHash?.slice(0, 6)}...${transaction?.txHash?.slice(-4)}`;
-
-                return (
-                  <div
-                    key={index}
-                    className="bg-gray-50 rounded-lg p-4 hover:bg-gray-50 transition-colors"
-                  >
-                    {/* Header with type and amount */}
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center space-x-3">
-                        <div
-                          className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                            transaction.type === 'deposit'
-                              ? 'bg-green-100 text-green-600'
-                              : 'bg-red-100 text-red-600'
-                          }`}
-                        >
-                          {transaction.type === 'deposit' ? (
-                            <ArrowUp className="w-4 h-4" />
-                          ) : (
-                            <ArrowDown className="w-4 h-4" />
-                          )}
-                        </div>
-                        <div>
-                          <div className="text-sm font-medium text-gray-900 capitalize ">
-                            {transaction.type}
-                          </div>
-                          <div className="text-xs text-gray-500">{transaction.status}</div>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div
-                          className={`text-sm font-medium ${
-                            transaction.type === 'deposit' ? 'text-green-600' : 'text-red-600'
-                          }`}
-                        >
-                          {transaction.type === 'withdrawal' ? '-' : '+'}
-                          {transaction.amount.toLocaleString('en-US', {
-                            minimumFractionDigits: currentProjectData.asset === 'USDC' ? 2 : 6,
-                            maximumFractionDigits: currentProjectData.asset === 'USDC' ? 2 : 6,
-                          })}{' '}
-                          {currentProjectData.asset}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Bottom section with time and tx hash */}
-                    <div className="flex items-center justify-between pt-3 border-t border-gray-200">
-                      <div>
-                        <div className="text-xs text-gray-500 mb-1">Time</div>
-                        <div className="text-sm text-gray-700">
-                          {formatDate} {formatTime}
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-xs text-gray-500 mb-1">Transaction</div>
-                        <a
-                          href={`${getExplorerLink(currentProjectData.chainId || 8453)}/tx/${transaction.txHash}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-sm text-blue-600 hover:text-blue-800 hover:underline cursor-pointer font-mono"
-                        >
-                          {truncatedHash}
-                        </a>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+            <MobileHistory
+              currentProjectData={currentProjectData}
+              currentTransactions={currentTransactions}
+              isDarkMode={isDarkMode}
+            />
           )}
 
           {isMobile === false && (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-gray-100">
-                    <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wide">
-                      Type
-                    </th>
-                    <th className="text-right py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wide">
-                      Amount
-                    </th>
-                    <th className="text-right py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wide">
-                      Status
-                    </th>
-                    <th className="text-right py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wide">
-                      Time
-                    </th>
-                    <th className="text-right py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wide">
-                      Tx ID
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {currentTransactions.map((transaction, index) => {
-                    const date = new Date(transaction.date);
-                    const formatDate = date.toLocaleDateString('en-US', {
-                      month: 'short',
-                      day: 'numeric',
-                    });
-                    const formatTime = date.toLocaleTimeString('en-US', {
-                      hour: 'numeric',
-                      minute: '2-digit',
-                      hour12: true,
-                    });
-                    const truncatedHash = `${transaction?.txHash?.slice(0, 6)}...${transaction?.txHash?.slice(-4)}`;
-                    return (
-                      <tr
-                        key={index}
-                        className="border-b border-gray-50 hover:bg-gray-50 transition-colors"
-                      >
-                        <td className="py-4 px-4">
-                          <div className="text-sm font-medium text-gray-900 capitalize ">
-                            {transaction.type}
-                          </div>
-                        </td>
-                        <td className="py-4 px-4 text-right">
-                          <div className="text-sm font-medium text-gray-900">
-                            {transaction.type === 'deposit' ? '+' : '-'}
-                            {transaction.amount.toLocaleString('en-US', {
-                              minimumFractionDigits: currentProjectData.asset === 'USDC' ? 2 : 6,
-                              maximumFractionDigits: currentProjectData.asset === 'USDC' ? 2 : 6,
-                            })}{' '}
-                            {currentProjectData.asset}
-                          </div>
-                        </td>
-                        <td className="py-4 px-4 text-right">
-                          <div className="text-sm font-medium text-gray-900">
-                            {transaction.status}
-                          </div>
-                        </td>
-                        <td className="py-4 px-4 text-right">
-                          <div className="text-sm text-gray-500">
-                            {formatDate} {formatTime}
-                          </div>
-                        </td>
-                        <td className="py-4 px-4 text-right">
-                          <a
-                            href={`${getExplorerLink(currentProjectData.chainId || 8453)}/tx/${transaction.txHash}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-sm text-blue-600 hover:text-blue-800 hover:underline cursor-pointer font-mono"
-                          >
-                            {truncatedHash}
-                          </a>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+            <DesktopHistory
+              currentProjectData={currentProjectData}
+              currentTransactions={currentTransactions}
+              isDarkMode={isDarkMode}
+            />
           )}
 
           {/* Pagination */}

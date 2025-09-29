@@ -1,6 +1,16 @@
+import { Dispatch, SetStateAction } from 'react';
+
 export type AutopilotProtocol = 'morpho' | 'euler';
 export type AutopilotAsset = 'USDC' | 'WETH' | 'cbBTC' | 'ETH';
 export type UserState = 'new' | 'active' | 'old';
+
+export type VaultHistoryEntry = {
+  timestamp: number;
+  sharePrice?: string | number | null;
+  tvl?: string | number | null;
+  apy?: string | number | null;
+  value?: string | number | null;
+};
 
 export type ProjectKey = `${AutopilotProtocol}-${AutopilotAsset}`;
 
@@ -17,7 +27,15 @@ export type GlobalData = {
   user: User;
   availableAutopilots: SideBarOption[];
   isMobile?: boolean;
+  isDarkMode?: boolean;
+  setIsDarkMode?: Dispatch<SetStateAction<boolean | undefined>>;
 };
+
+export type SideBarOptions = {
+  name: string;
+  icon: string;
+  options: SideBarOption[];
+}[];
 
 export type SideBarOption = {
   asset: AutopilotAsset;
@@ -28,7 +46,7 @@ export type SideBarOption = {
   vault: FullVaultData;
 };
 
-export type PortfolioData = {
+export type Portfolio = {
   protocol: AutopilotProtocol;
   asset: AutopilotAsset;
   showDecimals: number;
@@ -39,29 +57,23 @@ export type PortfolioData = {
   apy: number;
   secondBestAPY: number;
   status: string;
-}[];
+  chainName: string;
+  vaultAddress: string;
+};
 
-export type LatestEarningData = {
+export type PortfolioData = Portfolio[];
+
+export type Earnings = {
   asset: AutopilotAsset;
   protocol: AutopilotProtocol;
   amount: number;
   value: number;
   time: number;
-  icon: string;
-}[];
-
-export type EarningTransaction = {
-  id: string;
-  asset: AutopilotAsset;
-  protocol: 'morpho' | 'euler';
-  showDecimals: number;
-  amount: number;
-  usdValue: number;
-  timestamp: Date;
-  type: 'interest' | 'compound' | 'reward';
+  chainName: string;
+  type?: 'interest' | 'compound' | 'reward';
   txHash?: string;
   blockNumber?: number;
-};
+}[];
 
 export type AllUserStats = {
   [userStatus: string]: {
@@ -71,7 +83,8 @@ export type AllUserStats = {
 
 export type ProjectData = {
   name: string;
-  asset: string;
+  protocol: AutopilotProtocol;
+  asset: AutopilotAsset;
   showDecimals: number;
   icon: string;
   assetIcon: string;
@@ -96,8 +109,9 @@ export type ProjectData = {
   latestUpdate: string;
   operatingSince: string;
   allocations?: { name: string; apy: number; amount: number; allocation: number }[];
-  recentEarnings: { time: string; amount: number; amountUsd: number }[];
+  recentEarnings: Earnings;
   benchmarkData: BenchmarkData[];
+  uniqueVaultHData: VaultHistoryEntry[];
 };
 
 export type BenchmarkData = {
@@ -109,6 +123,7 @@ export type BenchmarkData = {
   allocation?: number;
   isAutopilot?: boolean;
   hVaultAddress: string;
+  mVaultAddress?: string;
 };
 
 export type VaultOnlyData = {
@@ -130,6 +145,7 @@ export type VaultOnlyData = {
   vaultDecimals: string;
   showDecimals: number;
   benchmarkData: BenchmarkData[];
+  plasmaHistory?: VaultHistoryData[];
 };
 
 export type UserRelatedData = {
@@ -170,6 +186,14 @@ export type HistoryStats = {
   }[];
 };
 
+export type UserTransaction = {
+  date: string;
+  type: string;
+  amount: number;
+  txHash?: string;
+  status: string;
+};
+
 export type UserStats = {
   totalBalance: string;
   totalEarnings: string;
@@ -180,13 +204,7 @@ export type UserStats = {
   totalDeposits: string;
   totalWithdrawals: string;
   totalActions: string;
-  transactions: {
-    date: string;
-    type: string;
-    amount: number;
-    txHash?: string;
-    status: string;
-  }[];
+  transactions: UserTransaction[];
 };
 
 export type UserStatsGrid = {

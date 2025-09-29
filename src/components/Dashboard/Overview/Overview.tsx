@@ -15,11 +15,13 @@ export default function Overview({
   userStatsData,
   metrics,
   setDepositTab,
+  isMobile,
 }: {
   currentProjectData: ProjectData;
   userStatsData: UserStats;
   metrics: Metrics;
   setDepositTab: () => void;
+  isMobile?: boolean;
 }) {
   const [timeframe, setTimeframe] = useState<TimeFrame>('all');
   const [curDate, setCurDate] = useState<string>('');
@@ -31,6 +33,7 @@ export default function Overview({
       <StatsGrid
         gridStructure={generateOverviewGridStructure(currentProjectData, userStatsData)}
         desktopColumns={4}
+        isMobile={isMobile}
       />
 
       {/* Main Content Grid */}
@@ -129,7 +132,10 @@ export default function Overview({
                 </div>
               ))
             ) : (
-              <EmptyEarnings handleAction={setDepositTab} />
+              <EmptyEarnings
+                balance={Number(userStatsData.totalBalance)}
+                handleAction={setDepositTab}
+              />
             )}
           </div>
         </div>

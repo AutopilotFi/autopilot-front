@@ -106,7 +106,7 @@ export const generateHistoryGridStructure = (
   },
   {
     label: 'Total Actions',
-    value: userStats.totalActions,
+    value: userStats?.transactions?.length.toString(),
   },
 ];
 

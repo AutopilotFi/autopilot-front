@@ -3,15 +3,20 @@ import {
   TrendingUp,
   BarChart3,
   Wallet,
-  // Trophy,
   History,
   Info,
-  Circle,
   CircleQuestionMark,
   PieChart,
   LucideProps,
 } from 'lucide-react';
-import { useState, useEffect, useContext, ForwardRefExoticComponent, RefAttributes } from 'react';
+import {
+  useState,
+  useEffect,
+  useContext,
+  ForwardRefExoticComponent,
+  RefAttributes,
+  useCallback,
+} from 'react';
 import { GlobalContext } from '@/providers/GlobalDataProvider';
 import { ProjectData, UserStats } from '@/types/globalAppTypes';
 import { TooltipProvider } from '../UI/Tooltip';
@@ -27,6 +32,9 @@ import Image from 'next/image';
 import { useVaultMetrics } from '@/providers/VaultMetricsProvider';
 import Allocations from './Allocations';
 import NavigationTabs from './NavigationTabs';
+import { getChainNameFromId } from '@/helpers/utils';
+import { ApyBadgeWithPoints } from '../UI/Badges';
+import ImageWithOverlay from '../UI/ImageWithOverlay';
 
 export type Tab =
   | 'overview'
@@ -78,15 +86,14 @@ export default function Dashboard({ currentProjectData }: DashboardProps) {
     transactions: [],
   });
 
-  const globalData = useContext(GlobalContext);
-  const user = globalData?.user;
-  const isMobile = globalData?.isMobile;
+  const { user, isMobile, isDarkMode } = useContext(GlobalContext);
 
-  const { getMetricsForVault, vaultMetrics } = useVaultMetrics();
+  const { getMetricsForVault, vaultMetrics, refreshMetrics } = useVaultMetrics();
   const metrics = vaultMetrics?.[currentProjectData?.vaultAddress]?.metrics;
 
   const isOldUser = user?.status === 'old';
   const isNewUser = user?.status === 'new';
+  const chainName = getChainNameFromId(currentProjectData.chainId);
 
   // Set the initial tab properly
   useEffect(() => {
@@ -97,94 +104,114 @@ export default function Dashboard({ currentProjectData }: DashboardProps) {
   }, []);
 
   // Load metrics and enrich project data
-  useEffect(() => {
+  const loadMetrics = useCallback(() => {
     if (!currentProjectData.vaultAddress) {
       return;
     }
 
-    const loadMetrics = () => {
-      try {
-        const result = getMetricsForVault(currentProjectData.vaultAddress);
-        if (!result) {
-          return;
-        }
-
-        // Update enriched project data with APY values
-        setEnrichedProjectData({
-          ...currentProjectData,
-          apy7d: Number(result.apy7d),
-          apy30d: Number(result.apy30d),
-          initialSharePrice: result.initialSharePrice,
-          latestSharePrice: result.latestSharePrice,
-          frequency: result.frequency,
-          latestUpdate: result.latestUpdate,
-          operatingSince: result.operatingSince,
-          recentEarnings: result.earningsSeries.map(e => ({
-            time: e.timestamp.toString(),
-            amount: e.amount,
-            amountUsd: e.amountUsd,
-          })),
-        });
-
-        // Calculate 24h and 30D earnings from earningsSeries
-        const now = Math.floor(Date.now() / 1000);
-        const oneDayAgo = now - 24 * 60 * 60;
-        const thirtyDaysAgo = now - 30 * 24 * 60 * 60;
-
-        const earnings24h = result.earningsSeries
-          .filter(earning => earning.timestamp >= oneDayAgo)
-          .reduce((sum, earning) => sum + earning.amount, 0);
-
-        const earnings30d = result.earningsSeries
-          .filter(earning => earning.timestamp >= thirtyDaysAgo)
-          .reduce((sum, earning) => sum + earning.amount, 0);
-
-        // Update enriched user stats data
-        setEnrichedUserStats({
-          totalBalance: result.totalBalance.toString(),
-          totalEarnings: result.totalEarnings.toString(),
-          monthlyForecast: result.monthlyForecast.toString(),
-          updateFrequency: result.frequency,
-          monthlyEarnings: earnings30d.toString(),
-          dailyEarnings: earnings24h.toString(),
-          totalDeposits: result.deposits.length
-            ? result.deposits.reduce((a, b) => a + b.amount, 0).toString()
-            : '0',
-          totalWithdrawals: result.withdrawals.length
-            ? result.withdrawals.reduce((a, b) => a + b.amount, 0).toString()
-            : '0',
-          totalActions: String(result.deposits.length + result.withdrawals.length),
-          transactions: [
-            ...result.deposits.map(deposit => {
-              return {
-                date: new Date(deposit.timestamp * 1000).toISOString(),
-                type: 'deposit',
-                amount: deposit.amount,
-                status: 'confirmed',
-                timestamp: deposit.timestamp, // Keep original timestamp for sorting
-                txHash: deposit.tx || undefined,
-              };
-            }),
-            ...result.withdrawals.map(withdrawal => {
-              return {
-                date: new Date(withdrawal.timestamp * 1000).toISOString(),
-                type: 'withdrawal',
-                amount: withdrawal.amount,
-                status: 'confirmed',
-                timestamp: withdrawal.timestamp, // Keep original timestamp for sorting
-                txHash: withdrawal.tx || undefined,
-              };
-            }),
-          ].sort((a, b) => b.timestamp - a.timestamp), // Sort by timestamp, newest first
-        });
-      } catch (error) {
-        console.error('Error loading metrics:', error);
+    try {
+      const result = getMetricsForVault(currentProjectData.vaultAddress);
+      if (!result) {
+        return;
       }
-    };
 
+      // Update enriched project data with APY values
+      setEnrichedProjectData({
+        ...currentProjectData,
+        apy7d: Number(result.apy7d),
+        apy30d: Number(result.apy30d),
+        initialSharePrice: result.initialSharePrice,
+        latestSharePrice: result.latestSharePrice,
+        frequency: result.frequency,
+        latestUpdate: result.latestUpdate,
+        operatingSince: result.operatingSince,
+        uniqueVaultHData: result.uniqueVaultHData,
+        recentEarnings: result.earningsSeries.map(e => ({
+          asset: currentProjectData.asset,
+          protocol: currentProjectData.protocol,
+          amount: e.amount,
+          value: e.amountUsd,
+          time: e.timestamp,
+          icon: currentProjectData.assetIcon,
+          chainName: getChainNameFromId(Number(currentProjectData.chainId)),
+        })),
+      });
+
+      // Calculate 24h and 30D earnings from earningsSeries
+      const now = Math.floor(Date.now() / 1000);
+      const oneDayAgo = now - 24 * 60 * 60;
+      const thirtyDaysAgo = now - 30 * 24 * 60 * 60;
+
+      const earnings24h = result.earningsSeries
+        .filter(earning => earning.timestamp >= oneDayAgo)
+        .reduce((sum, earning) => sum + earning.amount, 0);
+
+      const earnings30d = result.earningsSeries
+        .filter(earning => earning.timestamp >= thirtyDaysAgo)
+        .reduce((sum, earning) => sum + earning.amount, 0);
+
+      const subgraphBalance = result.totalBalance;
+      const finalTotalBalance = subgraphBalance;
+
+      // Update enriched user stats data
+      setEnrichedUserStats({
+        totalBalance: finalTotalBalance.toString(),
+        totalEarnings: result.totalEarnings.toString(),
+        monthlyForecast: result.monthlyForecast.toString(),
+        updateFrequency: result.frequency,
+        monthlyEarnings: earnings30d.toString(),
+        dailyEarnings: earnings24h.toString(),
+        totalDeposits: result.deposits.length
+          ? result.deposits.reduce((a, b) => a + b.amount, 0).toString()
+          : '0',
+        totalWithdrawals: result.withdrawals.length
+          ? result.withdrawals.reduce((a, b) => a + b.amount, 0).toString()
+          : '0',
+        totalActions: String(
+          result.deposits.length + result.withdrawals.length + result.earningsSeries.length
+        ),
+        transactions: [
+          ...result.deposits.map(deposit => {
+            return {
+              date: new Date(deposit.timestamp * 1000).toISOString(),
+              type: 'deposit',
+              amount: deposit.amount,
+              status: 'confirmed',
+              timestamp: deposit.timestamp, // Keep original timestamp for sorting
+              txHash: deposit.tx || undefined,
+            };
+          }),
+          ...result.withdrawals.map(withdrawal => {
+            return {
+              date: new Date(withdrawal.timestamp * 1000).toISOString(),
+              type: 'withdrawal',
+              amount: withdrawal.amount,
+              status: 'confirmed',
+              timestamp: withdrawal.timestamp, // Keep original timestamp for sorting
+              txHash: withdrawal.tx || undefined,
+            };
+          }),
+        ].sort((a, b) => b.timestamp - a.timestamp), // Sort by timestamp, newest first
+      });
+    } catch (error) {
+      console.error('Error loading metrics:', error);
+    }
+  }, [currentProjectData, getMetricsForVault]);
+
+  useEffect(() => {
     loadMetrics();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentProjectData.vaultAddress, getMetricsForVault]);
+  }, [loadMetrics]);
+
+  const refreshAllMetrics = async () => {
+    try {
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      await refreshMetrics();
+      loadMetrics();
+    } catch (error) {
+      console.error('Error refreshing metrics:', error);
+    }
+  };
 
   // Navigation handlers
   const handleNavigateToDeposit = () => {
@@ -205,12 +232,17 @@ export default function Dashboard({ currentProjectData }: DashboardProps) {
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4 ml-5 md:ml-0">
                 <div className="flex items-center space-x-3">
-                  <Image
-                    width={28}
-                    height={28}
-                    src={currentProjectData.assetIcon}
-                    alt={currentProjectData.asset}
-                    className="w-8 h-8"
+                  <ImageWithOverlay
+                    mainImg={{
+                      size: 28,
+                      src: currentProjectData.assetIcon,
+                      alt: currentProjectData.asset,
+                    }}
+                    overlayImg={{
+                      size: 11,
+                      src: `/projects/${currentProjectData.protocol}.png`,
+                      alt: currentProjectData.protocol,
+                    }}
                   />
                   <div>
                     <h1 className="font-semibold text-gray-900">
@@ -220,24 +252,23 @@ export default function Dashboard({ currentProjectData }: DashboardProps) {
                       <Image
                         width={14}
                         height={14}
-                        src={currentProjectData.icon}
-                        alt={currentProjectData.name}
+                        src={`/chains/${chainName.toLocaleLowerCase()}.png`}
+                        alt={chainName}
                         className="w-4 h-4"
                       />
-                      <span className="text-sm text-gray-500">{currentProjectData.name}</span>
+                      <span className="text-sm text-gray-500">{chainName}</span>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div className="flex items-center space-x-4">
-                <div className="flex items-center space-x-2 bg-green-50 border border-green-200 px-3 py-1.5 rounded-md">
-                  <Circle className="w-2 h-2 fill-green-600 text-green-600 animate-gentle-blink" />
-                  <span className="text-sm font-semibold text-green-600">
-                    {(currentProjectData.currentAPY * 100).toFixed(2)}% APY
-                  </span>
-                </div>
-              </div>
+              <ApyBadgeWithPoints
+                apy={(currentProjectData.currentAPY * 100).toFixed(2)}
+                points={['x1 Resolv Points', 'x1 Yield.Fi Points', 'x1 OpenEden Points']}
+                setActiveTab={setActiveTab}
+                asset={currentProjectData.asset}
+                isMobile={isMobile}
+              />
             </div>
           </div>
         </header>
@@ -254,6 +285,7 @@ export default function Dashboard({ currentProjectData }: DashboardProps) {
                 userStatsData={enrichedUserStats}
                 metrics={metrics}
                 setDepositTab={() => setActiveTab('deposit')}
+                isMobile={isMobile}
               />
             )}
 
@@ -265,6 +297,7 @@ export default function Dashboard({ currentProjectData }: DashboardProps) {
                 isNewUser={isNewUser}
                 userStatsData={enrichedUserStats}
                 isMobile={isMobile}
+                isDarkMode={isDarkMode}
               />
             )}
 
@@ -276,6 +309,7 @@ export default function Dashboard({ currentProjectData }: DashboardProps) {
                 isNewUser={isNewUser}
                 userStatsData={enrichedUserStats}
                 isMobile={isMobile}
+                isDarkMode={isDarkMode}
               />
             )}
 
@@ -296,6 +330,9 @@ export default function Dashboard({ currentProjectData }: DashboardProps) {
                 currentProjectData={enrichedProjectData}
                 setShowTermsModal={setShowTermsModal}
                 handleOpenBenchmark={handleOpenBenchmark}
+                refreshAllMetrics={refreshAllMetrics}
+                isMobile={isMobile}
+                isDarkMode={isDarkMode}
               />
             )}
 
@@ -305,7 +342,7 @@ export default function Dashboard({ currentProjectData }: DashboardProps) {
             )}
 
             {/* Faq tab */}
-            {activeTab === 'faq' && <Faq />}
+            {activeTab === 'faq' && <Faq setActiveTab={setActiveTab} isDarkMode={isDarkMode} />}
 
             {activeTab === 'allocations' && (
               <Allocations

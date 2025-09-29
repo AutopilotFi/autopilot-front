@@ -50,8 +50,13 @@ async function fetchVaults(): Promise<{ base: FullVaultData[]; ipor: FullVaultDa
     ].filter(Boolean);
 
     const withHistory = allVaults.map(v => ({ ...v, plasmaHistory: [] }) as FullVaultData);
-    // Split: only IPOR vaults in iporVaultData, everything else in baseVaultData
-    iporVaultData = withHistory.filter(v => v.isIPORVault === true && !v.inactive);
+    // Split: only Morpho IPOR vaults in iporVaultData, everything else in baseVaultData
+    iporVaultData = withHistory.filter(
+      v =>
+        v.isIPORVault === true &&
+        // !v.inactive &&
+        v.platform.includes('Autopilot - MORPHO')
+    );
     baseVaultData = withHistory;
 
     // Populate hVaultAddress in allocPointData by matching hVaultId with base vaults

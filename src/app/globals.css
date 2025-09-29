@@ -656,6 +656,19 @@ html {
   --tw-ring-color: var(--autopilot-brand-purple);
 }
 
+/* Mobile-friendly tooltips */
+@media (hover: none) and (pointer: coarse) {
+  /* On touch devices, make tooltips more accessible */
+  .tooltip-trigger-mobile {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+}
+
 /* Brand-specific utility classes - Updated for purple */
 .text-brand-purple {
   color: var(--autopilot-brand-purple);
@@ -804,4 +817,53 @@ html {
   background-position:
     0 0,
     12px 12px;
+}
+
+/* Airdrop label for charts */
+.airdrop-chart-label {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #9159ff;
+  color: white;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(145, 89, 255, 0.3);
+  z-index: 10;
+  pointer-events: none;
+}
+
+/* Airdrop marker hover effects */
+.airdrop-marker {
+  transition: all 0.2s ease-in-out;
+  cursor: pointer;
+}
+
+.airdrop-marker:hover {
+  transform: scale(1.2);
+  filter: drop-shadow(0 4px 8px rgba(145, 89, 255, 0.6));
+}
+
+.recharts-responsive-container:focus,
+.recharts-wrapper:focus,
+.recharts-surface:focus,
+.recharts-surface:focus-visible {
+  outline: none !important;
+  box-shadow: none !important; /* gdy ring jest ze stylu "ring"/box-shadow */
+}
+
+/* Airdrop marker glow animation */
+@keyframes airdropGlow {
+  0%,
+  100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.1);
+  }
 }

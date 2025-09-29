@@ -4,11 +4,13 @@ import { useEffect, useState, useContext } from 'react';
 import { useWallet } from '@/providers/WalletProvider';
 import { GlobalContext } from '@/providers/GlobalDataProvider';
 import { useVaultMetrics } from '@/providers/VaultMetricsProvider';
-import { EarningTransaction } from '@/types/globalAppTypes';
+import { Earnings } from '@/types/globalAppTypes';
 import EarningsPage from '@/components/EarningsPage';
+import { getChainNameFromId } from '@/helpers/utils';
 
 export default function Home() {
-  const [earningsData, setEarningsData] = useState<EarningTransaction[]>([]);
+  const [earningsData, setEarningsData] = useState<Earnings>([]);
+  const [userTotalBalance, setUserTotalBalance] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
   const { account, chainId } = useWallet();
@@ -29,7 +31,8 @@ export default function Home() {
     try {
       setError(null);
 
-      const allEarnings: EarningTransaction[] = [];
+      const allEarnings: Earnings = [];
+      let totalUserBalance = 0;
 
       // Process earnings from all available autopilots using cached metrics
       for (const autopilot of availableAutopilots) {
@@ -48,20 +51,18 @@ export default function Home() {
             continue;
           }
 
-          // Transform earnings data to match EarningTransaction type
-          const vaultEarnings = result.metrics.earningsSeries.map(
-            (
-              earning: { timestamp: number; amount: number; amountUsd?: number },
-              index: number
-            ) => ({
-              id: `${autopilot.protocol}-${autopilot.asset}-${earning.timestamp}-${index}`,
+          const totalVaultUserBalance = result.metrics.totalBalance;
+          totalUserBalance += totalVaultUserBalance;
+          // Transform earnings data to match Earnings type
+          const vaultEarnings: Earnings = result.metrics.earningsSeries.map(
+            (earning: { timestamp: number; amount: number; amountUsd?: number }) => ({
               asset: autopilot.asset,
-              showDecimals: autopilot.showDecimals,
               protocol: autopilot.protocol,
               amount: earning.amount,
-              usdValue: earning.amountUsd || 0,
-              timestamp: new Date(earning.timestamp * 1000),
+              value: earning.amountUsd || 0,
+              time: earning.timestamp,
               type: 'compound' as const, // Harvest earnings are typically compound
+              chainName: getChainNameFromId(Number(vaultData.chain)),
             })
           );
 
@@ -76,10 +77,9 @@ export default function Home() {
       }
 
       // Sort all earnings by timestamp (newest first)
-      const sortedEarnings = allEarnings.sort(
-        (a, b) => b.timestamp.getTime() - a.timestamp.getTime()
-      );
+      const sortedEarnings = allEarnings.sort((a, b) => b.time - a.time);
 
+      setUserTotalBalance(totalUserBalance);
       setEarningsData(sortedEarnings);
     } catch (err) {
       console.error('Error processing earnings:', err);
@@ -100,7 +100,12 @@ export default function Home() {
 
   return (
     <>
-      <EarningsPage earningsData={earningsData} isLoading={metricsLoading} />
+      <EarningsPage
+        earningsData={earningsData}
+        isLoading={metricsLoading}
+        userTotalBalance={userTotalBalance}
+        account={account}
+      />
     </>
   );
 }

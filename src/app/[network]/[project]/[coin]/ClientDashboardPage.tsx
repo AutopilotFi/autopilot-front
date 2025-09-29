@@ -58,6 +58,7 @@ const getDashboardStats = (
     walletBalance: 0,
     monthlyForecast: 0,
     recentEarnings: [],
+    protocol: selectedAutopilot.protocol,
   };
 
   return { vaultData, userData };
@@ -86,6 +87,7 @@ export default function ClientDashboardPage({ params }: { params: RouteParams })
         latestUpdate: '—',
         operatingSince: '—',
         chainId: getChainIdFromNetwork(network),
+        uniqueVaultHData: [],
       }}
     />
   );

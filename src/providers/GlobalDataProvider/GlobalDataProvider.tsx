@@ -43,6 +43,7 @@ const convertVaultDataToAutopilots = (vaultData: FullVaultData[]): SideBarOption
 export default function GlobalDataProvider({ children }: { children: React.ReactNode }) {
   const [globalData, setGlobalData] = useState<GlobalData>(defaultGlobalData);
   const [isMobile, setIsMobile] = useState<boolean>();
+  const [isDarkMode, setIsDarkMode] = useState<boolean>();
   const { iporVaultData, loading, error } = useIPORVaults();
 
   useEffect(() => {
@@ -60,8 +61,16 @@ export default function GlobalDataProvider({ children }: { children: React.React
     getUserData();
   }, [iporVaultData, loading]); // Add iporVaultData as dependency
 
-  // Mobile detection
+  // Mobile and DarkMode detection
   useEffect(() => {
+    const savedDarkMode = localStorage.getItem('darkMode');
+
+    if (savedDarkMode !== null) {
+      setIsDarkMode(savedDarkMode === 'true');
+    } else {
+      setIsDarkMode(false); // Default to white mode
+    }
+
     const checkMobile = () => {
       const isMobile = window.innerWidth < 768;
       setIsMobile(isMobile);
@@ -73,9 +82,20 @@ export default function GlobalDataProvider({ children }: { children: React.React
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  if (isMobile === undefined) return null;
+  // Apply dark mode class to document
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('darkMode', 'true');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('darkMode', 'false');
+    }
+  }, [isDarkMode]);
+
+  if (isMobile === undefined || isDarkMode === undefined) return null;
   return (
-    <GlobalContext.Provider value={{ ...globalData, isMobile }}>
+    <GlobalContext.Provider value={{ ...globalData, isMobile, isDarkMode, setIsDarkMode }}>
       {error ? <div className="p-4 text-red-600">Error loading vault data: {error}</div> : null}
       {children}
     </GlobalContext.Provider>
