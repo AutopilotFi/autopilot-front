@@ -601,7 +601,7 @@ export default function Deposit({
                 <TooltipContent
                   isMobile={isMobile}
                   side={isMobile ? 'bottom' : 'top'}
-                  className="w-64 bg-gray-900 text-white"
+                  className="w-54 bg-gray-900 text-white"
                   sideOffset={isMobile ? 8 : 4}
                   align="center"
                   avoidCollisions={true}
@@ -609,10 +609,7 @@ export default function Deposit({
                 >
                   <p className="text-xs">
                     This Autopilot setup underwent 3 audits in 2024/2025 from high profile auditing
-                    firms. See more in{' '}
-                    <a href="#" className="font-bold underline hover:no-underline">
-                      Documentation
-                    </a>
+                    firms.
                   </p>
                 </TooltipContent>
               </Tooltip>

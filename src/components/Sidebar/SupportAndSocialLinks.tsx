@@ -6,7 +6,7 @@ const links = [
   {
     title: 'Support',
     subTitle: 'Get help on Discord',
-    url: 'https://discord.com/invite/KWaTKcKK',
+    url: 'https://discord.gg/GYsW9pV2Eu',
     icon: '/socials/discord.png',
     darkThemeIcon: '/socials/discord-white.png',
   },

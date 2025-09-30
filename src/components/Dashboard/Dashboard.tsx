@@ -263,7 +263,7 @@ export default function Dashboard({ currentProjectData }: DashboardProps) {
               </div>
 
               <ApyBadgeWithPoints
-                apy={(currentProjectData.currentAPY * 100).toFixed(2)}
+                apy={enrichedProjectData.apy7d.toString()}
                 points={['x1 Resolv Points', 'x1 Yield.Fi Points', 'x1 OpenEden Points']}
                 setActiveTab={setActiveTab}
                 asset={currentProjectData.asset}

@@ -109,15 +109,17 @@ export default function EarningsTab({
         <div className="bg-white rounded-xl border border-gray-100 p-4 md:p-6">
           <div className="flex items-center justify-between mb-4 md:mb-6">
             <h3 className="text-base md:text-lg font-semibold text-gray-900">Earnings History</h3>
-            <button
-              className="text-sm bg-[#9159FF] text-white px-3 py-1.5 rounded-lg hover:bg-[#7c3aed] transition-colors flex items-center space-x-2 flex-shrink-0"
-              onClick={handleExportCSV}
-              disabled={currentProjectData.recentEarnings.length === 0}
-            >
-              <Download className="w-4 h-4" />
-              <span className="hidden sm:inline">Export</span>
-              <span className="sm:hidden">Export</span>
-            </button>
+            {currentProjectData.recentEarnings.length > 0 && !isMobile && (
+              <button
+                className="text-sm bg-[#9159FF] text-white px-3 py-1.5 rounded-lg hover:bg-[#7c3aed] transition-colors flex items-center space-x-2 flex-shrink-0"
+                onClick={handleExportCSV}
+                disabled={currentProjectData.recentEarnings.length === 0}
+              >
+                <Download className="w-4 h-4" />
+                <span className="hidden sm:inline">Export</span>
+                <span className="sm:hidden">Export</span>
+              </button>
+            )}
           </div>
           {currentEarnings.length > 0 ? (
             <>

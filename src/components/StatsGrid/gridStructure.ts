@@ -34,7 +34,7 @@ export const generateOverviewGridStructure = (
     label: 'Update Frequency',
     value: `${userStats.updateFrequency !== '—' ? '~' : ''}${userStats.updateFrequency}`,
     tooltipText:
-      'This is an approximation based on historical data, when the Autopilot will harvest the earned yield and distribute it to your account.',
+      'Based on past data, this is when Autopilot is expected to collect your earned yield and add it to your position.',
   },
 ];
 
@@ -76,7 +76,7 @@ export const generateEarningsGridStructure = (
     label: 'Update Frequency',
     value: `${userStats.updateFrequency !== '—' ? '~' : ''}${userStats.updateFrequency}`,
     tooltipText:
-      'This is an approximation based on historical data, when the Autopilot will harvest the earned yield and distribute it to your account.',
+      'Based on past data, this is when Autopilot is expected to collect your earned yield and add it to your position.',
   },
 ];
 
@@ -148,7 +148,7 @@ export const generatePortfolioGridStructure = (
   },
   {
     label: 'Est. Annual Earnings',
-    value: formatBalance(Math.round(annualEarningsFromAPY), 'USD', 2, true),
+    value: formatBalance(annualEarningsFromAPY, 'USD', 2, true),
     asset: 'USD',
     hideAsseticon: true,
   },

@@ -150,7 +150,7 @@ export default function DesktopEarnings({
                       isDarkMode ? 'text-foreground' : 'text-gray-900'
                     }`}
                   >
-                    {formatBalance(earning.value, 'USD')}
+                    {formatBalance(earning.value, 'USD', 2)}
                   </div>
                 </td>
                 <td className="text-right py-4 px-4">
