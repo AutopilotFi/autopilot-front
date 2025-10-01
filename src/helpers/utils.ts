@@ -171,6 +171,7 @@ export const formatBalance = (
   } else {
     switch (asset) {
       case 'USDC':
+      case 'USD':
       case 'USDT':
       case 'DAI':
         decimalPlaces = 2;

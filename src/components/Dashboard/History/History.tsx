@@ -111,14 +111,16 @@ export default function HistoryTab({
             <h3 className="text-base md:text-lg font-semibold text-gray-900">
               Transaction History
             </h3>
-            <button
-              className="text-sm bg-[#9159FF] text-white px-3 py-1.5 rounded-lg hover:bg-[#7c3aed] transition-colors flex items-center space-x-2 flex-shrink-0"
-              onClick={handleExportCSV}
-            >
-              <Download className="w-4 h-4" />
-              <span className="hidden sm:inline">Export</span>
-              <span className="sm:hidden">Export</span>
-            </button>
+            {userStatsData?.transactions?.length > 0 && !isMobile && (
+              <button
+                className="text-sm bg-[#9159FF] text-white px-3 py-1.5 rounded-lg hover:bg-[#7c3aed] transition-colors flex items-center space-x-2 flex-shrink-0"
+                onClick={handleExportCSV}
+              >
+                <Download className="w-4 h-4" />
+                <span className="hidden sm:inline">Export</span>
+                <span className="sm:hidden">Export</span>
+              </button>
+            )}
           </div>
 
           {/* Mobile card layout */}

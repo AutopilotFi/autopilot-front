@@ -263,7 +263,7 @@ export default function Faq({
                   isDarkMode ? 'text-green-300' : 'text-green-800'
                 }`}
               >
-                Check the APY indicator in the top right corner of the product to see current
+                Check the APY indicator in the top right corner of the product to see potential
                 exposure to active points programs.
               </p>
             </div>
