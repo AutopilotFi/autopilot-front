@@ -6,6 +6,8 @@ import Image from 'next/image';
 import { SideBarOption } from '@/types/globalAppTypes';
 import { morphoTempDisabled } from '@/consts/constants';
 import { useState } from 'react';
+import { useVaultMetrics } from '@/providers/VaultMetricsProvider';
+import LoadingSpinner from '../UI/LoadingSpinner';
 
 export default function NavAutopilotLinks({
   options,
@@ -21,6 +23,7 @@ export default function NavAutopilotLinks({
   isDarkMode?: boolean;
 }) {
   const [linksExpanded, setLinksExpaned] = useState(true);
+  const { getMetricsForVault, isLoading } = useVaultMetrics();
   return (
     <div>
       <div className="flex items-center justify-between mb-3">
@@ -113,7 +116,24 @@ export default function NavAutopilotLinks({
                     Autopilot
                   </div>
                 </div>
-                {isDisabled ? <CommingSoon /> : <ApyBadge apy={option.apy.toFixed(2)} />}
+                {isDisabled ? (
+                  <CommingSoon />
+                ) : (
+                  (() => {
+                    const metrics = getMetricsForVault(option.vault.vaultAddress);
+                    const apy7d = metrics?.apy7d;
+
+                    if (isLoading && !apy7d) {
+                      return <LoadingSpinner size="sm" className="text-purple-600" />;
+                    }
+
+                    return (
+                      <ApyBadge
+                        apy={apy7d ? parseFloat(apy7d).toFixed(2) : option.apy.toFixed(2)}
+                      />
+                    );
+                  })()
+                )}
               </Link>
             );
           })}
