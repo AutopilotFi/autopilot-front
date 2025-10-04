@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Script from 'next/script';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import Sidebar from '@/components/Sidebar';
@@ -39,6 +40,7 @@ export const metadata: Metadata = {
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
+      <Script src="https://cdn.usefathom.com/script.js" data-site="MHVSKUBZ" defer />
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <Providers>
           <Sidebar />

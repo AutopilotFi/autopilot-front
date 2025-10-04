@@ -15,41 +15,40 @@ export const CommingSoon = ({ fullWidth }: { fullWidth?: boolean }) => (
   </span>
 );
 
-export const ActionBadge = () => {
+export const ActionBadge = ({ isMobile }: { isMobile?: boolean }) => {
   return (
-    <div className="relative table">
-      <button
-        type="button"
-        className="peer inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium text-[#9159FF] bg-purple-50 border border-purple-200 cursor-help"
-        aria-describedby="autocompounded-tip"
-      >
-        <RotateCcw className="w-3 h-3 mr-1.5" />
-        Autocompounded
-      </button>
-
-      <div
-        id="autocompounded-tip"
-        role="tooltip"
-        className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2
-               bg-gray-900 text-white text-xs rounded-lg shadow-lg opacity-0
-               transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10 max-w-xs
-               peer-hover:opacity-100 peer-focus:opacity-100 peer-active:opacity-100"
-      >
-        <div className="text-center">
-          The earnings have been automatically
-          <br />
-          turned into more balance of your
-          <br />
-          position,increasing the strength
-          <br />
-          of your earnings going forward
-        </div>
-        <div
-          className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0
-                    border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"
-        />
-      </div>
-    </div>
+    <TooltipProvider>
+      <Tooltip isMobile={isMobile}>
+        <TooltipTrigger asChild isMobile={isMobile}>
+          <div className="relative table">
+            <button
+              type="button"
+              className="peer inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium text-[#9159FF] bg-purple-50 border border-purple-200 cursor-help"
+              aria-describedby="autocompounded-tip"
+            >
+              <RotateCcw className="w-3 h-3 mr-1.5" />
+              Autocompounded
+            </button>
+          </div>
+        </TooltipTrigger>
+        <TooltipContent
+          isMobile={isMobile}
+          className="bg-gray-900 text-white text-xs rounded-lg shadow-lg max-w-xs mb-2"
+          side="top"
+          collisionPadding={2}
+        >
+          <div className="text-center">
+            The earnings have been automatically
+            <br />
+            turned into more balance of your
+            <br />
+            position,increasing the strength
+            <br />
+            of your earnings going forward
+          </div>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 };
 
@@ -119,7 +118,10 @@ export const ApyBadgeWithPoints = ({
             <div className="space-y-2 mb-3">
               <div className="flex justify-between items-center text-sm">
                 <span className="text-gray-300">Native Yield</span>
-                <span className="text-white font-medium">{apy}%</span>
+                <div className="flex flex-col items-end">
+                  <span className="text-white font-medium">{apy}%</span>
+                  <span className="text-xs text-gray-400 mt-0.5">7-day APY</span>
+                </div>
               </div>
               <div className="border-t border-gray-700 pt-2 space-y-1">
                 {points.map((point, index) => (
@@ -131,13 +133,13 @@ export const ApyBadgeWithPoints = ({
             </div>
             <div className="text-xs text-gray-400 font-normal border-t border-gray-700 pt-2">
               <div>
-                Points Programs are realized into more {asset} once airdrop proceeds become
-                claimable and sufficient liquidity is available on the open market.
+                Points program rewards are realized as {asset} once airdrop or token launch proceeds
+                are claimable and liquidity is available. This {asset} is credited to your Earnings.
               </div>
-              <div className="mt-2">
+              {/* <div className="mt-2">
                 Points program proceeds are only distributed to Autopilot participants at the time
                 of distribution.
-              </div>
+              </div> */}
               <div className="mt-3">
                 <span
                   className="text-gray-300 border-b border-dotted border-gray-400 cursor-pointer hover:text-white hover:border-gray-200 transition-colors"

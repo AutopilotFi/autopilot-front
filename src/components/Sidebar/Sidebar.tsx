@@ -24,7 +24,7 @@ export default function Sidebar() {
   const baseOptions = availableAutopilots.filter(option => option.vault.chain === '8453');
   const sidebarOptions: SideBarOptions = [
     {
-      name: 'BASE NETWORK',
+      name: 'BASE AUTOPILOTS',
       icon: '/chains/base.png',
       options:
         baseOptions.length > 0
@@ -130,6 +130,7 @@ export default function Sidebar() {
                   pathname={pathname}
                   isDarkMode={isDarkMode}
                   setIsDarkMode={setIsDarkMode}
+                  isMobile={isMobile}
                 />
               </div>
             </div>
@@ -169,6 +170,7 @@ export default function Sidebar() {
             pathname={pathname}
             isDarkMode={isDarkMode}
             setIsDarkMode={setIsDarkMode}
+            isMobile={isMobile}
           />
         </div>
       </div>
