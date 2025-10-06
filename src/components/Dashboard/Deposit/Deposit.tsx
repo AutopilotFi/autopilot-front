@@ -686,7 +686,7 @@ export default function Deposit({
               <div className="flex justify-between">
                 <span className="text-gray-600">Current APY</span>
                 <span className="font-medium text-green-600">
-                  {(currentProjectData.currentAPY * 100).toFixed(2)}%
+                  {currentProjectData.apy7d.toFixed(2)}%
                 </span>
               </div>
               {depositMode === 'enter' && insuranceEnabled && (
@@ -715,7 +715,7 @@ export default function Deposit({
                     <span className="font-medium text-green-600 tabular-nums">
                       +{' '}
                       {formatBalance(
-                        parseFloat(depositAmount || '0') * currentProjectData.currentAPY,
+                        parseFloat(depositAmount || '0') * (currentProjectData.apy7d / 100),
                         currentProjectData.asset
                       )}
                     </span>
@@ -729,7 +729,7 @@ export default function Deposit({
                       </div>
                       <span className="font-semibold text-green-600 tabular-nums flex">
                         {parseFloat(depositAmount || '0') > 0 ? (
-                          `+ ${formatBalance(parseFloat(depositAmount || '0') * (currentProjectData.currentAPY - currentProjectData.secondBestAPY), currentProjectData.asset)}`
+                          `+ ${formatBalance(parseFloat(depositAmount || '0') * ((currentProjectData.apy7d / 100) - currentProjectData.secondBestAPY), currentProjectData.asset)}`
                         ) : (
                           <span className="text-xs md:text-sm font-medium text-green-700 text-right">
                             Enter amount to see benefit
@@ -763,7 +763,8 @@ export default function Deposit({
                     <span className="font-medium text-amber-600 tabular-nums">
                       -
                       {(
-                        parseFloat(depositAmount || '0') * currentProjectData.currentAPY
+                        parseFloat(depositAmount || '0') *
+                        (currentProjectData.apy7d / 100)
                       ).toLocaleString('en-US', {
                         minimumFractionDigits: currentProjectData.asset === 'USDC' ? 2 : 6,
                         maximumFractionDigits: currentProjectData.asset === 'USDC' ? 2 : 6,

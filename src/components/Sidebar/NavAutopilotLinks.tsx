@@ -8,6 +8,7 @@ import { morphoTempDisabled } from '@/consts/constants';
 import { useState } from 'react';
 import { useVaultMetrics } from '@/providers/VaultMetricsProvider';
 import LoadingSpinner from '../UI/LoadingSpinner';
+import { getProtocolIcon } from '@/helpers/getIcons';
 
 export default function NavAutopilotLinks({
   options,
@@ -15,12 +16,14 @@ export default function NavAutopilotLinks({
   name,
   icon,
   isDarkMode,
+  isMobile,
 }: {
   options: SideBarOption[];
   url?: string;
   name: string;
   icon: string;
   isDarkMode?: boolean;
+  isMobile?: boolean;
 }) {
   const [linksExpanded, setLinksExpaned] = useState(true);
   const { getMetricsForVault, isLoading } = useVaultMetrics();
@@ -88,14 +91,6 @@ export default function NavAutopilotLinks({
                     alt={option.asset}
                     className={`w-6 h-6 md:w-8 md:h-8 rounded-full object-cover ${isDisabled ? 'opacity-60' : ''}`}
                   />
-
-                  <Image
-                    width={10.5}
-                    height={10.5}
-                    src={`/projects/${option.protocol}.png`}
-                    alt="Morpho"
-                    className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 md:w-3 md:h-3 rounded-full object-cover bg-white border border-gray-200 ${isDisabled ? 'opacity-60' : ''}`}
-                  />
                 </div>
                 <div className="flex-1 text-left">
                   <div
@@ -112,8 +107,16 @@ export default function NavAutopilotLinks({
                   >
                     {option.asset}
                   </div>
-                  <div className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                    Autopilot
+                  <div
+                    className={`flex items-center gap-1.5 text-sm capitalize ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}
+                  >
+                    <Image
+                      width={isMobile ? 10 : 12.5}
+                      height={isMobile ? 10 : 12.5}
+                      src={getProtocolIcon(option.protocol)}
+                      alt={`${option.protocol} icon`}
+                    />
+                    {option.protocol}
                   </div>
                 </div>
                 {isDisabled ? (

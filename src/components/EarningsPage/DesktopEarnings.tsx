@@ -136,7 +136,7 @@ export default function DesktopEarnings({
                 </td>
                 {!hideAction && (
                   <td className="py-4 px-4 overflow-visible">
-                    <ActionBadge />
+                    <ActionBadge isMobile={false} />
                   </td>
                 )}
                 <td className="py-4 px-4 text-right">

@@ -33,12 +33,14 @@ export default function SidebarContent({
   pathname,
   options,
   isDarkMode,
+  isMobile,
   // setIsDarkMode,
 }: {
   pathname: string;
   options: SideBarOptions;
   isDarkMode?: boolean;
   setIsDarkMode?: Dispatch<SetStateAction<boolean | undefined>>;
+  isMobile?: boolean;
 }) {
   return (
     <>
@@ -117,6 +119,7 @@ export default function SidebarContent({
             icon={icon}
             url={pathname}
             isDarkMode={isDarkMode}
+            isMobile={isMobile}
           />
         ))}
       </div>
