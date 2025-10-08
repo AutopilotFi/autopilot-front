@@ -14,17 +14,33 @@ export default function DesktopPositions({
     <div className="overflow-x-auto">
       <table className="w-full">
         <thead>
-          <tr className="border-b border-gray-100">
-            <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wide">
+          <tr className={`border-b ${isDarkMode ? 'border-border' : 'border-gray-100'}`}>
+            <th
+              className={`text-left py-3 px-4 text-xs font-medium uppercase tracking-wide ${
+                isDarkMode ? 'text-muted-foreground' : 'text-gray-500'
+              }`}
+            >
               Autopilot
             </th>
-            <th className="text-right py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wide">
+            <th
+              className={`text-right py-3 px-4 text-xs font-medium uppercase tracking-wide ${
+                isDarkMode ? 'text-muted-foreground' : 'text-gray-500'
+              }`}
+            >
               Balance
             </th>
-            <th className="text-right py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wide">
+            <th
+              className={`text-right py-3 px-4 text-xs font-medium uppercase tracking-wide ${
+                isDarkMode ? 'text-muted-foreground' : 'text-gray-500'
+              }`}
+            >
               All-Time Earnings
             </th>
-            <th className="text-center py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wide">
+            <th
+              className={`text-center py-3 px-4 text-xs font-medium uppercase tracking-wide ${
+                isDarkMode ? 'text-muted-foreground' : 'text-gray-500'
+              }`}
+            >
               Best Allocation
             </th>
           </tr>

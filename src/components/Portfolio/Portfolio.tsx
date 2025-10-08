@@ -188,20 +188,28 @@ export default function Portfolio() {
   return (
     <div className="flex-1 flex flex-col min-w-0">
       {/* Header */}
-      <header className="bg-white border-b border-gray-100 sticky top-0 z-40">
+      <header
+        className={`border-b sticky top-0 z-40 ${
+          isDarkMode ? 'bg-card border-border' : 'bg-white border-gray-100'
+        }`}
+      >
         <div className="max-w-7xl mx-auto px-10 sm:px-12 lg:px-14 py-4 ml-7 md:ml-auto">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4 min-h-[49.25px]">
               <div>
-                <h1 className="font-semibold text-gray-900">Portfolio</h1>
-                <p className="text-sm text-gray-500">View all positions</p>
+                <h1 className={`font-semibold ${isDarkMode ? 'text-foreground' : 'text-gray-900'}`}>
+                  Portfolio
+                </h1>
+                <p className={`text-sm ${isDarkMode ? 'text-muted-foreground' : 'text-gray-500'}`}>
+                  View all positions
+                </p>
               </div>
             </div>
           </div>
         </div>
       </header>
 
-      <main className="flex-1">
+      <main className={`flex-1 ${isDarkMode ? 'bg-background' : 'bg-gray-50'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {error ? (
             <div className="bg-white rounded-xl border border-gray-100 p-8 text-center">
@@ -228,14 +236,27 @@ export default function Portfolio() {
                 )}
                 desktopColumns={3}
                 isMobile={isMobile}
+                isDarkMode={isDarkMode}
               />
 
               {/* Positions */}
               <div className="space-y-4">
-                <div className="bg-white rounded-xl border border-gray-100 p-6">
-                  <h3 className="text-sm font-medium text-gray-600 mb-4">My Positions</h3>
+                <div
+                  className={`rounded-xl border p-6 ${
+                    isDarkMode ? 'bg-card border-border' : 'bg-white border-gray-100'
+                  }`}
+                >
+                  <h3
+                    className={`text-sm font-medium mb-4 ${
+                      isDarkMode ? 'text-muted-foreground' : 'text-gray-600'
+                    }`}
+                  >
+                    My Positions
+                  </h3>
                   {!showPortfolioStats ? (
-                    <div className="bg-white rounded-xl border border-gray-100 p-6 text-center py-12">
+                    <div
+                      className={`rounded-xl p-6 text-center py-12 ${isDarkMode ? 'bg-card' : 'bg-white'}`}
+                    >
                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#9159FF] mx-auto mb-4"></div>
                       <p className="text-gray-600">Loading portfolio positions...</p>
                     </div>
@@ -261,37 +282,64 @@ export default function Portfolio() {
               </div>
 
               {/* Latest Earnings Section */}
-              {!showPortfolioStats ? (
-                <div className="bg-white rounded-xl border border-gray-100 p-6 text-center py-12">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#9159FF] mx-auto mb-4"></div>
-                  <p className="text-gray-600">Loading earnings data...</p>
-                </div>
-              ) : latestEarnings.length > 0 ? (
-                <div className="bg-white rounded-xl border border-gray-100 p-6">
-                  <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-sm font-medium text-gray-600 mb-2">Latest Earnings</h3>
+
+              <div
+                className={`rounded-xl border p-6 ${
+                  isDarkMode ? 'bg-card border-border' : 'bg-white border-gray-100'
+                }`}
+              >
+                <div className="flex items-center justify-between mb-6">
+                  <h3
+                    className={`text-sm font-medium mb-2 ${
+                      isDarkMode ? 'text-muted-foreground' : 'text-gray-600'
+                    }`}
+                  >
+                    Latest Earnings
+                  </h3>
+                  {latestEarnings.length > 0 && (
                     <Link
                       href="/earnings"
                       className="text-xs bg-[#9159FF] text-white px-3 py-1.5 rounded-md hover:bg-[#7c3aed] transition-colors"
                     >
                       View All
                     </Link>
+                  )}
+                </div>
+                {!showPortfolioStats ? (
+                  <div
+                    className={` rounded-xl  p-6 text-center py-12 ${
+                      isDarkMode ? 'bg-card ' : 'bg-white '
+                    }`}
+                  >
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#9159FF] mx-auto mb-4"></div>
+                    <p className="text-gray-600">Loading earnings data...</p>
                   </div>
-                  {/* Desktop Table */}
-                  {isMobile === false && (
-                    <DesktopEarnings earnings={latestEarnings} isDarkMode={isDarkMode} hideAction />
-                  )}
+                ) : latestEarnings.length > 0 ? (
+                  <>
+                    {/* Desktop Table */}
+                    {isMobile === false && (
+                      <DesktopEarnings
+                        earnings={latestEarnings}
+                        isDarkMode={isDarkMode}
+                        hideAction
+                      />
+                    )}
 
-                  {/* Mobile Cards */}
-                  {isMobile === true && (
-                    <MobileEarnings earnings={latestEarnings} isDarkMode={isDarkMode} showNetwork />
-                  )}
-                </div>
-              ) : (
-                <div className="bg-white rounded-xl border border-gray-100 p-6">
-                  <EmptyEarnings balance={totalValue} />
-                </div>
-              )}
+                    {/* Mobile Cards */}
+                    {isMobile === true && (
+                      <MobileEarnings
+                        earnings={latestEarnings}
+                        isDarkMode={isDarkMode}
+                        showNetwork
+                      />
+                    )}
+                  </>
+                ) : (
+                  <div className={`rounded-xl p-6 ${isDarkMode ? 'bg-card' : 'bg-white'}`}>
+                    <EmptyEarnings balance={totalValue} isDarkMode={isDarkMode} />
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>

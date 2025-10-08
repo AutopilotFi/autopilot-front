@@ -40,19 +40,22 @@ export default function Rebalance({
   noBorder,
   firstRebalance,
   currentProjectDataName,
+  isDarkMode,
 }: {
   rebalance: RebalanceData;
   noBorder?: boolean;
   firstRebalance?: boolean;
   currentProjectDataName?: string;
+  isDarkMode?: boolean;
 }) {
   return (
     <>
       {
         <div
           className={clsx(
-            !noBorder && 'border border-gray-200',
-            'rounded-lg p-4 hover:bg-gray-50 transition-colors duration-200'
+            !noBorder && 'border',
+            'rounded-lg p-4 transition-colors duration-200',
+            isDarkMode ? 'border-border bg-muted' : 'border-gray-200 hover:bg-gray-50'
           )}
         >
           <div className="flex items-center justify-between mb-3">
@@ -82,7 +85,9 @@ export default function Rebalance({
                 </div>
               )}
             </div>
-            <div className="text-xs text-gray-500 font-medium">
+            <div
+              className={`text-xs font-medium ${isDarkMode ? 'text-foreground' : 'text-gray-500'}`}
+            >
               {formatTimeAgo(rebalance.timestamp)}
             </div>
           </div>
@@ -114,8 +119,14 @@ export default function Rebalance({
                     style={{ backgroundColor: allocation.color }}
                   ></div>
                   <div className="min-w-0">
-                    <div className="font-medium text-gray-800 truncate">{allocation.name}</div>
-                    <div className="text-gray-600">{allocation.percentage}%</div>
+                    <div
+                      className={`font-medium  truncate ${isDarkMode ? 'text-foreground' : 'text-gray-900'}`}
+                    >
+                      {allocation.name}
+                    </div>
+                    <div className={`${isDarkMode ? 'text-muted-foreground' : 'text-gray-600'}`}>
+                      {allocation.percentage}%
+                    </div>
                   </div>
                 </div>
               ))}

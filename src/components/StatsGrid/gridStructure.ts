@@ -23,7 +23,7 @@ export const generateOverviewGridStructure = (
   {
     label: 'Monthly Forecast',
     value: formatBalance(
-      Number(userStats.monthlyForecast),
+      (Number(userStats.totalBalance) * (currentProjectData.apy7d / 100)) / 12,
       currentProjectData.asset,
       undefined,
       true

@@ -128,7 +128,7 @@ export default function MobileEarnings({
               {/* Secondary info row */}
               <div className="flex items-center justify-between text-xs">
                 <div className="flex items-center space-x-2">
-                  <ActionBadge isMobile={true} />
+                  <ActionBadge isMobile={true} isDarkMode={isDarkMode} />
                 </div>
                 <div
                   className={`cursor-help ${

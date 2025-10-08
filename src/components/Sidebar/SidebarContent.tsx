@@ -5,7 +5,7 @@ import NavAutopilotLinks from './NavAutopilotLinks';
 import { SideBarOptions } from '@/types/globalAppTypes';
 import SupportAndSocialLinks from './SupportAndSocialLinks';
 import { Dispatch, ForwardRefExoticComponent, RefAttributes, SetStateAction } from 'react';
-// import { DarkModeToggle } from './DarkModeToogle';
+import { DarkModeToggle } from './DarkModeToogle';
 
 type NavLink = {
   url: string;
@@ -34,7 +34,7 @@ export default function SidebarContent({
   options,
   isDarkMode,
   isMobile,
-  // setIsDarkMode,
+  setIsDarkMode,
 }: {
   pathname: string;
   options: SideBarOptions;
@@ -123,14 +123,14 @@ export default function SidebarContent({
           />
         ))}
       </div>
-      {/* {isDarkMode !== undefined && setIsDarkMode !== undefined && (
+      {isDarkMode !== undefined && setIsDarkMode !== undefined && (
         <div className="flex items-center justify-between">
           <span className={`text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
             Dark Mode
           </span>
           <DarkModeToggle isDarkMode={isDarkMode} onToggle={() => setIsDarkMode(st => !st)} />
         </div>
-      )} */}
+      )}
       <SupportAndSocialLinks isDarkMode={isDarkMode} />
     </>
   );

@@ -32,10 +32,12 @@ export default function Allocations({
   currentProjectData,
   isNewUser,
   handleNavigateToDeposit,
+  isDarkMode,
 }: {
   currentProjectData: ProjectData;
   isNewUser: boolean;
   handleNavigateToDeposit: () => void;
+  isDarkMode?: boolean;
 }) {
   const [currentPage, setCurrentPage] = useState(1);
   const rebalancesPerPage = 5;
@@ -280,11 +282,19 @@ export default function Allocations({
   return (
     <div className="space-y-8">
       {isNewUser ? (
-        <div className="bg-white rounded-xl border border-gray-100 p-3 md:p-6">
+        <div
+          className={`rounded-xl border p-4 md:p-6 ${
+            isDarkMode ? 'bg-card border-border' : 'bg-white border-gray-100'
+          }`}
+        >
           <div className="text-center py-16">
             <RefreshCw className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <h4 className="text-lg font-semibold text-gray-900 mb-2">Allocation History</h4>
-            <p className="text-sm text-gray-600 mb-6 max-w-md mx-auto">
+            <h4
+              className={`text-lg font-semibold mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}
+            >
+              Allocation History
+            </h4>
+            <p className={`text-sm mb-4 ${isDarkMode ? 'text-muted-foreground' : 'text-gray-600'}`}>
               Track how your funds are allocated across different yield sources and see historical
               rebalancing events.
             </p>
@@ -299,25 +309,36 @@ export default function Allocations({
       ) : (
         <>
           {/* Latest Allocation */}
-          <div className="bg-white rounded-xl border border-gray-100 p-3 md:p-6">
-            <div className="bg-gradient-to-r from-green-50 to-purple-50 border border-green-200 rounded-lg">
+          <div
+            className={`rounded-xl p-3 md:p-6 ${isDarkMode ? 'bg-card border-border' : 'border border-gray-100'}`}
+          >
+            <div
+              className={`border  rounded-lg ${isDarkMode ? 'border-border' : 'border-green-200 bg-gradient-to-r from-green-50 to-purple-50'}`}
+            >
               {latestAllocation && (
                 <Rebalance
                   rebalance={latestAllocation}
                   noBorder
                   firstRebalance
                   currentProjectDataName={currentProjectData.name}
+                  isDarkMode={isDarkMode}
                 />
               )}
             </div>
 
             <div className="my-6">
               {/* Main Status Text */}
-              <span className="text-sm font-medium text-gray-700">Allocation History Chart</span>
+              <span
+                className={`text-sm font-medium ${isDarkMode ? 'text-foreground' : ' text-gray-700'}`}
+              >
+                Allocation History Chart
+              </span>
             </div>
 
             {/* Chart Display */}
-            <div className="bg-gradient-to-r from-green-50 to-purple-50 border border-green-200 rounded-lg pr-7 md:pr-10 py-6">
+            <div
+              className={`${isDarkMode ? 'bg-card border-border' : 'bg-white border-green-200 bg-gradient-to-r from-green-50 to-purple-50'}  border  rounded-lg pr-7 md:pr-10 py-6`}
+            >
               {chartData.length > 0 ? (
                 <div className="h-80">
                   <ResponsiveContainer width="100%" height="100%">
@@ -377,8 +398,14 @@ export default function Allocations({
                 <div className="h-80 flex items-center justify-center">
                   <div className="text-center">
                     <RefreshCw className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                    <h4 className="text-lg font-medium text-gray-900 mb-2">No Allocation Data</h4>
-                    <p className="text-sm text-gray-600">
+                    <h4
+                      className={`${isDarkMode ? 'text-white' : 'text-gray-900'} text-lg font-medium mb-2`}
+                    >
+                      No Allocation Data
+                    </h4>
+                    <p
+                      className={`text-sm ${isDarkMode ? 'text-muted-foreground' : 'text-gray-600'}`}
+                    >
                       Allocation chart will appear here once data is available.
                     </p>
                   </div>
@@ -388,10 +415,19 @@ export default function Allocations({
           </div>
 
           {/* Historical Rebalance History */}
-          <div className="bg-white rounded-lg border border-gray-100 p-6">
+          <div
+            id="tableTop"
+            className={` rounded-lg border p-6 ${isDarkMode ? 'bg-card border-border' : 'border-gray-100'}`}
+          >
             <div className="mb-6">
-              <h2 className="text-lg font-semibold text-gray-900">Recent Rebalances</h2>
-              <p className="text-sm text-gray-600 mt-1">
+              <h2
+                className={`text-lg font-semibold ${isDarkMode ? 'text-foreground' : 'text-gray-900'}`}
+              >
+                Recent Rebalances
+              </h2>
+              <p
+                className={`text-sm mt-1 ${isDarkMode ? 'text-muted-foreground' : 'text-gray-600'}`}
+              >
                 Historical allocation changes and optimizations
               </p>
             </div>
@@ -400,14 +436,20 @@ export default function Allocations({
               {totalRebalances === 0 ? (
                 <div className="text-center py-8">
                   <RefreshCw className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <h4 className="text-lg font-medium text-gray-900 mb-2">No Rebalance History</h4>
-                  <p className="text-sm text-gray-600">
+                  <h4
+                    className={`text-lg font-medium mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}
+                  >
+                    No Rebalance History
+                  </h4>
+                  <p
+                    className={`text-sm ${isDarkMode ? 'text-muted-foreground' : 'text-gray-600'}`}
+                  >
                     Rebalance history will appear here once the vault starts optimizing allocations.
                   </p>
                 </div>
               ) : (
                 currentRebalances.map((rebalance, index) => (
-                  <Rebalance rebalance={rebalance} key={index} />
+                  <Rebalance rebalance={rebalance} key={index} isDarkMode={isDarkMode} />
                 ))
               )}
             </div>
@@ -419,6 +461,7 @@ export default function Allocations({
               startIndex={startIndex}
               endIndex={endIndex}
               dataPerPage={rebalancesPerPage}
+              isDarkMode={isDarkMode}
             />
           </div>
         </>

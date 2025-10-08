@@ -847,14 +847,6 @@ html {
   filter: drop-shadow(0 4px 8px rgba(145, 89, 255, 0.6));
 }
 
-.recharts-responsive-container:focus,
-.recharts-wrapper:focus,
-.recharts-surface:focus,
-.recharts-surface:focus-visible {
-  outline: none !important;
-  box-shadow: none !important; /* gdy ring jest ze stylu "ring"/box-shadow */
-}
-
 /* Airdrop marker glow animation */
 @keyframes airdropGlow {
   0%,
@@ -866,4 +858,12 @@ html {
     opacity: 0.6;
     transform: scale(1.1);
   }
+}
+
+.recharts-responsive-container:focus,
+.recharts-wrapper:focus,
+.recharts-surface:focus,
+.recharts-surface:focus-visible {
+  outline: none !important;
+  box-shadow: none !important; /* gdy ring jest ze stylu "ring"/box-shadow */
 }

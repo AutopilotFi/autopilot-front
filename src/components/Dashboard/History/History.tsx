@@ -92,13 +92,32 @@ export default function HistoryTab({
         gridStructure={generateHistoryGridStructure(currentProjectData, userStatsData)}
         desktopColumns={3}
         isMobile={isMobile}
+        isDarkMode={isDarkMode}
       />
       {isNewUser || totalTransactions === 0 ? (
-        <div className="bg-white rounded-xl border border-gray-100 p-6">
+        <div
+          className={`rounded-xl border p-6 ${
+            isDarkMode ? 'bg-card border-border' : 'bg-white border-gray-100'
+          }`}
+        >
           <div className="text-center py-16">
-            <History className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <h4 className="text-lg font-semibold text-gray-900 mb-2">Transaction History</h4>
-            <p className="text-sm text-gray-600 mb-6 max-w-md mx-auto">
+            <History
+              className={`w-16 h-16 mx-auto mb-4 ${
+                isDarkMode ? 'text-muted-foreground' : 'text-gray-400'
+              }`}
+            />
+            <h4
+              className={`text-lg font-semibold mb-2 ${
+                isDarkMode ? 'text-foreground' : 'text-gray-900'
+              }`}
+            >
+              Transaction History
+            </h4>
+            <p
+              className={`text-sm mb-6 max-w-md mx-auto ${
+                isDarkMode ? 'text-muted-foreground' : 'text-gray-600'
+              }`}
+            >
               All your deposits, withdrawals, and other transactions will be tracked here once you
               start using the Autopilot.
             </p>
@@ -106,9 +125,17 @@ export default function HistoryTab({
           </div>
         </div>
       ) : (
-        <div className="bg-white rounded-xl border border-gray-100 p-4 md:p-6">
+        <div
+          className={`rounded-xl border p-4 md:p-6 ${
+            isDarkMode ? 'bg-card border-border' : 'bg-white border-gray-100'
+          }`}
+        >
           <div className="flex items-center justify-between mb-4 md:mb-6">
-            <h3 className="text-base md:text-lg font-semibold text-gray-900">
+            <h3
+              className={`text-base md:text-lg font-semibold ${
+                isDarkMode ? 'text-foreground' : 'text-gray-900'
+              }`}
+            >
               Transaction History
             </h3>
             {userStatsData?.transactions?.length > 0 && !isMobile && (
@@ -148,6 +175,7 @@ export default function HistoryTab({
             startIndex={startIndex}
             endIndex={endIndex}
             dataPerPage={dataPerPage}
+            isDarkMode={isDarkMode}
           />
         </div>
       )}

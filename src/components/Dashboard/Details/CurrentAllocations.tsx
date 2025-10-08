@@ -10,20 +10,32 @@ export default function CurrentAllocations({
   allocations,
   isOldUser,
   isMobile,
+  isDarkMode,
 }: {
   currentProjectData: ProjectData;
   allocations: AllocationData[];
   isOldUser: boolean;
   isMobile?: boolean;
+  isDarkMode?: boolean;
 }) {
   const filteredAllocations = allocations.filter(allocation => allocation.name !== 'Not invested');
   return (
-    <div className="bg-white rounded-xl border border-gray-100 p-4 md:p-6">
+    <div
+      className={`rounded-xl border p-4 md:p-6 ${
+        isDarkMode ? 'bg-card border-border' : 'bg-white border-gray-100'
+      }`}
+    >
       <div className="mb-4 md:mb-6">
-        <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-1">
+        <h3
+          className={`text-base md:text-lg font-semibold mb-1 ${
+            isDarkMode ? 'text-foreground' : 'text-gray-900'
+          }`}
+        >
           Current Allocation
         </h3>
-        <p className="text-sm text-gray-600">Live distribution across yield sources</p>
+        <p className={`text-sm ${isDarkMode ? 'text-muted-foreground' : 'text-gray-600'}`}>
+          Live distribution across yield sources
+        </p>
       </div>
 
       {/* Optimization Status */}
@@ -39,12 +51,20 @@ export default function CurrentAllocations({
             </div>
             <div className="min-w-0 flex-1">
               <h4
-                className={`text-sm font-semibold ${isOldUser ? 'text-gray-900' : 'text-green-900'}`}
+                className={`text-sm font-semibold ${
+                  isOldUser ? (isDarkMode ? 'text-foreground' : 'text-gray-900') : 'text-green-900'
+                }`}
               >
                 {isOldUser ? 'No Active Positions' : 'Optimization Active'}
               </h4>
               <p
-                className={`text-xs ${isOldUser ? 'text-gray-700' : 'text-green-700'} leading-tight`}
+                className={`text-xs leading-tight ${
+                  isOldUser
+                    ? isDarkMode
+                      ? 'text-muted-foreground'
+                      : 'text-gray-700'
+                    : 'text-green-700'
+                }`}
               >
                 {isOldUser
                   ? 'All funds have been withdrawn'
@@ -67,8 +87,18 @@ export default function CurrentAllocations({
       {isOldUser && isMobile && (
         <div className="py-8 text-center">
           <Layers className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <h4 className="text-lg font-semibold text-gray-900 mb-2">No Active Allocations</h4>
-          <p className="text-sm text-gray-600 mb-4 px-4">
+          <h4
+            className={`text-lg font-semibold mb-2 ${
+              isDarkMode ? 'text-foreground' : 'text-gray-900'
+            }`}
+          >
+            No Active Allocations
+          </h4>
+          <p
+            className={`text-sm mb-4 px-4 ${
+              isDarkMode ? 'text-muted-foreground' : 'text-gray-600'
+            }`}
+          >
             You have withdrawn all funds. Your historical allocation data is preserved in the
             details section.
           </p>
@@ -81,7 +111,9 @@ export default function CurrentAllocations({
           {filteredAllocations.map(allocation => (
             <div
               key={allocation.marketId}
-              className="bg-gray-50 rounded-lg p-4 hover:bg-gray-50 transition-colors"
+              className={`rounded-lg p-4 transition-colors ${
+                isDarkMode ? 'bg-muted hover:bg-purple-900/20' : 'bg-gray-50 hover:bg-purple-50'
+              }`}
             >
               {/* Header with source and APY */}
               <div className="flex items-center justify-between mb-3">
@@ -94,7 +126,11 @@ export default function CurrentAllocations({
                     className="w-6 h-6 rounded-full flex-shrink-0"
                   />
                   <div className="min-w-0 flex-1">
-                    <div className="text-sm font-medium text-gray-900 leading-tight break-words">
+                    <div
+                      className={`text-sm font-medium leading-tight break-words ${
+                        isDarkMode ? 'text-foreground' : 'text-gray-900'
+                      }`}
+                    >
                       {allocation.name}
                     </div>
                     <div className="flex items-center space-x-1 mt-1">
@@ -105,20 +141,42 @@ export default function CurrentAllocations({
                         alt="Morpho"
                         className="w-3 h-3 flex-shrink-0"
                       />
-                      <span className="text-xs text-gray-500">{currentProjectData.name}</span>
+                      <span
+                        className={`text-xs ${
+                          isDarkMode ? 'text-muted-foreground' : 'text-gray-500'
+                        }`}
+                      >
+                        {currentProjectData.name}
+                      </span>
                     </div>
                   </div>
                 </div>
-                {/* <div className="text-sm font-medium text-gray-900 flex-shrink-0">
+                {/* <div className={`text-sm font-medium flex-shrink-0 ${
+                                isDarkMode ? 'text-foreground' : 'text-gray-900'
+                              }`}>
                   {allocation.apy.toFixed(2)}%
                 </div> */}
               </div>
 
               {/* Bottom row with amount and allocation */}
-              <div className="flex items-center justify-between pt-3 border-t border-gray-200">
+              <div
+                className={`flex items-center justify-between pt-3 border-t ${
+                  isDarkMode ? 'border-border' : 'border-gray-200'
+                }`}
+              >
                 <div>
-                  <div className="text-xs text-gray-500 mb-1">AUTOPILOT TVL</div>
-                  <div className="text-sm font-medium text-gray-900">
+                  <div
+                    className={`text-xs mb-1 ${
+                      isDarkMode ? 'text-muted-foreground' : 'text-gray-500'
+                    }`}
+                  >
+                    AUTOPILOT TVL
+                  </div>
+                  <div
+                    className={`text-sm font-medium ${
+                      isDarkMode ? 'text-foreground' : 'text-gray-900'
+                    }`}
+                  >
                     {formatBalance(
                       allocation.amount ?? 0,
                       currentProjectData.asset,
@@ -127,8 +185,18 @@ export default function CurrentAllocations({
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-xs text-gray-500 mb-1">Allocation</div>
-                  <div className="text-sm font-medium text-gray-900">
+                  <div
+                    className={`text-xs mb-1 ${
+                      isDarkMode ? 'text-muted-foreground' : 'text-gray-500'
+                    }`}
+                  >
+                    Allocation
+                  </div>
+                  <div
+                    className={`text-sm font-medium ${
+                      isDarkMode ? 'text-foreground' : 'text-gray-900'
+                    }`}
+                  >
                     {(allocation.percentage ?? 0) < 0.01
                       ? '<0.01'
                       : (allocation.percentage ?? 0).toFixed(2)}
@@ -146,17 +214,31 @@ export default function CurrentAllocations({
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-gray-100">
-                <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wide">
+              <tr className={`border-b ${isDarkMode ? 'border-border' : 'border-gray-100'}`}>
+                <th
+                  className={`text-left py-3 px-4 text-xs font-medium uppercase tracking-wide ${
+                    isDarkMode ? 'text-muted-foreground' : 'text-gray-500'
+                  }`}
+                >
                   Yield Source
                 </th>
-                {/* <th className="text-right py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wide">
+                {/* <th className={`text-right py-3 px-4 text-xs font-medium uppercase tracking-wide ${
+                              isDarkMode ? 'text-muted-foreground' : 'text-gray-500'
+                            }`}>
                   7d APY
                 </th> */}
-                <th className="text-right py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wide">
+                <th
+                  className={`text-right py-3 px-4 text-xs font-medium uppercase tracking-wide ${
+                    isDarkMode ? 'text-muted-foreground' : 'text-gray-500'
+                  }`}
+                >
                   AUTOPILOT TVL
                 </th>
-                <th className="text-right py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wide">
+                <th
+                  className={`text-right py-3 px-4 text-xs font-medium uppercase tracking-wide ${
+                    isDarkMode ? 'text-muted-foreground' : 'text-gray-500'
+                  }`}
+                >
                   Allocation
                 </th>
               </tr>
@@ -167,10 +249,18 @@ export default function CurrentAllocations({
                   <td colSpan={4} className="py-12 text-center">
                     <div className="text-center">
                       <Layers className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                      <h4 className="text-lg font-semibold text-gray-900 mb-2">
+                      <h4
+                        className={`text-lg font-semibold mb-2 ${
+                          isDarkMode ? 'text-foreground' : 'text-gray-900'
+                        }`}
+                      >
                         No Active Allocations
                       </h4>
-                      <p className="text-sm text-gray-600 mb-4">
+                      <p
+                        className={`text-sm mb-4 ${
+                          isDarkMode ? 'text-muted-foreground' : 'text-gray-600'
+                        }`}
+                      >
                         You have withdrawn all funds. Your historical allocation data is preserved
                         in the details section.
                       </p>
@@ -181,7 +271,11 @@ export default function CurrentAllocations({
                 filteredAllocations.map((allocation, index) => (
                   <tr
                     key={index}
-                    className="border-b border-gray-50 hover:bg-gray-50 transition-colors"
+                    className={`border-b transition-colors ${
+                      isDarkMode
+                        ? 'border-border hover:bg-purple-900/20'
+                        : 'border-gray-50 hover:bg-purple-50'
+                    }`}
                   >
                     <td className="py-4 px-4">
                       <div className="flex items-center space-x-3">
@@ -193,7 +287,13 @@ export default function CurrentAllocations({
                           className="w-6 h-6 rounded-full"
                         />
                         <div>
-                          <div className="text-sm font-medium text-gray-900">{allocation.name}</div>
+                          <div
+                            className={`text-sm font-medium ${
+                              isDarkMode ? 'text-foreground' : 'text-gray-900'
+                            }`}
+                          >
+                            {allocation.name}
+                          </div>
                           <div className="flex items-center space-x-1 mt-1">
                             <Image
                               width={10.5}
@@ -202,7 +302,13 @@ export default function CurrentAllocations({
                               alt="Morpho"
                               className="w-3 h-3"
                             />
-                            <span className="text-xs text-gray-500">{currentProjectData.name}</span>
+                            <span
+                              className={`text-xs ${
+                                isDarkMode ? 'text-muted-foreground' : 'text-gray-500'
+                              }`}
+                            >
+                              {currentProjectData.name}
+                            </span>
                           </div>
                         </div>
                       </div>
@@ -213,7 +319,11 @@ export default function CurrentAllocations({
                       </div>
                     </td> */}
                     <td className="py-4 px-4 text-right">
-                      <div className="text-sm font-medium text-gray-900">
+                      <div
+                        className={`text-sm font-medium ${
+                          isDarkMode ? 'text-foreground' : 'text-gray-900'
+                        }`}
+                      >
                         {formatBalance(
                           allocation.amount ?? 0,
                           currentProjectData.asset,
@@ -222,7 +332,11 @@ export default function CurrentAllocations({
                       </div>
                     </td>
                     <td className="py-4 px-4 text-right">
-                      <div className="text-sm font-medium text-gray-900">
+                      <div
+                        className={`text-sm font-medium ${
+                          isDarkMode ? 'text-foreground' : 'text-gray-900'
+                        }`}
+                      >
                         {(allocation.percentage ?? 0) < 0.01
                           ? '<0.01'
                           : (allocation.percentage ?? 0).toFixed(2)}

@@ -8,10 +8,12 @@ export default function StatsGrid({
   gridStructure,
   desktopColumns,
   isMobile,
+  isDarkMode,
 }: {
   gridStructure: UserStatsGrid[];
   desktopColumns?: number;
   isMobile?: boolean;
+  isDarkMode?: boolean;
 }) {
   const gridContainerCalsses = clsx(
     desktopColumns ? `md:grid-cols-${desktopColumns}` : 'md:grid-cols-4',
@@ -25,12 +27,17 @@ export default function StatsGrid({
           <div
             key={index}
             className={clsx(
-              'bg-white rounded-lg md:rounded-xl border border-gray-100 p-3 md:p-6 relative',
-              spanFirstRowOnMobile
+              'rounded-lg md:rounded-xl border p-3 md:p-6 relative',
+              spanFirstRowOnMobile,
+              isDarkMode ? 'bg-card border-border' : 'bg-white border-gray-100'
             )}
           >
             <div className="flex items-start justify-between mb-2 md:mb-3">
-              <p className="text-xs md:text-sm font-medium text-gray-600 leading-tight">
+              <p
+                className={`text-sm font-medium mb-2 ${
+                  isDarkMode ? 'text-muted-foreground' : 'text-gray-600'
+                }`}
+              >
                 {stat.label}
               </p>
               {stat.tooltipText ? (
@@ -59,11 +66,17 @@ export default function StatsGrid({
             </div>
             <div className="flex items-baseline space-x-1 md:space-x-2">
               <span
-                className={`text-lg md:text-2xl font-bold leading-none break-all text-gray-900}`}
+                className={`text-lg md:text-2xl font-bold leading-none break-all ${isDarkMode ? 'text-foreground' : 'text-gray-900'}`}
               >
                 {stat.value}
               </span>
-              <span className="text-xs md:text-sm text-gray-500 flex-shrink-0">{stat.asset}</span>
+              <span
+                className={`text-xs md:text-sm font-normal ml-1 ${
+                  isDarkMode ? 'text-muted-foreground' : 'text-gray-500'
+                }`}
+              >
+                {stat.asset}
+              </span>
             </div>
           </div>
         );
