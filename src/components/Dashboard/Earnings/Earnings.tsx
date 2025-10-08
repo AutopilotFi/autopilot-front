@@ -90,15 +90,36 @@ export default function EarningsTab({
       <StatsGrid
         gridStructure={generateEarningsGridStructure(currentProjectData, userStatsData)}
         isMobile={isMobile}
+        isDarkMode={isDarkMode}
       />
       {isNewUser ? (
-        <div className="bg-white rounded-xl border border-gray-100 p-6">
+        <div
+          className={`rounded-xl border p-6 ${
+            isDarkMode ? 'bg-card border-border' : 'bg-white border-gray-100'
+          }`}
+        >
           <div className="text-center py-16">
-            <div className="w-16 h-16 bg-gradient-to-br from-green-100 to-purple-100 rounded-xl flex items-center justify-center mx-auto mb-4">
+            <div
+              className={`w-16 h-16 rounded-xl flex items-center justify-center mx-auto mb-4 ${
+                isDarkMode
+                  ? 'bg-gradient-to-br from-green-900/40 to-purple-900/40'
+                  : 'bg-gradient-to-br from-green-100 to-purple-100'
+              }`}
+            >
               <History className="w-8 h-8 text-green-600" />
             </div>
-            <h4 className="text-lg font-semibold text-gray-900 mb-2">Your Earnings History</h4>
-            <p className="text-sm text-gray-600 mb-6 max-w-md mx-auto">
+            <h4
+              className={`text-lg font-semibold mb-2 ${
+                isDarkMode ? 'text-foreground' : 'text-gray-900'
+              }`}
+            >
+              Your Earnings History
+            </h4>
+            <p
+              className={`text-sm mb-6 max-w-md mx-auto ${
+                isDarkMode ? 'text-muted-foreground' : 'text-gray-600'
+              }`}
+            >
               All your earnings transactions will be tracked here. Start by making your first
               deposit to begin earning yield with the {currentProjectData.asset} Autopilot.
             </p>
@@ -106,9 +127,19 @@ export default function EarningsTab({
           </div>
         </div>
       ) : (
-        <div className="bg-white rounded-xl border border-gray-100 p-4 md:p-6">
-          <div className="flex items-center justify-between mb-4 md:mb-6">
-            <h3 className="text-base md:text-lg font-semibold text-gray-900">Earnings History</h3>
+        <div
+          className={`rounded-xl border p-4 md:p-6 ${
+            isDarkMode ? 'bg-card border-border' : 'bg-white border-gray-100'
+          }`}
+        >
+          <div id="tableTop" className="flex items-center justify-between mb-4 md:mb-6">
+            <h3
+              className={`text-base md:text-lg font-semibold ${
+                isDarkMode ? 'text-foreground' : 'text-gray-900'
+              }`}
+            >
+              Earnings History
+            </h3>
             {currentProjectData.recentEarnings.length > 0 && !isMobile && (
               <button
                 className="text-sm bg-[#9159FF] text-white px-3 py-1.5 rounded-lg hover:bg-[#7c3aed] transition-colors flex items-center space-x-2 flex-shrink-0"
@@ -148,6 +179,7 @@ export default function EarningsTab({
             <EmptyEarnings
               balance={Number(userStatsData.totalBalance)}
               handleAction={handleNavigateToDeposit}
+              isDarkMode={isDarkMode}
             />
           )}
 
@@ -159,6 +191,7 @@ export default function EarningsTab({
             startIndex={startIndex}
             endIndex={endIndex}
             dataPerPage={dataPerPage}
+            isDarkMode={isDarkMode}
           />
         </div>
       )}

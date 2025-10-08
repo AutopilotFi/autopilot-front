@@ -15,7 +15,13 @@ export const CommingSoon = ({ fullWidth }: { fullWidth?: boolean }) => (
   </span>
 );
 
-export const ActionBadge = ({ isMobile }: { isMobile?: boolean }) => {
+export const ActionBadge = ({
+  isMobile,
+  isDarkMode,
+}: {
+  isMobile?: boolean;
+  isDarkMode?: boolean;
+}) => {
   return (
     <TooltipProvider>
       <Tooltip isMobile={isMobile}>
@@ -23,7 +29,11 @@ export const ActionBadge = ({ isMobile }: { isMobile?: boolean }) => {
           <div className="relative table">
             <button
               type="button"
-              className="peer inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium text-[#9159FF] bg-purple-50 border border-purple-200 cursor-help"
+              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium text-[#9159FF] border cursor-help ${
+                isDarkMode
+                  ? 'bg-purple-900/30 border-purple-700/60'
+                  : 'bg-purple-50 border-purple-300/70'
+              }`}
               aria-describedby="autocompounded-tip"
             >
               <RotateCcw className="w-3 h-3 mr-1.5" />

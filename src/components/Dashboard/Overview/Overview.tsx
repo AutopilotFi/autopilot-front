@@ -16,12 +16,14 @@ export default function Overview({
   metrics,
   setDepositTab,
   isMobile,
+  isDarkMode,
 }: {
   currentProjectData: ProjectData;
   userStatsData: UserStats;
   metrics: Metrics;
   setDepositTab: () => void;
   isMobile?: boolean;
+  isDarkMode?: boolean;
 }) {
   const [timeframe, setTimeframe] = useState<TimeFrame>('all');
   const [curDate, setCurDate] = useState<string>('');
@@ -34,17 +36,28 @@ export default function Overview({
         gridStructure={generateOverviewGridStructure(currentProjectData, userStatsData)}
         desktopColumns={4}
         isMobile={isMobile}
+        isDarkMode={isDarkMode}
       />
 
       {/* Main Content Grid */}
       <div className="grid lg:grid-cols-3 gap-8">
         {/* Earnings Card */}
-        <div className="lg:col-span-2 bg-white rounded-xl border border-gray-100 overflow-hidden">
+        <div
+          className={`lg:col-span-2 rounded-xl border overflow-hidden ${
+            isDarkMode ? 'bg-card border-border' : 'bg-white border-gray-100'
+          }`}
+        >
           <>
             {/* Header (moved from EarningsChart; now driven by parent state) */}
             <div className="p-6 pb-4">
               <div className="flex items-start justify-between">
-                <div className="text-lg font-semibold text-gray-900 mb-2">Earnings</div>
+                <div
+                  className={`text-lg font-semibold ${
+                    isDarkMode ? 'text-foreground' : 'text-gray-900'
+                  }`}
+                >
+                  Earnings
+                </div>
                 <div>
                   <div className="text-lg font-semibold text-green-500">{curContent || '—'}</div>
                   {curDate && (
@@ -76,14 +89,25 @@ export default function Overview({
               onTimeframeChange={setTimeframe}
               setCurDate={setCurDate}
               setCurContent={setCurContent}
+              isDarkMode={isDarkMode}
             />
           </>
         </div>
 
         {/* Latest Earnings */}
-        <div className="bg-white rounded-xl border border-gray-100 p-6">
+        <div
+          className={`rounded-xl border p-6 ${
+            isDarkMode ? 'bg-card border-border' : 'bg-white border-gray-100'
+          }`}
+        >
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-semibold text-gray-900">Latest Earnings</h3>
+            <h3
+              className={`text-lg font-semibold ${
+                isDarkMode ? 'text-foreground' : 'text-gray-900'
+              }`}
+            >
+              Latest Earnings
+            </h3>
             {currentProjectData.recentEarnings.length > 5 && (
               <Link
                 href={'/earnings'}
@@ -99,7 +123,9 @@ export default function Overview({
               currentProjectData.recentEarnings.slice(0, 5).map((earning, index) => (
                 <div
                   key={index}
-                  className="flex items-center justify-between py-2.5 px-3 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
+                  className={`flex items-center justify-between py-2.5 px-3 rounded-lg transition-colors cursor-pointer ${
+                    isDarkMode ? 'hover:bg-purple-900/20' : ' hover:bg-gray-50 '
+                  }`}
                 >
                   <div className="flex items-center space-x-3">
                     <Image
@@ -110,14 +136,22 @@ export default function Overview({
                       className="w-5 h-5"
                     />
                     <div>
-                      <div className="text-sm font-medium text-gray-900">
+                      <div
+                        className={`text-sm font-medium ${
+                          isDarkMode ? 'text-foreground' : 'text-gray-900'
+                        }`}
+                      >
                         {formatBalance(
                           earning.amount,
                           currentProjectData.asset,
                           currentProjectData.showDecimals
                         )}
                       </div>
-                      <div className="text-xs text-gray-500">
+                      <div
+                        className={`text-xs ${
+                          isDarkMode ? 'text-muted-foreground' : 'text-gray-500'
+                        }`}
+                      >
                         {formatBalance(
                           earning.amount * metrics?.latestUnderlyingPrice || 0,
                           'USD',
@@ -135,6 +169,7 @@ export default function Overview({
               <EmptyEarnings
                 balance={Number(userStatsData.totalBalance)}
                 handleAction={setDepositTab}
+                isDarkMode={isDarkMode}
               />
             )}
           </div>

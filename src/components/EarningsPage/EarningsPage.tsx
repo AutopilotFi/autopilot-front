@@ -3,7 +3,6 @@ import { useState, useContext } from 'react';
 import { Earnings } from '@/types/globalAppTypes';
 import { GlobalContext } from '@/providers/GlobalDataProvider';
 import Pagination from '../UI/Pagination';
-import clsx from 'clsx';
 import DesktopEarnings from './DesktopEarnings';
 import MobileEarnings from './MobileEarnings';
 import { Account } from 'viem';
@@ -64,13 +63,19 @@ export default function EarningsPage({
   return (
     <div className="flex-1 flex flex-col min-w-0">
       {/* Header */}
-      <header className="bg-white border-b border-gray-100 sticky top-0 z-40">
+      <header
+        className={`border-b sticky top-0 z-40 ${
+          isDarkMode ? 'bg-card border-border' : 'bg-white border-gray-100'
+        }`}
+      >
         <div className="max-w-7xl mx-auto px-10 sm:px-12 lg:px-14 py-4 ml-7 md:ml-auto">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4 min-h-[49.25px]">
               <div>
-                <h1 className="font-semibold text-gray-900">Earnings</h1>
-                <p className="text-sm text-gray-500">
+                <h1 className={`font-semibold ${isDarkMode ? 'text-foreground' : 'text-gray-900'}`}>
+                  Earnings
+                </h1>
+                <p className={`text-sm ${isDarkMode ? 'text-muted-foreground' : 'text-gray-500'}`}>
                   {isNewUser ? 'No earnings yet' : 'Full History'}
                   {isNewUser && (
                     <span className="ml-2 text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-medium">
@@ -84,11 +89,16 @@ export default function EarningsPage({
         </div>
       </header>
 
-      <main className="flex-1">
+      <main className={`flex-1 ${isDarkMode ? 'bg-background' : 'bg-gray-50'}`}>
         <div className="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-15">
           <div className="space-y-6">
             {/* Earnings Table */}
-            <div className={clsx('bg-white rounded-xl border border-gray-100 p-6 ')}>
+            <div
+              id="tableTop"
+              className={`rounded-xl border p-6 overflow-x-hidden ${
+                isDarkMode ? 'bg-card border-border' : 'bg-white border-gray-100'
+              }`}
+            >
               {allTransactions.length > 0 ? (
                 <>
                   {/* Desktop Earnings Table */}
@@ -107,7 +117,11 @@ export default function EarningsPage({
                   )}
                 </>
               ) : isLoading ? (
-                <div className="bg-white rounded-xl border border-gray-100 p-6 text-center py-22">
+                <div
+                  className={`rounded-xl p-6 text-center py-22 ${
+                    isDarkMode ? 'bg-card' : 'bg-white'
+                  }`}
+                >
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#9159FF] mx-auto mb-4"></div>
                   <p className="text-gray-600">Loading earnings data...</p>
                 </div>
@@ -115,6 +129,7 @@ export default function EarningsPage({
                 <EmptyEarnings
                   balance={account ? userTotalBalance : 0}
                   handleAction={() => router.push(`/base/morpho/USDC#deposit`)}
+                  isDarkMode={isDarkMode}
                 />
               )}
 
@@ -126,6 +141,7 @@ export default function EarningsPage({
                 startIndex={startIndex}
                 endIndex={endIndex}
                 dataPerPage={itemsPerPage}
+                isDarkMode={isDarkMode}
               />
             </div>
           </div>

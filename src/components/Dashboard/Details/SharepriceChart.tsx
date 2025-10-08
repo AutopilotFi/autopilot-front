@@ -14,6 +14,7 @@ import { VaultHistoryEntry } from '@/types/globalAppTypes';
 
 interface SharepriceChartProps {
   uniqueVaultHData?: VaultHistoryEntry[];
+  isDarkMode?: boolean;
 }
 
 interface ChartDataPoint {
@@ -22,7 +23,7 @@ interface ChartDataPoint {
   timestamp: string;
 }
 
-const SharepriceChart: React.FC<SharepriceChartProps> = ({ uniqueVaultHData }) => {
+const SharepriceChart: React.FC<SharepriceChartProps> = ({ uniqueVaultHData, isDarkMode }) => {
   const [chartData, setChartData] = useState<ChartDataPoint[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -108,7 +109,13 @@ const SharepriceChart: React.FC<SharepriceChartProps> = ({ uniqueVaultHData }) =
   });
 
   return (
-    <div className="w-full h-[28rem] bg-white rounded-lg border border-gray-200 p-4">
+    <div
+      className={`w-full h-[28rem] rounded-lg border border-gray-200 p-4 ${
+        isDarkMode
+          ? 'bg-gradient-to-br from-purple-950/30 via-purple-900/20 to-purple-950/30 border-purple-700/50'
+          : 'bg-gradient-to-br from-purple-25 via-purple-50 to-purple-75 border-purple-100'
+      }`}
+    >
       <ResponsiveContainer width="100%" height="100%">
         <ComposedChart data={chartData} margin={{ top: 20, right: 20, left: 20, bottom: 20 }}>
           <defs>

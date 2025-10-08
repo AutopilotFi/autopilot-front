@@ -256,11 +256,21 @@ export default function Deposit({
     <div className="space-y-6">
       <div className="flex flex-col lg:flex-row gap-6">
         {/* Left: Deposit Interface */}
-        <div className="w-full lg:w-[60%] bg-white rounded-xl p-6 border border-gray-100">
+        <div
+          className={`w-full lg:w-[60%] rounded-xl pt-5 px-5 pb-0 border ${
+            isDarkMode ? 'bg-card border-border' : 'bg-white border-gray-100'
+          }`}
+        >
           {/* Full Width Enter/Exit Toggle */}
-          <div className="relative bg-gray-100 rounded-2xl p-1 flex mb-6">
+          <div
+            className={`relative rounded-2xl p-1 flex mb-5 ${
+              isDarkMode ? 'bg-muted' : 'bg-gray-100'
+            }`}
+          >
             <div
-              className={`absolute top-1 h-[calc(100%-8px)] bg-white rounded-xl transition-all duration-300 ease-in-out ${
+              className={`absolute top-1 h-[calc(100%-8px)] rounded-xl transition-all duration-300 ease-in-out ${
+                isDarkMode ? 'bg-card' : 'bg-white'
+              } ${
                 depositMode === 'enter'
                   ? 'left-1 w-[calc(50%-4px)]'
                   : 'left-[calc(50%+2px)] w-[calc(50%-4px)]'
@@ -270,7 +280,11 @@ export default function Deposit({
             <button
               onClick={() => setDepositMode('enter')}
               className={`relative z-10 px-6 py-3 rounded-xl font-medium transition-all duration-300 flex items-center justify-center space-x-2 flex-1 ${
-                depositMode === 'enter' ? 'text-[#9159FF]' : 'text-gray-500 hover:text-gray-700'
+                depositMode === 'enter'
+                  ? 'text-[#9159FF]'
+                  : isDarkMode
+                    ? 'text-muted-foreground hover:text-foreground'
+                    : 'text-gray-500 hover:text-gray-700'
               }`}
             >
               <Plus
@@ -284,7 +298,11 @@ export default function Deposit({
             <button
               onClick={() => setDepositMode('exit')}
               className={`relative z-10 px-6 py-3 rounded-xl font-medium transition-all duration-300 flex items-center justify-center space-x-2 flex-1 ${
-                depositMode === 'exit' ? 'text-[#9159FF]' : 'text-gray-500 hover:text-gray-700'
+                depositMode === 'exit'
+                  ? 'text-[#9159FF]'
+                  : isDarkMode
+                    ? 'text-muted-foreground hover:text-foreground'
+                    : 'text-gray-500 hover:text-gray-700'
               }`}
               disabled={isNewUser}
             >
@@ -298,12 +316,24 @@ export default function Deposit({
           </div>
 
           {isNewUser && depositMode === 'exit' && (
-            <div className="mb-6 p-4 bg-purple-50 border border-purple-200 rounded-lg">
+            <div
+              className={`mb-5 p-4 border rounded-lg ${
+                isDarkMode
+                  ? 'bg-purple-900/30 border-purple-700/50'
+                  : 'bg-purple-50 border-purple-200'
+              }`}
+            >
               <div className="flex items-center space-x-3">
                 <Info className="w-5 h-5 text-[#9159FF] flex-shrink-0" />
                 <div>
-                  <h4 className="text-sm font-medium text-purple-900">No Balance to Withdraw</h4>
-                  <p className="text-sm text-purple-700">
+                  <h4
+                    className={`text-sm font-medium ${
+                      isDarkMode ? 'text-purple-200' : 'text-purple-900'
+                    }`}
+                  >
+                    No Balance to Withdraw
+                  </h4>
+                  <p className={`text-sm ${isDarkMode ? 'text-purple-300' : 'text-purple-700'}`}>
                     You need to deposit {currentProjectData.asset} first before you can withdraw.
                   </p>
                 </div>
@@ -324,10 +354,14 @@ export default function Deposit({
           )} */}
 
           {/* Available Balance Section with Integrated Top-up */}
-          <div className="bg-gray-50 rounded-xl p-4 mb-6">
+          <div className={`rounded-xl p-4 mb-5 ${isDarkMode ? 'bg-muted' : 'bg-gray-50'}`}>
             <div className="flex items-center justify-between">
               <div className="flex-1">
-                <p className="text-sm text-gray-500 mb-1">
+                <p
+                  className={`text-sm mb-1 ${
+                    isDarkMode ? 'text-muted-foreground' : 'text-gray-500'
+                  }`}
+                >
                   {depositMode === 'enter'
                     ? 'Available in Wallet'
                     : `${currentProjectData.asset} in ${currentProjectData.name} Autopilot`}
@@ -344,7 +378,11 @@ export default function Deposit({
                     {(balancesLoading || isRefreshingBalances) && (
                       <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
                     )}
-                    <span className="text-xl font-semibold text-gray-900">
+                    <span
+                      className={`text-xl font-semibold ${
+                        isDarkMode ? 'text-foreground' : 'text-gray-900'
+                      }`}
+                    >
                       {formatBalance(currentBalance, currentProjectData.asset)}
                     </span>
                   </div>
@@ -366,7 +404,11 @@ export default function Deposit({
           {/* Amount Input */}
           <div className="space-y-4 mb-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                className={`block text-sm font-medium mb-2 ${
+                  isDarkMode ? 'text-foreground' : 'text-gray-700'
+                }`}
+              >
                 Amount to {depositMode === 'enter' ? 'Deposit' : 'Withdraw'}
               </label>
               <div className="relative">
@@ -384,7 +426,11 @@ export default function Deposit({
                     isRefreshingBalances ||
                     (isConnected && !isCorrectNetwork)
                   }
-                  className="w-full p-4 pr-20 border border-gray-200 rounded-lg text-xl font-medium focus:ring-1 focus:ring-purple-300 focus:border-purple-400 transition-colors disabled:bg-gray-50 disabled:cursor-not-allowed"
+                  className={`w-full p-4 pr-20 border rounded-lg text-xl font-medium focus:ring-1 focus:ring-purple-300 focus:border-purple-400 transition-colors ${
+                    isDarkMode
+                      ? 'bg-background border-border text-foreground placeholder:text-muted-foreground'
+                      : 'bg-white border-gray-200 text-gray-900 placeholder:text-gray-500'
+                  }`}
                 />
                 <div className="absolute right-4 top-1/2 transform -translate-y-1/2 flex items-center space-x-2">
                   <Image
@@ -394,7 +440,11 @@ export default function Deposit({
                     alt={currentProjectData.asset}
                     className="w-5 h-5"
                   />
-                  <span className="text-sm font-medium text-gray-500">
+                  <span
+                    className={`text-sm font-medium ${
+                      isDarkMode ? 'text-muted-foreground' : 'text-gray-500'
+                    }`}
+                  >
                     {currentProjectData.asset}
                   </span>
                 </div>
@@ -422,7 +472,11 @@ export default function Deposit({
                     isRefreshingBalances ||
                     (isConnected && !isCorrectNetwork)
                   }
-                  className="py-2.5 px-3 bg-gray-100 hover:bg-purple-100 hover:text-purple-700 disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed rounded-lg text-sm font-medium text-gray-700 transition-colors"
+                  className={`py-2.5 px-3 rounded-lg text-sm font-medium transition-colors text-center ${
+                    isDarkMode
+                      ? 'bg-muted hover:bg-purple-900/20 hover:text-purple-400 text-muted-foreground'
+                      : 'bg-gray-100 hover:bg-purple-100 hover:text-purple-700 text-gray-700'
+                  }`}
                 >
                   {percentage}%
                 </button>
@@ -658,8 +712,18 @@ export default function Deposit({
         {/* Right: Transaction Preview + Info Cards */}
         <div className="w-full lg:w-[40%] space-y-6">
           {/* Transaction Preview */}
-          <div className="bg-white rounded-xl p-6 border border-gray-100">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Transaction Preview</h3>
+          <div
+            className={`rounded-xl p-6 border ${
+              isDarkMode ? 'bg-card border-border' : 'bg-white border-gray-100'
+            }`}
+          >
+            <h3
+              className={`text-lg font-semibold mb-4 ${
+                isDarkMode ? 'text-foreground' : 'text-gray-900'
+              }`}
+            >
+              Transaction Preview
+            </h3>
 
             {/* Network Warning */}
             {isConnected && !isCorrectNetwork && (
@@ -676,22 +740,26 @@ export default function Deposit({
 
             <div className="space-y-3 text-sm">
               <div className="flex justify-between">
-                <span className="text-gray-600">
+                <span className={`${isDarkMode ? 'text-muted-foreground' : 'text-gray-600'}`}>
                   {depositMode === 'enter' ? 'Deposit Amount' : 'Withdrawal Amount'}
                 </span>
-                <span className="font-medium">
+                <span className={`font-medium ${isDarkMode ? 'text-foreground' : 'text-gray-900'}`}>
                   {depositAmount || '0.00'} {currentProjectData.asset}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Current APY</span>
+                <span className={`${isDarkMode ? 'text-muted-foreground' : 'text-gray-600'}`}>
+                  30d APY
+                </span>
                 <span className="font-medium text-green-600">
                   {currentProjectData.apy7d.toFixed(2)}%
                 </span>
               </div>
               {depositMode === 'enter' && insuranceEnabled && (
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Insurance Cost</span>
+                  <span className={`${isDarkMode ? 'text-muted-foreground' : 'text-gray-600'}`}>
+                    Insurance Cost
+                  </span>
                   <span className="font-medium text-purple-600">
                     {(parseFloat(depositAmount || '0') * 0.0024).toLocaleString('en-US', {
                       minimumFractionDigits: currentProjectData.asset === 'USDC' ? 2 : 6,
@@ -702,16 +770,24 @@ export default function Deposit({
                 </div>
               )}
               <div className="flex justify-between">
-                <span className="text-gray-600">
+                <span className={`${isDarkMode ? 'text-muted-foreground' : 'text-gray-600'}`}>
                   {depositMode === 'enter' ? 'Entry Fee' : 'Exit Fee'}
                 </span>
-                <span className="font-medium">$0.00</span>
+                <span className={`font-medium ${isDarkMode ? 'text-foreground' : 'text-gray-900'}`}>
+                  $0.00
+                </span>
               </div>
 
               {depositMode === 'enter' ? (
-                <div className="border-t border-gray-100 pt-3 space-y-3">
+                <div
+                  className={`border-t pt-3 space-y-3 ${
+                    isDarkMode ? 'border-border' : 'border-gray-100'
+                  }`}
+                >
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Est. Yearly Earnings</span>
+                    <span className={`${isDarkMode ? 'text-muted-foreground' : 'text-gray-600'}`}>
+                      Est. Yearly Earnings
+                    </span>
                     <span className="font-medium text-green-600 tabular-nums">
                       +{' '}
                       {formatBalance(
@@ -744,10 +820,20 @@ export default function Deposit({
                   </div> */}
                 </div>
               ) : (
-                <div className="border-t border-gray-100 pt-3 space-y-3">
+                <div
+                  className={`border-t pt-3 space-y-3 ${
+                    isDarkMode ? 'border-border' : 'border-gray-100'
+                  }`}
+                >
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Remaining Balance</span>
-                    <span className="font-medium text-gray-900 tabular-nums">
+                    <span className={`${isDarkMode ? 'text-muted-foreground' : 'text-gray-600'}`}>
+                      Remaining Balance
+                    </span>
+                    <span
+                      className={`font-medium tabular-nums ${
+                        isDarkMode ? 'text-foreground' : 'text-gray-900'
+                      }`}
+                    >
                       {Math.max(
                         0,
                         currentBalance - parseFloat(depositAmount || '0')
@@ -759,7 +845,9 @@ export default function Deposit({
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Forfeited Yearly Earnings</span>
+                    <span className={`${isDarkMode ? 'text-muted-foreground' : 'text-gray-600'}`}>
+                      Forfeited Yearly Earnings
+                    </span>
                     <span className="font-medium text-amber-600 tabular-nums">
                       -
                       {(

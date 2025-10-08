@@ -227,7 +227,9 @@ export default function Dashboard({ currentProjectData }: DashboardProps) {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Header */}
-        <header className="bg-white border-b border-gray-100 sticky top-0 z-40">
+        <header
+          className={`sticky top-0 z-40 ${isDarkMode ? 'bg-card border-b border-border' : 'bg-white border-b border-gray-100'}`}
+        >
           <div className="max-w-7xl ml-5 lg:ml-auto mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4 ml-5 md:ml-0">
@@ -245,7 +247,9 @@ export default function Dashboard({ currentProjectData }: DashboardProps) {
                     }}
                   />
                   <div>
-                    <h1 className="font-semibold text-gray-900">
+                    <h1
+                      className={`font-semibold ${isDarkMode ? 'text-foreground' : 'text-gray-900'}`}
+                    >
                       {currentProjectData.asset} Autopilot
                     </h1>
                     <div className="flex items-center space-x-2">
@@ -256,7 +260,11 @@ export default function Dashboard({ currentProjectData }: DashboardProps) {
                         alt={chainName}
                         className="w-4 h-4"
                       />
-                      <span className="text-sm text-gray-500">{chainName}</span>
+                      <span
+                        className={`text-sm ${isDarkMode ? 'text-muted-foreground' : 'text-gray-500'}`}
+                      >
+                        {chainName}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -274,10 +282,15 @@ export default function Dashboard({ currentProjectData }: DashboardProps) {
         </header>
 
         {/* Navigation Tabs */}
-        <NavigationTabs activeTab={activeTab} setActiveTab={setActiveTab} tabConfig={tabConfig} />
+        <NavigationTabs
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          tabConfig={tabConfig}
+          isDarkMode={isDarkMode}
+        />
 
         {/* Main Content with Boxed Layout */}
-        <main className="flex-1 bg-gray-50">
+        <main className={`flex-1 ${isDarkMode ? 'bg-background' : 'bg-gray-50'}`}>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             {activeTab === 'overview' && (
               <Overview
@@ -286,6 +299,7 @@ export default function Dashboard({ currentProjectData }: DashboardProps) {
                 metrics={metrics}
                 setDepositTab={() => setActiveTab('deposit')}
                 isMobile={isMobile}
+                isDarkMode={isDarkMode}
               />
             )}
 
@@ -320,6 +334,7 @@ export default function Dashboard({ currentProjectData }: DashboardProps) {
                 isNewUser={isNewUser}
                 isOldUser={isOldUser}
                 isMobile={isMobile}
+                isDarkMode={isDarkMode}
               />
             )}
 
@@ -349,6 +364,7 @@ export default function Dashboard({ currentProjectData }: DashboardProps) {
                 currentProjectData={enrichedProjectData}
                 handleNavigateToDeposit={handleNavigateToDeposit}
                 isNewUser={isNewUser}
+                isDarkMode={isDarkMode}
               />
             )}
           </div>

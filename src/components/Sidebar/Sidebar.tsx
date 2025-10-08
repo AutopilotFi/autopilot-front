@@ -144,7 +144,7 @@ export default function Sidebar() {
   return (
     <div
       className={clsx(
-        'hidden md:flex fixed inset-y-0 left-0 z-50 w-80 bg-white border-r border-gray-100 flex-col min-h-screen',
+        'hidden md:flex fixed inset-y-0 left-0 z-50 w-80 bg-white border-r flex-col min-h-screen',
         isDarkMode ? "border-gray-700'" : 'bg-white border-gray-100'
       )}
       style={isDarkMode ? { backgroundColor: '#1f2937' } : {}}

@@ -7,6 +7,7 @@ import Image from 'next/image';
 import useCurrentAllocations from '@/hooks/useCurrentAllocations';
 import { morphoTempDisabled } from '@/consts/constants';
 import { useRouter } from 'next/navigation';
+import ImageWithOverlay from '@/components/UI/ImageWithOverlay';
 
 export default function DesktopPosition({
   position,
@@ -24,8 +25,10 @@ export default function DesktopPosition({
   const isDisabled = position.protocol === 'morpho' && morphoTempDisabled.includes(position.asset);
   return (
     <tr
-      className={`border-b border-gray-50 hover:bg-gray-50 transition-colors ${
+      className={`border-b transition-colors ${
         position.asset === 'USDC' ? 'cursor-pointer' : 'cursor-default'
+      } ${
+        isDarkMode ? 'border-border hover:bg-purple-900/20' : 'border-gray-50 hover:bg-purple-50'
       }`}
       onClick={
         position.asset === 'USDC'
@@ -35,22 +38,18 @@ export default function DesktopPosition({
     >
       <td className="py-4 px-4">
         <div className="flex items-center space-x-3">
-          <div className="relative">
-            <Image
-              width={28}
-              height={28}
-              src={getAssetIcon(position.asset)}
-              alt={position.asset}
-              className="w-8 h-8 rounded-full object-cover"
-            />
-            <Image
-              width={10.5}
-              height={10.5}
-              src={getProtocolIcon(position.protocol)}
-              alt={position.protocol}
-              className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full object-cover bg-white border border-gray-200"
-            />
-          </div>
+          <ImageWithOverlay
+            mainImg={{
+              size: 28,
+              src: getAssetIcon(position.asset),
+              alt: position.asset,
+            }}
+            overlayImg={{
+              size: 10.5,
+              src: getProtocolIcon(position.protocol),
+              alt: position.protocol,
+            }}
+          />
           <div className="min-w-0">
             <span
               className={`text-sm font-medium ${isDarkMode ? 'text-foreground' : 'text-gray-900'}`}
@@ -76,13 +75,17 @@ export default function DesktopPosition({
         <div className="text-sm font-medium text-green-600">
           {formatBalance(position.balance, position.asset, position.showDecimals)}
         </div>
-        <div className="text-xs text-gray-500">{formatBalance(position.usdValue, 'USD', 2)}</div>
+        <div className={`text-xs ${isDarkMode ? 'text-muted-foreground' : 'text-gray-500'}`}>
+          {formatBalance(position.usdValue, 'USD', 2)}
+        </div>
       </td>
       <td className="py-4 px-4 text-right">
         <div className="text-sm font-medium text-green-600">
           {formatBalance(position.earnings, position.asset)}
         </div>
-        <div className="text-xs text-gray-500">{formatBalance(position.earningsUsd, 'USD', 2)}</div>
+        <div className={`text-xs ${isDarkMode ? 'text-muted-foreground' : 'text-gray-500'}`}>
+          {formatBalance(position.earningsUsd, 'USD', 2)}
+        </div>
       </td>
       <td className="py-4 px-4 text-center">
         {isDisabled ? (

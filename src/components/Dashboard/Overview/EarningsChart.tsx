@@ -11,6 +11,7 @@ interface EarningsChartProps {
   onTimeframeChange: (timeframe: '1m' | '7d' | 'all') => void;
   setCurDate: (date: string) => void;
   setCurContent: (content: string) => void;
+  isDarkMode?: boolean;
 }
 
 interface ChartDataPoint {
@@ -40,6 +41,7 @@ export default function EarningsChart({
   onTimeframeChange, // eslint-disable-line @typescript-eslint/no-unused-vars
   setCurDate,
   setCurContent,
+  isDarkMode,
 }: EarningsChartProps) {
   const { isConnected } = useWallet();
   const chartData = useMemo<ChartDataPoint[]>(() => {
@@ -245,13 +247,15 @@ export default function EarningsChart({
   // Handle wallet not connected state
   if (!isConnected) {
     return (
-      <div className="h-72 bg-white rounded-lg flex items-center justify-center relative">
+      <div
+        className={`h-72 rounded-lg flex items-center justify-center relative ${isDarkMode ? 'bg-card' : 'bg-white'}`}
+      >
         {/* Show mock chart in the background with blur */}
         <MockChart />
 
         {/* Simple text overlay */}
         <div className="relative z-10 text-center mb-20">
-          <div className="text-gray-700 text-sm font-medium">
+          <div className={`${isDarkMode ? 'text-white' : 'text-gray-700 '} text-sm font-medium`}>
             Connect wallet to see Earnings Chart
           </div>
         </div>
@@ -262,13 +266,15 @@ export default function EarningsChart({
   // Handle insufficient earnings events (1-4 events)
   if (earningsEvents.length < 5) {
     return (
-      <div className="h-72 bg-white rounded-lg flex items-center justify-center relative">
+      <div
+        className={`h-72 rounded-lg flex items-center justify-center relative ${isDarkMode ? 'bg-card' : 'bg-white'}`}
+      >
         {/* Show mock chart in the background with blur */}
         <MockChart />
 
         {/* Simple text overlay */}
         <div className="relative z-10 text-center mb-20">
-          <div className="text-gray-700 text-sm font-medium">
+          <div className={`${isDarkMode ? 'text-white' : 'text-gray-700 '} text-sm font-medium`}>
             Chart will appear once 5 yield earning events are registered.
           </div>
         </div>
