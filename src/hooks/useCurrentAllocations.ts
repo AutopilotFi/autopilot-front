@@ -6,6 +6,11 @@ export default function useCurrentAllocations(vaultAddress: string) {
   const { iporVaultData } = useIPORVaults();
 
   const currentAllocations = useMemo(() => {
+    // Add null/undefined check for vaultAddress
+    if (!vaultAddress) {
+      return [];
+    }
+
     const currentVault = iporVaultData.find(
       vault => vault.vaultAddress.toLowerCase() === vaultAddress.toLowerCase()
     );

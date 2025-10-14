@@ -279,8 +279,8 @@ export interface VaultHistoryData {
 }
 
 export interface MarketBalance {
-  protocol: string;
-  marketId: string;
+  protocol: string | null;
+  marketId: string | null;
   balanceType: string;
   balance: string;
   balanceUsd: string;
