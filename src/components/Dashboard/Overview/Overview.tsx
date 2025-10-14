@@ -8,7 +8,7 @@ import Image from 'next/image';
 import EarningsChart from './EarningsChart';
 import { formatBalance, formatFrequency } from '@/helpers/utils';
 import { Metrics } from '@/hooks/useHarvestMetrics';
-import EmptyEarnings from '../Earnings/EmptyEarnings';
+import EmptyStateComponent from '@/components/UI/EmptyStateComponent';
 
 export default function Overview({
   currentProjectData,
@@ -166,7 +166,7 @@ export default function Overview({
                 </div>
               ))
             ) : (
-              <EmptyEarnings
+              <EmptyStateComponent
                 balance={Number(userStatsData.totalBalance)}
                 handleAction={setDepositTab}
                 isDarkMode={isDarkMode}

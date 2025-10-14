@@ -6,7 +6,7 @@ import StandardCTAButton from '@/components/UI/StandardCTAButton';
 import { useState } from 'react';
 import { formatBalance } from '@/helpers/utils';
 import Pagination from '@/components/UI/Pagination';
-import EmptyEarnings from './EmptyEarnings';
+import EmptyStateComponent from '@/components/UI/EmptyStateComponent';
 import DesktopEarnings from '@/components/EarningsPage/DesktopEarnings';
 import MobileEarnings from '@/components/EarningsPage/MobileEarnings';
 
@@ -176,7 +176,7 @@ export default function EarningsTab({
               )}
             </>
           ) : (
-            <EmptyEarnings
+            <EmptyStateComponent
               balance={Number(userStatsData.totalBalance)}
               handleAction={handleNavigateToDeposit}
               isDarkMode={isDarkMode}

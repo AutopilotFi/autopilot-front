@@ -6,7 +6,7 @@ import Pagination from '../UI/Pagination';
 import DesktopEarnings from './DesktopEarnings';
 import MobileEarnings from './MobileEarnings';
 import { Account } from 'viem';
-import EmptyEarnings from '../Dashboard/Earnings/EmptyEarnings';
+import EmptyStateComponent from '../UI/EmptyStateComponent';
 import { useRouter } from 'next/navigation';
 
 export default function EarningsPage({
@@ -126,7 +126,7 @@ export default function EarningsPage({
                   <p className="text-gray-600">Loading earnings data...</p>
                 </div>
               ) : (
-                <EmptyEarnings
+                <EmptyStateComponent
                   balance={account ? userTotalBalance : 0}
                   handleAction={() => router.push(`/base/morpho/USDC#deposit`)}
                   isDarkMode={isDarkMode}
