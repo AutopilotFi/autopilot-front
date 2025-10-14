@@ -45,7 +45,11 @@ export default function Allocations({
 
   // Function to get vault name from marketId using allocPointData
   const getVaultNameFromMarketId = useCallback(
-    (marketId: string, allocPointData: { hVaultAddress?: string; hVaultId: string }[]) => {
+    (marketId: string | null, allocPointData: { hVaultAddress?: string; hVaultId: string }[]) => {
+      if (!marketId) {
+        return 'Unknown Vault';
+      }
+
       const allocPoint = allocPointData?.find(
         ap => ap.hVaultAddress?.toLowerCase() === marketId.toLowerCase()
       );
@@ -105,7 +109,7 @@ export default function Allocations({
 
           const allocations = history.marketBalances
             .filter(
-              (marketBalance: MarketBalance) => marketBalance.protocol.toLowerCase() !== 'erc20'
+              (marketBalance: MarketBalance) => marketBalance.protocol?.toLowerCase() !== 'erc20'
             )
             .map((marketBalance: MarketBalance) => {
               const balance = parseFloat(marketBalance.balance) || 0;
@@ -182,7 +186,7 @@ export default function Allocations({
 
         history.marketBalances
           .filter(
-            (marketBalance: MarketBalance) => marketBalance.protocol.toLowerCase() !== 'erc20'
+            (marketBalance: MarketBalance) => marketBalance.protocol?.toLowerCase() !== 'erc20'
           )
           .forEach((marketBalance: MarketBalance) => {
             const balance = parseFloat(marketBalance.balance) || 0;

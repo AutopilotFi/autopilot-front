@@ -6,8 +6,8 @@ export interface AllocationData {
   percentage: number;
   amount: number;
   color: string;
-  protocol: string;
-  marketId: string;
+  protocol: string | null;
+  marketId: string | null;
   apy: number;
 }
 
@@ -49,9 +49,13 @@ const convertHVaultIdToName = (hVaultId: string): string => {
 
 // Function to get vault name and APY from marketId using allocPointData
 const getVaultDataFromMarketId = (
-  marketId: string,
+  marketId: string | null,
   allocPointData: { hVaultAddress?: string; hVaultId: string; apy?: string }[]
 ): { name: string; apy: number } => {
+  if (!marketId) {
+    return { name: 'Unknown Vault', apy: 0 };
+  }
+  
   const allocPoint = allocPointData?.find(
     ap => ap.hVaultAddress?.toLowerCase() === marketId.toLowerCase()
   );
@@ -93,7 +97,7 @@ export const getCurrentAllocations = (
 
   // Filter out ERC20 tokens - only show actual vault protocols
   const vaultBalances = latestHistory.marketBalances.filter(
-    (marketBalance: MarketBalance) => marketBalance.protocol.toLowerCase() !== 'erc20'
+    (marketBalance: MarketBalance) => marketBalance.protocol?.toLowerCase() !== 'erc20'
   );
 
   const allocations = vaultBalances
