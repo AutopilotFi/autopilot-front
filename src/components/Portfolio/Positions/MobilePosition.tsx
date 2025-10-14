@@ -124,12 +124,12 @@ export default function MobilePosition({
           <div
             className={`text-xs mb-0.5 ${isDarkMode ? 'text-muted-foreground' : 'text-gray-500'}`}
           >
-            USD Value
+            Value
           </div>
           <div
             className={`text-sm font-medium ${isDarkMode ? 'text-foreground' : 'text-gray-900'}`}
           >
-            {formatBalance(position.usdValue, '$', 2)}
+            {formatBalance(position.usdValue, 'USD', 2)}
           </div>
         </div>
         <div className="col-span-2 pt-1">
@@ -142,7 +142,7 @@ export default function MobilePosition({
             {formatBalance(position.earnings, position.asset)}
           </div>
           <div className={`text-xs ${isDarkMode ? 'text-muted-foreground' : 'text-gray-500'}`}>
-            {formatBalance(position.earningsUsd, '$', 2)}
+            {formatBalance(position.earningsUsd, 'USD', 2)}
           </div>
         </div>
       </div>

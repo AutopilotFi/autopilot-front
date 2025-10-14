@@ -10,8 +10,9 @@ import MobileEarnings from '../EarningsPage/MobileEarnings';
 import { useVaultMetrics } from '@/providers/VaultMetricsProvider';
 import StatsGrid from '../StatsGrid';
 import { generatePortfolioGridStructure } from '../StatsGrid/gridStructure';
-import EmptyEarnings from '../Dashboard/Earnings/EmptyEarnings';
+import EmptyStateComponent from '../UI/EmptyStateComponent';
 import { getChainNameFromId } from '@/helpers/utils';
+import { useRouter } from 'next/navigation';
 
 export default function Portfolio() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -21,6 +22,7 @@ export default function Portfolio() {
   const [realLatestEarningsData, setRealLatestEarningsData] = useState<Earnings>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
   const { user, isMobile, availableAutopilots, isDarkMode } = useContext(GlobalContext);
   // const { account } = useWallet();
@@ -270,12 +272,21 @@ export default function Portfolio() {
                         />
                       )}
                       {/* Mobile Cards */}
-                      {isMobile === true && (
-                        <MobilePositions
-                          sortedPortfolioData={sortedPortfolioData}
-                          isDarkMode={isDarkMode}
-                        />
-                      )}
+                      {isMobile === true ? (
+                        portfolio.some(vault => vault.balance || vault.earnings) ? (
+                          <MobilePositions
+                            sortedPortfolioData={sortedPortfolioData}
+                            isDarkMode={isDarkMode}
+                          />
+                        ) : (
+                          <EmptyStateComponent
+                            customTitle="No Positions"
+                            customSubtitle="Make your first deposit and start earning yield!"
+                            isDarkMode={isDarkMode}
+                            handleAction={() => router.push(`/base/morpho/USDC#deposit`)}
+                          />
+                        )
+                      ) : null}
                     </>
                   )}
                 </div>
@@ -336,7 +347,11 @@ export default function Portfolio() {
                   </>
                 ) : (
                   <div className={`rounded-xl p-6 ${isDarkMode ? 'bg-card' : 'bg-white'}`}>
-                    <EmptyEarnings balance={totalValue} isDarkMode={isDarkMode} />
+                    <EmptyStateComponent
+                      balance={totalValue}
+                      isDarkMode={isDarkMode}
+                      handleAction={() => router.push(`/base/morpho/USDC#deposit`)}
+                    />
                   </div>
                 )}
               </div>

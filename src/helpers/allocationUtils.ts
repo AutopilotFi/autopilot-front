@@ -55,7 +55,7 @@ const getVaultDataFromMarketId = (
   if (!marketId) {
     return { name: 'Unknown Vault', apy: 0 };
   }
-  
+
   const allocPoint = allocPointData?.find(
     ap => ap.hVaultAddress?.toLowerCase() === marketId.toLowerCase()
   );
