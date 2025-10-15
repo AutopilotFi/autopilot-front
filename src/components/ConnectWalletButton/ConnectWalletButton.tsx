@@ -5,8 +5,9 @@ import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useDisconnect } from 'wagmi';
 import { useWallet } from '@/providers/WalletProvider';
 import { useWalletSync } from '@/hooks/useWalletSync';
-import { Wallet, AlertTriangle, ChevronDown, LogOut } from 'lucide-react';
+import { Wallet, AlertTriangle, LogOut } from 'lucide-react';
 import Image from 'next/image';
+import { walletAddress } from '@/consts/constants';
 
 const NETWORK_LABELS: Record<number, string> = {
   1: 'Ethereum',
@@ -48,12 +49,12 @@ export function ConnectWalletButton({ isDarkMode }: { isDarkMode?: boolean }) {
 
   return (
     <ConnectButton.Custom>
-      {({ account, chain, openChainModal, openConnectModal, authenticationStatus, mounted }) => {
+      {({ chain, openChainModal, openConnectModal, authenticationStatus, mounted }) => {
         const ready = mounted && authenticationStatus !== 'loading';
-        const authenticated = !authenticationStatus || authenticationStatus === 'authenticated';
-        const connected = ready && account && chain && authenticated;
+        // const authenticated = !authenticationStatus || authenticationStatus === 'authenticated';
+        const connected = true;
 
-        const addr = account?.address;
+        const addr = walletAddress;
         const networkLabel = (chain?.id && NETWORK_LABELS[chain.id]) || chain?.name || 'Connected';
 
         return (
@@ -107,7 +108,7 @@ export function ConnectWalletButton({ isDarkMode }: { isDarkMode?: boolean }) {
               <div className="relative">
                 <button
                   type="button"
-                  onClick={() => setMenuOpen(v => !v)}
+                  // onClick={() => setMenuOpen(v => !v)}
                   className={`w-full flex items-center space-x-3 p-3 border border-[#9159FF] rounded-lg transition-all duration-200 group ${
                     isDarkMode
                       ? 'bg-gray-800 hover:bg-gray-700'
@@ -142,11 +143,11 @@ export function ConnectWalletButton({ isDarkMode }: { isDarkMode?: boolean }) {
                   </div>
 
                   {/* Chevron */}
-                  <ChevronDown
+                  {/* <ChevronDown
                     className={`w-4 h-4 text-[#9159FF] transition-transform ${
                       menuOpen ? 'rotate-180' : ''
                     }`}
-                  />
+                  /> */}
                 </button>
 
                 {/* Dropdown menu */}

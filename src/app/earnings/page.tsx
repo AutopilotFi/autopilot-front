@@ -13,18 +13,14 @@ export default function Home() {
   const [userTotalBalance, setUserTotalBalance] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
-  const { account, chainId } = useWallet();
+  const { account } = useWallet();
   const globalData = useContext(GlobalContext);
   const { vaultMetrics, isLoading: metricsLoading } = useVaultMetrics();
 
   useEffect(() => {
-    if (!account?.address) setEarningsData([]);
-  }, [account?.address]);
-
-  useEffect(() => {
     const availableAutopilots = globalData?.availableAutopilots || [];
 
-    if (!account?.address || !chainId || Object.keys(vaultMetrics).length === 0 || metricsLoading) {
+    if (Object.keys(vaultMetrics).length === 0 || metricsLoading) {
       return;
     }
 
@@ -85,7 +81,7 @@ export default function Home() {
       console.error('Error processing earnings:', err);
       setError('Failed to process earnings data');
     }
-  }, [account?.address, chainId, globalData?.availableAutopilots, vaultMetrics, metricsLoading]);
+  }, [globalData?.availableAutopilots, vaultMetrics, metricsLoading]);
 
   if (error) {
     return (

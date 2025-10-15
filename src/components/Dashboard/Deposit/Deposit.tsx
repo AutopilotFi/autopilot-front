@@ -1,13 +1,12 @@
 'use client';
 import { ProjectData } from '@/types/globalAppTypes';
-import { Plus, Minus, Info, Loader2, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { Plus, Minus, Info, Loader2, CheckCircle2 } from 'lucide-react';
 import { Dispatch, SetStateAction, useState } from 'react';
 import { useIporActions } from '@/hooks/useIporActions';
 import { useBalances } from '@/hooks/useBalances';
 import { useWallet } from '@/providers/WalletProvider';
 import { useToastContext } from '@/providers/ToastProvider';
 import { Address, parseUnits } from 'viem';
-import { ConnectWalletButton } from '@/components/ConnectWalletButton';
 import { convertAssetsToVault } from '@/lib/contracts/iporVault';
 import { formatBalance, getChainNameFromId } from '@/helpers/utils';
 import Image from 'next/image';
@@ -551,7 +550,7 @@ export default function Deposit({
           )} */}
 
           {/* Network Switching Indicator */}
-          {isConnected && !isCorrectNetwork && (
+          {/* {isConnected && !isCorrectNetwork && (
             <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg flex items-center space-x-3">
               <AlertTriangle className="w-5 h-5 text-yellow-500 flex-shrink-0" />
               <div>
@@ -563,14 +562,10 @@ export default function Deposit({
                 </p>
               </div>
             </div>
-          )}
+          )} */}
 
           {/* Supply Button with Dynamic Text */}
-          {!isConnected ? (
-            <div className="w-full">
-              <ConnectWalletButton />
-            </div>
-          ) : (
+          {
             <button
               onClick={handleMainAction}
               disabled={
@@ -590,29 +585,29 @@ export default function Deposit({
               {isProcessing && <Loader2 className="w-5 h-5 animate-spin" />}
               <span>
                 {(() => {
-                  if (isProcessing) {
-                    return depositMode === 'enter'
-                      ? 'Processing Deposit...'
-                      : 'Processing Withdrawal...';
-                  }
+                  // if (isProcessing) {
+                  //   return depositMode === 'enter'
+                  //     ? 'Processing Deposit...'
+                  //     : 'Processing Withdrawal...';
+                  // }
 
-                  if (isNewUser && depositMode === 'enter') {
-                    return 'Accept Terms of Use';
-                  }
+                  // if (isNewUser && depositMode === 'enter') {
+                  //   return 'Accept Terms of Use';
+                  // }
 
-                  if (!isCorrectNetwork) {
-                    return `Change to ${targetChainName} Network`;
-                  }
+                  // if (!isCorrectNetwork) {
+                  //   return `Change to ${targetChainName} Network`;
+                  // }
 
                   const amount = parseFloat(depositAmount);
                   const hasAmount = amount > 0;
 
                   // Check for insufficient balance
-                  if (hasAmount && amount > currentBalance) {
-                    return depositMode === 'enter'
-                      ? 'Insufficient Wallet Balance'
-                      : 'Insufficient Vault Balance';
-                  }
+                  // if (hasAmount && amount > currentBalance) {
+                  //   return depositMode === 'enter'
+                  //     ? 'Insufficient Wallet Balance'
+                  //     : 'Insufficient Vault Balance';
+                  // }
 
                   if (depositMode === 'enter') {
                     if (insuranceEnabled && hasAmount) {
@@ -632,7 +627,7 @@ export default function Deposit({
                 })()}
               </span>
             </button>
-          )}
+          }
           {/* Attribution Footer */}
           <div className="flex items-center justify-between pt-3 pb-5">
             {/* Left: Audited */}
@@ -726,7 +721,7 @@ export default function Deposit({
             </h3>
 
             {/* Network Warning */}
-            {isConnected && !isCorrectNetwork && (
+            {/* {isConnected && !isCorrectNetwork && (
               <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
                 <div className="flex items-center space-x-2 text-yellow-800">
                   <AlertTriangle className="w-4 h-4" />
@@ -736,7 +731,7 @@ export default function Deposit({
                   Switch to {targetChainName} to interact with this vault
                 </p>
               </div>
-            )}
+            )} */}
 
             <div className="space-y-3 text-sm">
               <div className="flex justify-between">

@@ -70,3 +70,5 @@ export const morphoVaultMap = {
 };
 
 export const morphoTempDisabled: AutopilotAsset[] = ['WETH', 'cbBTC', 'ETH'];
+
+export const walletAddress = '0x947D4e4B5f83333909370720f0E2b8a304a28E85';

@@ -1,10 +1,10 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { useWallet } from '@/providers/WalletProvider';
 import { GlobalContext } from '@/providers/GlobalDataProvider';
 import { getHarvestMetrics } from '@/hooks/useHarvestMetrics';
 import { Metrics } from '@/hooks/useHarvestMetrics';
+import { walletAddress } from '@/consts/constants';
 
 interface VaultMetrics {
   [vaultAddress: string]: {
@@ -41,7 +41,6 @@ export const VaultMetricsProvider: React.FC<VaultMetricsProviderProps> = ({ chil
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const { account, isConnected } = useWallet();
   const globalData = useContext(GlobalContext);
   const availableAutopilots = globalData?.availableAutopilots || [];
 
@@ -69,7 +68,7 @@ export const VaultMetricsProvider: React.FC<VaultMetricsProviderProps> = ({ chil
           const result = await getHarvestMetrics(
             vaultData.vaultAddress as `0x${string}`,
             Number(vaultData.chain) as 1 | 137 | 324 | 8453 | 42161,
-            account?.address ?? '0x0000000000000000000000000000000000000000',
+            walletAddress,
             vaultData.decimals || '6',
             vaultData.vaultDecimals || '18'
           );
@@ -118,11 +117,11 @@ export const VaultMetricsProvider: React.FC<VaultMetricsProviderProps> = ({ chil
   useEffect(() => {
     fetchAllVaultMetrics();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [account?.address, availableAutopilots, isConnected]);
+  }, [availableAutopilots]);
 
   // Auto-refresh metrics every 5 minutes
   useEffect(() => {
-    if (!account?.address || availableAutopilots.length === 0) {
+    if (availableAutopilots.length === 0) {
       return;
     }
 
@@ -135,7 +134,7 @@ export const VaultMetricsProvider: React.FC<VaultMetricsProviderProps> = ({ chil
 
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [account?.address, availableAutopilots]);
+  }, [availableAutopilots]);
 
   const value: VaultMetricsContextType = {
     vaultMetrics,

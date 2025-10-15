@@ -71,9 +71,9 @@ export default function Rebalance({
 
                     {/* Main Status Text */}
                     <span className="flex text-sm font-medium text-gray-700">
-                      Live allocation{' '}
+                      Live allocation
                       <span className="hidden md:block">
-                        to the best {currentProjectDataName} yield sources
+                        &nbsp;to the best {currentProjectDataName} yield sources
                       </span>
                     </span>
                   </div>

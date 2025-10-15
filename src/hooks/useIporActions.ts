@@ -5,36 +5,33 @@ import { Address, parseUnits, createWalletClient, custom } from 'viem';
 import { useWallet } from '@/providers/WalletProvider';
 import { iporVaultAbi } from '@/lib/contracts/iporVault';
 import { erc20Abi } from '@/lib/contracts/erc20';
+import { walletAddress } from '@/consts/constants';
 
 type Hash = `0x${string}`;
 
 export function useIporActions() {
-  const { walletClient, publicClient, account } = useWallet();
+  const { walletClient, publicClient } = useWallet();
 
   const ensureClients = useCallback(() => {
-    if (!publicClient || !account?.address) {
+    if (!publicClient) {
       throw new Error('Connect your wallet first.');
     }
 
     if (!walletClient) {
       console.log('walletClient not available, will create on-demand');
     }
-  }, [walletClient, publicClient, account?.address]);
+  }, [walletClient, publicClient]);
 
   const getWalletClient = useCallback(() => {
-    if (walletClient) {
-      return walletClient;
-    }
-
-    if (!window?.ethereum || !account?.address) {
+    if (!window?.ethereum) {
       throw new Error('Wallet not available');
     }
 
     return createWalletClient({
-      account: account.address,
+      account: walletAddress,
       transport: custom(window.ethereum),
     });
-  }, [walletClient, account?.address]);
+  }, []);
 
   const approveIfNeeded = useCallback(
     async (token: Address, owner: Address, spender: Address, amount: bigint) => {
@@ -66,7 +63,7 @@ export function useIporActions() {
   const deposit = useCallback(
     async (vault: Address, underlying: Address, amount: string, decimals: number) => {
       ensureClients();
-      const owner = account!.address as Address;
+      const owner = walletAddress as Address;
       const assets = parseUnits(amount, decimals);
 
       // 1) approve underlying to vault
@@ -85,13 +82,13 @@ export function useIporActions() {
       const receipt = await publicClient!.waitForTransactionReceipt({ hash: tx });
       return { hash: tx as Hash, receipt };
     },
-    [account, approveIfNeeded, publicClient, getWalletClient, ensureClients]
+    [approveIfNeeded, publicClient, getWalletClient, ensureClients]
   );
 
   const withdraw = useCallback(
     async (vault: Address, shares: string) => {
       ensureClients();
-      const owner = account!.address as Address;
+      const owner = walletAddress as Address;
 
       const wc = getWalletClient();
       const tx = await wc.writeContract({
@@ -105,7 +102,7 @@ export function useIporActions() {
       const receipt = await publicClient!.waitForTransactionReceipt({ hash: tx });
       return { hash: tx as Hash, receipt };
     },
-    [account, publicClient, getWalletClient, ensureClients]
+    [publicClient, getWalletClient, ensureClients]
   );
 
   return { deposit, withdraw };

@@ -3,7 +3,6 @@ import React, { useEffect, useMemo, useRef, useCallback } from 'react';
 import { Area, AreaChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from 'recharts';
 import { ProjectData } from '@/types/globalAppTypes';
 import { formatBalance } from '@/helpers/utils';
-import { useWallet } from '@/providers/WalletProvider';
 
 interface EarningsChartProps {
   currentProjectData: ProjectData;
@@ -43,7 +42,6 @@ export default function EarningsChart({
   setCurContent,
   isDarkMode,
 }: EarningsChartProps) {
-  const { isConnected } = useWallet();
   const chartData = useMemo<ChartDataPoint[]>(() => {
     const recent = currentProjectData.recentEarnings || [];
     if (recent.length === 0) return [];
@@ -243,25 +241,6 @@ export default function EarningsChart({
 
   // Check if we have enough earnings events to show a meaningful chart
   const earningsEvents = currentProjectData.recentEarnings || [];
-
-  // Handle wallet not connected state
-  if (!isConnected) {
-    return (
-      <div
-        className={`h-72 rounded-lg flex items-center justify-center relative ${isDarkMode ? 'bg-card' : 'bg-white'}`}
-      >
-        {/* Show mock chart in the background with blur */}
-        <MockChart />
-
-        {/* Simple text overlay */}
-        <div className="relative z-10 text-center mb-20">
-          <div className={`${isDarkMode ? 'text-white' : 'text-gray-700 '} text-sm font-medium`}>
-            Connect wallet to see Earnings Chart
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   // Handle insufficient earnings events (1-4 events)
   if (earningsEvents.length < 5) {

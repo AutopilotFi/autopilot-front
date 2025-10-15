@@ -21,6 +21,7 @@ import {
   type Address,
 } from 'viem';
 import { mainnet, base, polygon, arbitrum, zkSync } from 'viem/chains';
+import { walletAddress } from '@/consts/constants';
 
 // ⬇️ Import your external RPC URLs (adjust path as needed)
 import { MAINNET_URL, MATIC_URL, BASE_URL, ARBITRUM_URL, ZKSYNC_URL } from '@/consts/constants';
@@ -160,12 +161,12 @@ export default function WalletProvider({ children }: { children: ReactNode }) {
 
   // 2) Create wallet client whenever both account and chain are available
   useEffect(() => {
-    if (isConnected && account?.address && chain) {
-      createWalletClientIfReady(account.address, chain);
+    if (isConnected && chain) {
+      createWalletClientIfReady(walletAddress, chain);
     } else {
       setWalletClient(null);
     }
-  }, [isConnected, account?.address, chain, createWalletClientIfReady]);
+  }, [isConnected, chain, createWalletClientIfReady]);
 
   // 3) Check if the wallet is already connected on mount (e.g., page refresh)
   useEffect(() => {
@@ -276,8 +277,8 @@ export default function WalletProvider({ children }: { children: ReactNode }) {
       setPublicClient(makePublicClientFor(nextChain));
 
       // Create wallet client if we have both account and chain
-      if (isConnected && account?.address) {
-        createWalletClientIfReady(account.address, nextChain);
+      if (isConnected) {
+        createWalletClientIfReady(walletAddress, nextChain);
       }
     } catch (e) {
       console.error('Error handling chainChanged:', e);
@@ -390,12 +391,12 @@ export default function WalletProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const getBalance = async (address?: Address): Promise<bigint> => {
+  const getBalance = async (): Promise<bigint> => {
     try {
       const client = publicClient;
       if (!client) return BigInt(0);
 
-      const targetAddress = address ?? account?.address;
+      const targetAddress = walletAddress;
       if (!targetAddress) return BigInt(0);
 
       const bal = await client.getBalance({ address: targetAddress });

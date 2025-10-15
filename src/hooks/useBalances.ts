@@ -5,6 +5,7 @@ import { Address, formatUnits } from 'viem';
 import { useWallet } from '@/providers/WalletProvider';
 import { erc20Abi } from '@/lib/contracts/erc20';
 import { convertVaultToAssets } from '@/lib/contracts/iporVault';
+import { walletAddress } from '@/consts/constants';
 
 export interface BalanceData {
   tokenBalance: string;
@@ -16,7 +17,7 @@ export interface BalanceData {
 }
 
 export function useBalances(tokenAddress: string, vaultAddress: string, tokenDecimals: number) {
-  const { publicClient, account, isConnected } = useWallet();
+  const { publicClient } = useWallet();
   const [balances, setBalances] = useState<BalanceData>({
     tokenBalance: '0',
     vaultBalance: '0',
@@ -27,7 +28,7 @@ export function useBalances(tokenAddress: string, vaultAddress: string, tokenDec
   });
 
   const fetchBalances = useCallback(async () => {
-    if (!publicClient || !account?.address || !isConnected) {
+    if (!publicClient) {
       setBalances(prev => ({
         ...prev,
         tokenBalance: '0',
@@ -49,14 +50,14 @@ export function useBalances(tokenAddress: string, vaultAddress: string, tokenDec
           address: tokenAddress as Address,
           abi: erc20Abi,
           functionName: 'balanceOf',
-          args: [account.address],
+          args: [walletAddress],
         }) as Promise<bigint>,
         // Get vault shares balance
         publicClient.readContract({
           address: vaultAddress as Address,
           abi: erc20Abi, // Vault tokens are ERC20-like
           functionName: 'balanceOf',
-          args: [account.address],
+          args: [walletAddress],
         }) as Promise<bigint>,
       ]);
 
@@ -95,7 +96,7 @@ export function useBalances(tokenAddress: string, vaultAddress: string, tokenDec
         error: error instanceof Error ? error.message : 'Failed to fetch balances',
       }));
     }
-  }, [publicClient, account?.address, isConnected, tokenAddress, vaultAddress, tokenDecimals]);
+  }, [publicClient, tokenAddress, vaultAddress, tokenDecimals]);
 
   // Fetch balances on mount and when dependencies change
   useEffect(() => {

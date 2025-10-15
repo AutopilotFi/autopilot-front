@@ -64,7 +64,7 @@ export default function EarningsPage({
     <div className="flex-1 flex flex-col min-w-0">
       {/* Header */}
       <header
-        className={`border-b sticky top-0 z-40 ${
+        className={`pt-[25px] border-b sticky top-0 z-40 ${
           isDarkMode ? 'bg-card border-border' : 'bg-white border-gray-100'
         }`}
       >

@@ -82,7 +82,7 @@ export default function Sidebar() {
         ) : (
           <button
             onClick={openSidebar}
-            className="fixed top-[29.8px] left-[21px] z-[10000] rounded-md hover:bg-gray-100 text-gray-500 hover:text-gray-700 transition-colors"
+            className="fixed top-[55px] left-[21px] z-[10000] rounded-md hover:bg-gray-100 text-gray-500 hover:text-gray-700 transition-colors"
           >
             <Menu className="w-5 h-5" />
           </button>
@@ -90,7 +90,7 @@ export default function Sidebar() {
 
         {/* Mobile Sidebar */}
         <div
-          className={`fixed inset-y-0 left-0 z-50 w-80 transform transition-transform duration-300 ease-in-out md:hidden border-r ${
+          className={`fixed inset-y-0 left-0 z-500 w-80 transform transition-transform duration-300 ease-in-out md:hidden border-r ${
             isDarkMode ? 'border-gray-700' : 'bg-white border-gray-100'
           } ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}
           style={isDarkMode ? { backgroundColor: '#1f2937' } : {}}
@@ -150,7 +150,9 @@ export default function Sidebar() {
       style={isDarkMode ? { backgroundColor: '#1f2937' } : {}}
     >
       {/* Header */}
-      <div className={`p-6 border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-100'}`}>
+      <div
+        className={`pt-[46px] p-6 border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-100'}`}
+      >
         <Link href={'/'} className="flex items-center hover:opacity-80 transition-opacity">
           <Image
             width={136}

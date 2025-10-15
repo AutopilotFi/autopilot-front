@@ -41,7 +41,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="en">
       <Script src="https://cdn.usefathom.com/script.js" data-site="MHVSKUBZ" defer />
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased relative`}>
+        <div className="fixed inset-x-0 top-0 h-[30px] z-[100] w-full bg-purple-50 border-purple-200/50 border-b py-2 px-4 text-center text-[11px] text-purple-700">
+          Demo reflects Autopilot exactly as it appears to a real user wallet.
+        </div>
         <Providers>
           <Sidebar />
           <div className="min-h-screen bg-gray-50 flex md:ml-80">{children}</div>
